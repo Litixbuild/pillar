@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  /* Luxury color palette - Cream, Charcoal, soft Gold */
+  --cream: #F5F3EE;
+  --charcoal: #2C2C2C;
+  --gold: #D4AF6A;
+  --gold-light: #E8D4A8;
+  --gold-dark: #B8945A;
+  
+  /* Semantic mappings */
+  --background: var(--cream);
+  --foreground: var(--charcoal);
+  --accent: var(--gold);
+}
+
+@theme inline {
+  /* Color system */
+  --color-cream: var(--cream);
+  --color-charcoal: var(--charcoal);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  
+  /* Typography */
+  /* Body */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /* Titles */
+  --font-serif: var(--font-lux-title), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--charcoal);
+    --foreground: var(--cream);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-feature-settings: "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Luxury titles */
+h1, h2, h3 {
+  font-family: var(--font-lux-title), ui-serif, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* For non-heading elements that behave like titles. */
+.lux-title {
+  font-family: var(--font-lux-title), ui-serif, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/*
+  Hide the Next.js/Turbopack devtools UI badge ("N" menu: Route/Bundler/Routeinfo/Processes)
+  so property pages look like a real guest-facing experience during development.
+*/
+nextjs-devtools,
+nextjs-devtools-button,
+nextjs-devtools-panel,
+nextjs-devtools-popover,
+nextjs-devtools-overlay,
+nextjs-turbopack-devtools,
+[data-nextjs-devtools],
+[data-nextjs-turbopack-devtools] {
+  display: none !important;
+}
+
+/* Some Next devtools UIs are mounted inside a nextjs-portal host. */
+nextjs-portal {
+  display: none !important;
+}

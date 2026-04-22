@@ -1,0 +1,32 @@
+# Enforce consistent line endings across platforms.
+# Default: treat files as text and store as LF in the repo.
+* text=auto eol=lf
+
+# Common Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Images / binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg text eol=lf
+
+# Fonts
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+
+# Archives / executables
+*.zip binary
+*.gz binary
+*.7z binary
+*.exe binary
+*.dll binary
+
+# Lockfiles should be normalized
+package-lock.json text eol=lf

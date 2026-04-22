@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Env / secrets
+.env
+.env.*
+
+# Next.js
+.next/
+out/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local-only
+**/.env.local
