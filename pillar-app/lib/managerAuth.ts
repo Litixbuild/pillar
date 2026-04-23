@@ -11,7 +11,7 @@ function getSecretRequired(): string {
   const s = getSecretOrNull();
   if (!s) {
     throw new Error(
-      "Missing MANAGER_SESSION_SECRET. Set it in .env.local / host env vars."
+      "Missing MANAGER_SESSION_SECRET. Set it in .env.local or in your host env vars (Netlify: Site settings → Environment variables). After adding it, trigger a new deploy."
     );
   }
   return s;

@@ -49,6 +49,16 @@ export async function POST(req: Request) {
           e instanceof Error
             ? e.message
             : "Missing MANAGER_SESSION_SECRET. Set it in .env.local / host env vars.",
+        debug: {
+          hasManagerSessionSecret: Boolean(process.env.MANAGER_SESSION_SECRET?.trim()),
+          nodeEnv: process.env.NODE_ENV,
+          netlify: {
+            CONTEXT: process.env.CONTEXT,
+            NETLIFY: process.env.NETLIFY,
+            SITE_NAME: process.env.SITE_NAME,
+            BRANCH: process.env.BRANCH,
+          },
+        },
       },
       { status: 500 }
     );
