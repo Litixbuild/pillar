@@ -7,16 +7,51 @@ const propertyBySlugCache = new Map<
   { atMs: number; value: Property | null }
 >();
 
+function firstNonEmptyEnv(...names: string[]): string | undefined {
+  for (const name of names) {
+    const v = process.env[name];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
+function envPresence(names: string[]): Record<string, boolean> {
+  return Object.fromEntries(
+    names.map((n) => [n, typeof process.env[n] === 'string' && !!process.env[n]?.trim()])
+  );
+}
+
 function getBase() {
-  if (!process.env.AIRTABLE_TOKEN || !process.env.AIRTABLE_BASE_ID) {
-    throw new Error('AIRTABLE_TOKEN and AIRTABLE_BASE_ID must be set');
+  const token = firstNonEmptyEnv('AIRTABLE_TOKEN', 'AIRTABLE_API_KEY', 'AIRTABLE_PAT');
+  const baseId = firstNonEmptyEnv('AIRTABLE_BASE_ID', 'AIRTABLE_BASE');
+
+  if (!token || !baseId) {
+    // Intentionally do NOT print secrets; just presence + Netlify context.
+    console.error('[airtable] Missing required env vars', {
+      requiredPresence: envPresence([
+        'AIRTABLE_TOKEN',
+        'AIRTABLE_API_KEY',
+        'AIRTABLE_PAT',
+        'AIRTABLE_BASE_ID',
+        'AIRTABLE_BASE',
+      ]),
+      netlify: {
+        CONTEXT: process.env.CONTEXT,
+        NETLIFY: process.env.NETLIFY,
+        SITE_NAME: process.env.SITE_NAME,
+      },
+      nodeEnv: process.env.NODE_ENV,
+    });
+    throw new Error(
+      'AIRTABLE_TOKEN and AIRTABLE_BASE_ID must be set (or alternates: AIRTABLE_API_KEY/AIRTABLE_PAT, AIRTABLE_BASE)'
+    );
   }
 
   if (cachedBase) return cachedBase;
 
   cachedBase = new Airtable({
-    apiKey: process.env.AIRTABLE_TOKEN,
-  }).base(process.env.AIRTABLE_BASE_ID);
+    apiKey: token,
+  }).base(baseId);
 
   return cachedBase;
 }
@@ -53,6 +88,14 @@ function getLocalSpotsTableName(): string {
 
 function getLocalSpotsZipFieldName(): string {
   return (process.env.AIRTABLE_LOCAL_SPOTS_ZIP_FIELD || 'ZipCode').trim();
+}
+
+function getPropertiesTableName(): string {
+  return (process.env.AIRTABLE_PROPERTIES_TABLE || 'Properties').trim();
+}
+
+function getPropertiesSlugFieldName(): string {
+  return (process.env.AIRTABLE_PROPERTIES_SLUG_FIELD || 'Slug').trim();
 }
 
 export async function getLocalSpotsByZip(zipCode: string): Promise<LocalSpot[]> {
@@ -103,9 +146,12 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
     // Escape single quotes in slug to prevent formula injection
     const sanitizedSlug = cacheKey.replace(/'/g, "\\'");
 
-    const records = await base('Properties')
+    const tableName = getPropertiesTableName();
+    const slugFieldName = getPropertiesSlugFieldName();
+
+    const records = await base(tableName)
       .select({
-        filterByFormula: `{Slug} = '${sanitizedSlug}'`,
+        filterByFormula: `{${slugFieldName}} = '${sanitizedSlug}'`,
         maxRecords: 1,
       })
       .firstPage();
