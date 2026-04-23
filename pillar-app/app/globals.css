@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: make `dark:` respond to the `.dark` class (not system preference). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Luxury color palette - Cream, Charcoal, soft Gold */
   --cream: #F5F3EE;

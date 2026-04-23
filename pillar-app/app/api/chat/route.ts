@@ -42,6 +42,20 @@ type ChatOkResponse =
       model: string;
     }
   | {
+      kind: "itinerary";
+      intro: string;
+      sections: Array<{
+        title: string;
+        places: Array<{
+          name: string;
+          blurb?: string;
+          phone?: string;
+          googleMapsUri?: string;
+        }>;
+      }>;
+      model: string;
+    }
+  | {
       kind: "places";
       places: Array<{
         name: string;
@@ -119,12 +133,20 @@ function requireGeminiApiKey(): string {
 }
 
 function requireGooglePlacesApiKey(): string {
-  const v = process.env.GOOGLE_PLACES_API_KEY?.trim();
+  const v = (
+    process.env.GOOGLE_PLACES_API_KEY ||
+    // Common alternate naming on hosts like Netlify/Vercel.
+    process.env.GOOGLE_MAPS_API_KEY ||
+    process.env.GOOGLE_MAPS_PLATFORM_API_KEY ||
+    ""
+  ).trim();
+
   if (!v) {
     throw new Error(
-      "GOOGLE_PLACES_API_KEY must be set in .env.local to enable accurate local business suggestions."
+      "Missing Google Places key. Set GOOGLE_PLACES_API_KEY (recommended). If deployed (e.g. Netlify), add it in your host's Environment Variables; .env.local is not deployed."
     );
   }
+
   return v;
 }
 
@@ -190,6 +212,9 @@ async function vertexGenerateContent(opts: {
 function looksLikeLocalBusinessQuestion(userMessage: string): boolean {
   const m = userMessage.toLowerCase();
   return [
+    "itinerary",
+    "plan a day",
+    "plan my day",
     "nearby",
     "near me",
     "around here",
@@ -212,6 +237,31 @@ function looksLikeLocalBusinessQuestion(userMessage: string): boolean {
     "shopping",
     "things to do",
   ].some((k) => m.includes(k));
+}
+
+function looksLikeDayPlanQuestion(userMessage: string): boolean {
+  const m = userMessage.toLowerCase();
+  // If the guest explicitly asks for a day plan / itinerary, or requests multiple meal stops + activities,
+  // we should NOT use the single-query fast-path.
+  const explicit =
+    m.includes("itinerary") ||
+    m.includes("plan a day") ||
+    m.includes("plan my day") ||
+    m.includes("day plan") ||
+    m.includes("full day");
+
+  const mealHits = ["breakfast", "brunch", "lunch", "dinner"].filter((k) =>
+    m.includes(k)
+  ).length;
+  const wantsActivities =
+    m.includes("things to do") ||
+    m.includes("activities") ||
+    m.includes("what should we do") ||
+    m.includes("what to do") ||
+    m.includes("day") ||
+    m.includes("afternoon");
+
+  return explicit || (mealHits >= 2 && wantsActivities);
 }
 
 type MealIntent = "breakfast" | "brunch" | "lunch" | "dinner" | null;
@@ -530,27 +580,63 @@ export async function POST(req: Request) {
     }
 
     const wantsLocal = looksLikeLocalBusinessQuestion(message);
+    const wantsDayPlan = wantsLocal && looksLikeDayPlanQuestion(message);
     const wantsWeather = looksLikeWeatherQuestion(message);
     const wantsPropertyInfo = looksLikePropertyInfoQuestion(message);
 
     let livePlaces: PlaceResult[] = [];
+    let dayPlanPlaces: {
+      breakfast: PlaceResult[];
+      lunch: PlaceResult[];
+      dinner: PlaceResult[];
+      activities: PlaceResult[];
+    } | null = null;
     let weatherJson: unknown = null;
 
-    if (wantsLocal || wantsWeather) {
+    if (wantsLocal) {
       const placesKey = requireGooglePlacesApiKey();
 
-      if (wantsLocal) {
+      const fetchPlaces = async (query: string): Promise<PlaceResult[]> => {
+        const raw = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, query));
+        // We only need a small set for the prompt; keep it deterministic.
+        return raw.slice(0, 8);
+      };
+
+      if (wantsDayPlan) {
+        const near = `${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
+        const [breakfast, lunch, dinner, activities] = await Promise.all([
+          fetchPlaces(`breakfast near ${near}`.trim()),
+          fetchPlaces(`lunch near ${near}`.trim()),
+          fetchPlaces(`dinner restaurant near ${near}`.trim()),
+          fetchPlaces(`things to do near ${near}`.trim()),
+        ]);
+
+        dayPlanPlaces = {
+          breakfast: filterPlacesForIntent("breakfast", breakfast),
+          lunch: filterPlacesForIntent("lunch", lunch),
+          dinner: filterPlacesForIntent("dinner", dinner),
+          activities,
+        };
+
+        // Also keep a merged list for any fast-path payloads / fallback prompt text.
+        livePlaces = [
+          ...dayPlanPlaces.breakfast,
+          ...dayPlanPlaces.lunch,
+          ...dayPlanPlaces.dinner,
+          ...dayPlanPlaces.activities,
+        ];
+      } else {
         const q = shapePlacesQuery(message, property);
         const rawPlaces = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, q));
         livePlaces = filterPlacesForIntent(message, rawPlaces);
       }
+    }
 
-      if (wantsWeather) {
-        const latLng = await withOverloadRetry(() =>
-          openMeteoGeocodeZip(property.PropertyZipCode || "")
-        );
-        weatherJson = await withOverloadRetry(() => fetchOpenMeteoCurrent(latLng));
-      }
+    if (wantsWeather) {
+      const latLng = await withOverloadRetry(() =>
+        openMeteoGeocodeZip(property.PropertyZipCode || "")
+      );
+      weatherJson = await withOverloadRetry(() => fetchOpenMeteoCurrent(latLng));
     }
 
     const fastPathEnabled = (process.env.CHAT_FAST_PATH || "1") !== "0";
@@ -600,7 +686,46 @@ export async function POST(req: Request) {
       );
     }
 
-    if (fastPathEnabled && (wantsLocal || wantsWeather)) {
+    if (fastPathEnabled && wantsDayPlan && dayPlanPlaces) {
+      const toMini = (p: PlaceResult) => ({
+        name: p.name,
+        blurb: inferCuisine(p),
+        phone: p.phone,
+        googleMapsUri: p.googleMapsUri,
+      });
+
+      const pick = (arr: PlaceResult[], idx: number) => (arr[idx]?.name || "").trim();
+      const b1 = pick(dayPlanPlaces.breakfast, 0);
+      const l1 = pick(dayPlanPlaces.lunch, 0);
+      const d1 = pick(dayPlanPlaces.dinner, 0);
+      const a1 = pick(dayPlanPlaces.activities, 0);
+
+      const introParts = [
+        "I planned a relaxed day nearby for you.",
+        b1 ? `Start with breakfast at ${b1}.` : null,
+        a1 ? `Then I’d spend late morning at ${a1}.` : null,
+        l1 ? `For lunch, I’d do ${l1}.` : null,
+        d1 ? `And finish with dinner at ${d1}.` : null,
+      ].filter(Boolean);
+
+      const intro = introParts.join(" ");
+
+      const payload: ChatOkResponse = {
+        kind: "itinerary",
+        intro,
+        sections: [
+          { title: "Breakfast", places: dayPlanPlaces.breakfast.slice(0, 2).map(toMini) },
+          { title: "Lunch", places: dayPlanPlaces.lunch.slice(0, 2).map(toMini) },
+          { title: "Dinner", places: dayPlanPlaces.dinner.slice(0, 2).map(toMini) },
+          { title: "Things to do", places: dayPlanPlaces.activities.slice(0, 2).map(toMini) },
+        ],
+        model: "fast-itinerary",
+      };
+
+      return Response.json(payload, { status: 200 });
+    }
+
+    if (fastPathEnabled && (wantsLocal || wantsWeather) && !wantsDayPlan) {
       if (wantsLocal) {
         const payload: ChatOkResponse = {
           kind: "places",
@@ -636,22 +761,34 @@ export async function POST(req: Request) {
 
     const geminiKey = requireGeminiApiKey();
 
-    const placesText =
-      livePlaces.length > 0
-        ? livePlaces
-            .slice(0, 5)
-            .map((p) => {
-              const parts = [
-                p.name,
-                p.formattedAddress ? `Address: ${p.formattedAddress}` : null,
-                p.phone ? `Phone: ${p.phone}` : null,
-                p.websiteUri ? `Website: ${p.websiteUri}` : null,
-                p.googleMapsUri ? `Maps: ${p.googleMapsUri}` : null,
-                typeof p.rating === "number" ? `Rating: ${p.rating}` : null,
-              ].filter(Boolean);
-              return `- ${parts.join(" | ")}`;
-            })
-            .join("\n")
+    const fmtPlace = (p: PlaceResult) => {
+      const parts = [
+        p.name,
+        p.formattedAddress ? `Address: ${p.formattedAddress}` : null,
+        p.phone ? `Phone: ${p.phone}` : null,
+        p.websiteUri ? `Website: ${p.websiteUri}` : null,
+        p.googleMapsUri ? `Maps: ${p.googleMapsUri}` : null,
+        typeof p.rating === "number" ? `Rating: ${p.rating}` : null,
+      ].filter(Boolean);
+      return `- ${parts.join(" | ")}`;
+    };
+
+    const placesText = dayPlanPlaces
+      ? [
+          "Breakfast options:",
+          ...(dayPlanPlaces.breakfast.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          "",
+          "Lunch options:",
+          ...(dayPlanPlaces.lunch.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          "",
+          "Dinner options:",
+          ...(dayPlanPlaces.dinner.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          "",
+          "Things to do:",
+          ...(dayPlanPlaces.activities.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+        ].join("\n")
+      : livePlaces.length > 0
+        ? livePlaces.slice(0, 5).map(fmtPlace).join("\n")
         : "- (none)";
 
     const weatherSummary = weatherJson ? summarizeWeather(weatherJson) : null;
@@ -675,6 +812,8 @@ export async function POST(req: Request) {
       "If the guest asks about the local area:",
       "- Recommend places ONLY from the list above. Do not invent places.",
       "- Provide 2–5 options unless the guest asked for one.",
+      "- For every recommended place, include direct links when available: add `Website: <url>` and `Maps: <url>`.",
+      "- Prefer a compact, scannable format using ` | ` separators (e.g. `1) Name | Address: ... | Website: ... | Maps: ...`).",
       "Tone: elegant, concise, and professional.",
     ]
       .filter(Boolean)

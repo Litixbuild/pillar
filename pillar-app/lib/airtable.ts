@@ -57,6 +57,7 @@ function getBase() {
 }
 
 export interface Property {
+  Slug?: string;
   PropertyName: string;
   PropertyAddress: string;
   PropertyZipCode: string;
@@ -66,11 +67,61 @@ export interface Property {
   GarageCode?: string;
   HouseRules: string;
   ManagerPhone: string;
+  ManagerName?: string;
+  ManagerEmail?: string;
+  ManagerPassword?: string;
   HeroImage?: string;
   Video1_File?: string;
   PoolHeater?: string;
   Television?: string;
   CoffeeMachine?: string;
+}
+
+export async function getPropertiesByManagerEmail(email: string): Promise<Property[]> {
+  const e = email.trim().toLowerCase();
+  if (!e) return [];
+
+  const base = getBase();
+  const tableName = getPropertiesTableName();
+  const slugFieldName = getPropertiesSlugFieldName();
+
+  // Escape single quotes to avoid formula injection.
+  const sanitized = e.replace(/'/g, "\\'");
+  const records = await base(tableName)
+    .select({
+      filterByFormula: `{ManagerEmail} = '${sanitized}'`,
+      maxRecords: 200,
+    })
+    .firstPage();
+
+  return records.map((r) => r.fields as Record<string, unknown>).map((fields) => {
+    const firstAttachmentUrl = (v: unknown): string | undefined => {
+      if (!Array.isArray(v)) return undefined;
+      const first = (v as Array<{ url?: unknown }>)[0];
+      return first && typeof first.url === 'string' ? first.url : undefined;
+    };
+
+    return {
+      Slug: typeof fields[slugFieldName] === 'string' ? ((fields[slugFieldName] as string) || '').trim() || undefined : undefined,
+      PropertyName: (fields.PropertyName as string) || '',
+      PropertyAddress: (fields.PropertyAddress as string) || 'Not provided',
+      PropertyZipCode: (fields.PropertyZipCode as string) || 'Not provided',
+      DetailedHouseBio: (fields.DetailedHouseBio as string) || 'Not provided',
+      WiFiName: (fields.WiFiName as string) || '',
+      WiFiPassword: (fields.WiFiPassword as string) || '',
+      GarageCode: (fields.GarageCode as string) || '',
+      HouseRules: (fields.HouseRules as string) || '',
+      ManagerPhone: (fields.ManagerPhone as string) || '',
+      ManagerName: (fields.ManagerName as string) || undefined,
+      ManagerEmail: (fields.ManagerEmail as string) || undefined,
+      ManagerPassword: (fields.ManagerPassword as string) || undefined,
+      HeroImage: firstAttachmentUrl(fields.HeroImage),
+      Video1_File: firstAttachmentUrl(fields.Video1_File),
+      PoolHeater: firstAttachmentUrl(fields.PoolHeater),
+      Television: firstAttachmentUrl(fields.Television),
+      CoffeeMachine: firstAttachmentUrl(fields.CoffeeMachine),
+    } satisfies Property;
+  });
 }
 
 export interface LocalSpot {

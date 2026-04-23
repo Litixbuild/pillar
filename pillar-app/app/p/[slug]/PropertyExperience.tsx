@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 
 function ChevronLeft({ className }: { className?: string }) {
   return (
@@ -97,6 +97,8 @@ export default function PropertyExperience({
   slug: string;
   property: Property;
 }) {
+  const PREVIEW_FADE_MS = 450;
+
   const [expanded, setExpanded] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [fullView, setFullView] = useState<'content' | 'amenities'>('content');
@@ -138,7 +140,7 @@ export default function PropertyExperience({
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [expanded]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (expanded) return;
     const el = document.querySelector<HTMLButtonElement>('[data-preview-sheet="1"]');
     if (!el) return;
@@ -157,6 +159,7 @@ export default function PropertyExperience({
   }, [expanded, property.DetailedHouseBio]);
 
   const rootOverflow = expanded ? '' : 'overflow-hidden';
+  const previewOpacityClass = isTransitioning ? 'opacity-0' : 'opacity-100';
 
   return (
     <div className={`min-h-screen bg-[#F9F7F2] font-sans ${rootOverflow}`}>
@@ -167,6 +170,24 @@ export default function PropertyExperience({
       />
       {/* Subtle gradient for legibility */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-black/25 via-black/35 to-black/65" />
+
+      {/* Temporary Property Manager logo (preview screen only) */}
+      {!expanded ? (
+        <div
+          className={
+            'pointer-events-none fixed inset-x-0 top-10 z-[22] mx-auto flex w-full max-w-md justify-center px-6 transition-opacity duration-[450ms] ease-in-out ' +
+            previewOpacityClass
+          }
+          style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/pillarlogowhite.png"
+            alt="Property Manager"
+            className="h-60 w-auto opacity-95 drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] sm:h-72"
+          />
+        </div>
+      ) : null}
 
       {!expanded ? (
         <>
@@ -180,7 +201,10 @@ export default function PropertyExperience({
 
           {/* Always-visible title block (stays above the sheet) */}
           <div
-            className="fixed inset-x-0 z-[21] mx-auto w-full max-w-md px-6"
+            className={
+              'fixed inset-x-0 z-[21] mx-auto w-full max-w-md px-6 transition-[bottom,opacity] duration-300 ease-out ' +
+              previewOpacityClass
+            }
             style={{ bottom: `${previewSheetBottomPx}px` }}
           >
             <div className="space-y-2">
@@ -201,16 +225,16 @@ export default function PropertyExperience({
               data-preview-sheet="1"
               type="button"
               onClick={() => {
-                // Cross-fade: full content fades in while this sheet fades out.
+                // Cross-fade: fade OUT the preview screen, then mount the full view and fade it IN.
                 setIsTransitioning(true);
-                setExpanded(true);
-                window.setTimeout(() => setIsTransitioning(false), 900);
+                window.setTimeout(() => setExpanded(true), PREVIEW_FADE_MS);
+                window.setTimeout(() => setIsTransitioning(false), PREVIEW_FADE_MS * 2);
               }}
               className={
-                'group flex w-full items-start justify-between gap-4 rounded-2xl border border-white/20 bg-white/12 px-6 py-5 text-left shadow-xl backdrop-blur-sm transition-opacity duration-[900ms] ease-in-out ' +
+                'group flex w-full items-start justify-between gap-4 rounded-2xl border border-white/20 bg-white/12 px-6 py-5 text-left shadow-xl backdrop-blur-sm transition-opacity duration-[450ms] ease-in-out ' +
                 (isTransitioning ? 'opacity-0' : 'opacity-100 hover:bg-white/14')
               }
-              style={{ maxHeight: '70vh' }}
+              style={{ maxHeight: '70vh', transitionDuration: `${PREVIEW_FADE_MS}ms` }}
               aria-label="Open full property details"
             >
               <div className="min-w-0">
@@ -233,11 +257,12 @@ export default function PropertyExperience({
             {/* CONTENT screen */}
             <div
               className={
-                'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-[900ms] ease-in-out ' +
+                'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-[450ms] ease-in-out ' +
                 (isTransitioning || isFullViewTransitioning || fullView !== 'content'
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100')
               }
+              style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
             >
               {/* Hero spacer (lets background read like a hero) */}
               <header className="h-[38vh] w-full flex-none" />

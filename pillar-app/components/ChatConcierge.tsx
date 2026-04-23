@@ -129,12 +129,32 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="lux-title text-sm text-[#333333]">
-                    {p.name}{' '}
-                    {p.cuisine ? (
-                      <span className="text-xs font-normal italic text-[#666666]">
-                        ({p.cuisine})
-                      </span>
-                    ) : null}
+                    {(() => {
+                      const href = p.websiteUri || p.googleMapsUri;
+                      const title = (
+                        <>
+                          {p.name}{' '}
+                          {p.cuisine ? (
+                            <span className="text-xs font-normal italic text-[#666666]">
+                              ({p.cuisine})
+                            </span>
+                          ) : null}
+                        </>
+                      );
+
+                      return href ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
+                        >
+                          {title}
+                        </a>
+                      ) : (
+                        title
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -170,7 +190,6 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
               </div>
 
               <div className="mt-1 space-y-1 text-xs text-[#444444]">
-                {p.formattedAddress ? <div>{linkifyLine(`Address: ${p.formattedAddress}`)}</div> : null}
                 {typeof p.rating === 'number' ? <div>Rating: {p.rating}</div> : null}
                 {p.phone ? (
                   <div className="flex items-center justify-between gap-2">
@@ -178,13 +197,79 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
                     <CopyButton value={p.phone} />
                   </div>
                 ) : null}
-                {p.websiteUri ? (
-                  <div>Website: {linkifyLine(p.websiteUri)}</div>
-                ) : null}
               </div>
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (data.kind === 'itinerary') {
+    const sections = Array.isArray(data.sections) ? data.sections : [];
+    return (
+      <div className="space-y-3">
+        {data.intro ? (
+          <div className="text-xs leading-relaxed text-[#444444]">{data.intro}</div>
+        ) : null}
+        {sections.map((s, si) => (
+          <div key={si} className="space-y-2">
+            <div className="lux-title text-sm text-[#333333]">{s.title}</div>
+            <div className="space-y-2">
+              {(s.places || []).map((p, pi) => (
+                <div
+                  key={pi}
+                  className="rounded-xl border border-[#D4AF6A]/30 bg-white/60 p-3 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-[#333333]">{p.name || '—'}</div>
+                      {p.blurb ? (
+                        <div className="mt-0.5 text-xs text-[#666666]">{p.blurb}</div>
+                      ) : null}
+                      {p.phone ? (
+                        <div className="mt-1 flex items-center justify-between gap-2 text-xs text-[#444444]">
+                          <div>{linkifyLine(`Phone: ${p.phone}`)}</div>
+                          <CopyButton value={p.phone} />
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {p.googleMapsUri ? (
+                      <a
+                        href={p.googleMapsUri}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[#D4AF6A]/30 bg-white/80 shadow-sm hover:bg-white"
+                        aria-label="Open in Google Maps"
+                        title="Open in Google Maps"
+                      >
+                        <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
+                          <path
+                            fill="#EA4335"
+                            d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z"
+                          />
+                          <path
+                            fill="#4285F4"
+                            d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z"
+                          />
+                        </svg>
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -205,6 +290,15 @@ type ButlerCardData =
       houseRules: string;
       managerPhone: string;
       wifiName: string;
+      model?: string;
+    }
+  | {
+      kind: 'itinerary';
+      intro?: string;
+      sections: Array<{
+        title: string;
+        places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }>;
+      }>;
       model?: string;
     }
   | {
@@ -250,6 +344,15 @@ type ChatOkResponse =
       houseRules: string;
       managerPhone: string;
       wifiName: string;
+      model: string;
+    }
+  | {
+      kind: 'itinerary';
+      intro: string;
+      sections: Array<{
+        title: string;
+        places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }>;
+      }>;
       model: string;
     }
   | {
@@ -315,15 +418,75 @@ function MessageText({ text }: { text: string }) {
           const title = chunks[0] || '—';
           const details = chunks.slice(1);
 
+          const website = details.find((d) => d.toLowerCase().startsWith('website:'));
+          const maps = details.find((d) => d.toLowerCase().startsWith('maps:'));
+          const websiteHref = (website || '').split(/\s+/).slice(1).join(' ').trim();
+          const mapsHref = (maps || '').split(/\s+/).slice(1).join(' ').trim();
+          const href = websiteHref || mapsHref;
+          const titleNode = href ? (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
+            >
+              {title}
+            </a>
+          ) : (
+            title
+          );
+
+          // Keep the UI clean: if we already used Website/Maps to build the title hyperlink,
+          // don't show the raw URLs as separate lines.
+          const cleanedDetails = details.filter((d) => {
+            const low = d.toLowerCase();
+            if (href && (low.startsWith('website:') || low.startsWith('maps:'))) return false;
+            // Hide Address lines in itinerary cards; user wants a clean list + a Google button.
+            if (low.startsWith('address:')) return false;
+            return true;
+          });
+
           return (
             <div
               key={i}
               className="rounded-xl border border-[#D4AF6A]/30 bg-white/60 p-3 shadow-sm"
             >
-              <div className="text-sm font-semibold text-[#333333]">{title}</div>
-              {details.length ? (
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm font-semibold text-[#333333]">{titleNode}</div>
+
+                {mapsHref ? (
+                  <a
+                    href={mapsHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[#D4AF6A]/30 bg-white/80 shadow-sm hover:bg-white"
+                    aria-label="Open in Google Maps"
+                    title="Open in Google Maps"
+                  >
+                    <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
+                      <path
+                        fill="#EA4335"
+                        d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z"
+                      />
+                      <path
+                        fill="#4285F4"
+                        d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z"
+                      />
+                    </svg>
+                  </a>
+                ) : null}
+              </div>
+              {cleanedDetails.length ? (
                 <div className="mt-1 space-y-1 text-xs text-[#444444]">
-                  {details.map((d, di) => (
+                  {cleanedDetails.map((d, di) => (
                     <div key={di}>{linkifyLine(d)}</div>
                   ))}
                 </div>
@@ -403,6 +566,7 @@ function TypingDots() {
 const SUGGESTED = [
   "What's the WiFi?",
   'Local dinner spots',
+  'Plan my day',
   'Check-out instructions',
 ] as const;
 
@@ -524,6 +688,15 @@ export default function ChatConcierge({ slug }: Props) {
                         phoneNumber: data.phoneNumber || '',
                         model: data.model,
                       }
+                    : data.kind === 'itinerary'
+                      ? {
+                          kind: 'itinerary',
+                          intro: typeof (data as { intro?: unknown }).intro === 'string'
+                            ? (data as { intro: string }).intro
+                            : undefined,
+                          sections: Array.isArray(data.sections) ? data.sections : [],
+                          model: data.model,
+                        }
                     : data.kind === 'weather'
                       ? { kind: 'weather', summary: data.summary || '—', model: data.model }
                       : data.kind === 'property'
@@ -601,15 +774,17 @@ export default function ChatConcierge({ slug }: Props) {
 
   return (
     <>
-      {/* Floating trigger (always on top) */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-[9999] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white shadow-2xl backdrop-blur-md transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/40"
-        aria-label={open ? 'Close concierge' : 'Open concierge'}
-      >
-        <ButlerIcon className="h-6 w-6 opacity-95" />
-      </button>
+      {/* Floating trigger (hide while open so it doesn't overlap the panel) */}
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="fixed bottom-5 right-5 z-[9999] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white shadow-2xl backdrop-blur-md transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/40"
+          aria-label="Open concierge"
+        >
+          <ButlerIcon className="h-6 w-6 opacity-95" />
+        </button>
+      ) : null}
 
       {/* Panel layer */}
       <div
