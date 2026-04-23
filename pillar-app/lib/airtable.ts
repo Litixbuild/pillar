@@ -208,6 +208,11 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
         ? (err as { error?: { message?: unknown } }).error?.message
         : undefined;
 
+    const airtableMessageField =
+      typeof err === 'object' && err && 'message' in err
+        ? (err as { message?: unknown }).message
+        : undefined;
+
     const message =
       (err instanceof Error ? err.message : undefined) ||
       (typeof nestedErrorMessage === 'string' ? nestedErrorMessage : undefined) ||
@@ -220,6 +225,18 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
       tableName: getPropertiesTableName(),
       slugFieldName: getPropertiesSlugFieldName(),
       statusCode,
+      airtableMessage:
+        typeof airtableMessageField === 'string'
+          ? airtableMessageField
+          : typeof airtableMessageField === 'number'
+            ? String(airtableMessageField)
+            : undefined,
+      airtableErrorMessage:
+        typeof nestedErrorMessage === 'string'
+          ? nestedErrorMessage
+          : typeof nestedErrorMessage === 'number'
+            ? String(nestedErrorMessage)
+            : undefined,
       hasErrorField:
         typeof err === 'object' && !!err && 'error' in err && !!(err as { error?: unknown }).error,
       errorKeys:
