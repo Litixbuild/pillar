@@ -197,13 +197,39 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
     return out;
   } catch (error) {
     const err = error as unknown;
+
+    const statusCode =
+      typeof err === 'object' && err && 'statusCode' in err
+        ? (err as { statusCode?: unknown }).statusCode
+        : undefined;
+
+    const nestedErrorMessage =
+      typeof err === 'object' && err && 'error' in err
+        ? (err as { error?: { message?: unknown } }).error?.message
+        : undefined;
+
     const message =
       (err instanceof Error ? err.message : undefined) ||
-      (typeof err === 'object' && err && 'error' in err
-        ? String((err as { error?: { message?: unknown } }).error?.message || '')
-        : '') ||
-      (error instanceof Error ? error.message : 'Unknown Airtable error');
+      (typeof nestedErrorMessage === 'string' ? nestedErrorMessage : undefined) ||
+      (typeof nestedErrorMessage === 'number' ? String(nestedErrorMessage) : undefined) ||
+      'Unknown Airtable error';
 
-    throw new Error(`Airtable request failed: ${message}`);
+    // Safe diagnostics: no secrets, but enough to fix schema/auth issues.
+    console.error('[airtable] getPropertyBySlug failed', {
+      slug: slug.trim(),
+      tableName: getPropertiesTableName(),
+      slugFieldName: getPropertiesSlugFieldName(),
+      statusCode,
+      hasErrorField:
+        typeof err === 'object' && !!err && 'error' in err && !!(err as { error?: unknown }).error,
+      errorKeys:
+        typeof err === 'object' && err
+          ? Object.keys(err as Record<string, unknown>).slice(0, 20)
+          : undefined,
+    });
+
+    throw new Error(
+      `Airtable request failed: ${typeof statusCode === 'number' ? `HTTP ${statusCode}: ` : ''}${message}`
+    );
   }
 }
