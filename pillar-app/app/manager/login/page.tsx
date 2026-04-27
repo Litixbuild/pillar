@@ -8,10 +8,6 @@ export default function ManagerLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5F3EE] via-white to-[#F5F3EE] text-[#2C2C2C] dark:from-[#0F0F0F] dark:via-[#1B1B1B] dark:to-black dark:text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-8">
-        <div className="mb-4 flex justify-end">
-          <ManagerThemeToggle />
-        </div>
-
         <div className="mb-6 flex justify-center">
           <img
             src="/images/pillarlogoblack.png"
@@ -92,6 +88,9 @@ export default function ManagerLoginPage() {
               Sign in
             </button>
 
+            <div className="pt-4 flex justify-center">
+              <ManagerThemeToggle />
+            </div>
           </form>
         </div>
       </div>

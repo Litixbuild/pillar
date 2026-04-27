@@ -1,4 +1,56 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+function looksLikeIndoorQuestion(userMessage: string): boolean {
+  const m = userMessage.toLowerCase();
+  return (
+    m.includes('indoor') ||
+    m.includes('inside') ||
+    m.includes('rainy') ||
+    m.includes('rain')
+  );
+}
+
+function looksLikeMoreOptionsRequest(userMessage: string): boolean {
+  const m = userMessage.toLowerCase();
+  return (
+    m.includes('other options') ||
+    m.includes('more options') ||
+    m.includes('something else') ||
+    m.includes('different options') ||
+    m.includes('another option') ||
+    m.includes('others')
+  );
+}
+
+function normalizePlaceKey(p: PlaceResult): string {
+  const id = (p.placeId || '').trim();
+  if (id) return `id:${id}`;
+  return `name:${(p.name || '').trim().toLowerCase()}`;
+}
+
+function rotate<T>(arr: T[], offset: number): T[] {
+  const a = arr.slice();
+  if (!a.length) return a;
+  const n = ((offset % a.length) + a.length) % a.length;
+  return a.slice(n).concat(a.slice(0, n));
+}
+
+function takeUniquePlaces(
+  candidates: PlaceResult[],
+  used: Set<string>,
+  max: number
+): PlaceResult[] {
+  const out: PlaceResult[] = [];
+  for (const p of candidates) {
+    const k = normalizePlaceKey(p);
+    if (!p.name || used.has(k)) continue;
+    used.add(k);
+    out.push(p);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 import { getPropertyBySlug } from "@/lib/airtable";
 
 export const runtime = "nodejs";
@@ -13,6 +65,7 @@ type OverloadedError = {
 type ChatRequestBody = {
   message: string;
   slug: string;
+  variant?: number;
 };
 
 type LatLng = { lat: number; lng: number };
@@ -566,6 +619,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as Partial<ChatRequestBody>;
     const message = body.message?.toString().trim();
     const slug = body.slug?.toString().trim();
+    const variant = typeof body.variant === 'number' && Number.isFinite(body.variant) ? body.variant : 0;
 
     if (!message) {
       return Response.json({ error: "Missing 'message'" }, { status: 400 });
@@ -583,6 +637,7 @@ export async function POST(req: Request) {
     const wantsDayPlan = wantsLocal && looksLikeDayPlanQuestion(message);
     const wantsWeather = looksLikeWeatherQuestion(message);
     const wantsPropertyInfo = looksLikePropertyInfoQuestion(message);
+    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
 
     let livePlaces: PlaceResult[] = [];
     let dayPlanPlaces: {
@@ -629,6 +684,16 @@ export async function POST(req: Request) {
         const q = shapePlacesQuery(message, property);
         const rawPlaces = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, q));
         livePlaces = filterPlacesForIntent(message, rawPlaces);
+
+        // If we got no results (or filtering removed everything), broaden the search so we stay helpful.
+        if (!livePlaces.length) {
+          const near = `${property.PropertyZipCode || ''} ${property.PropertyAddress || ''}`.trim();
+          const broad = looksLikeIndoorQuestion(message)
+            ? `indoor activities near ${near}`.trim()
+            : `things to do near ${near}`.trim();
+          const rawBroad = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, broad));
+          livePlaces = rawBroad.slice(0, 8);
+        }
       }
     }
 
@@ -694,11 +759,19 @@ export async function POST(req: Request) {
         googleMapsUri: p.googleMapsUri,
       });
 
-      const pick = (arr: PlaceResult[], idx: number) => (arr[idx]?.name || "").trim();
-      const b1 = pick(dayPlanPlaces.breakfast, 0);
-      const l1 = pick(dayPlanPlaces.lunch, 0);
-      const d1 = pick(dayPlanPlaces.dinner, 0);
-      const a1 = pick(dayPlanPlaces.activities, 0);
+      // Rotate results when the guest asks for other options, and ensure we never repeat a place
+      // across breakfast/lunch/dinner/activities within a single payload.
+      const rot = wantsMoreOptions ? Math.max(0, variant) : 0;
+      const used = new Set<string>();
+      const breakfast = takeUniquePlaces(rotate(dayPlanPlaces.breakfast, rot), used, 2);
+      const activities = takeUniquePlaces(rotate(dayPlanPlaces.activities, rot), used, 2);
+      const lunch = takeUniquePlaces(rotate(dayPlanPlaces.lunch, rot), used, 2);
+      const dinner = takeUniquePlaces(rotate(dayPlanPlaces.dinner, rot), used, 2);
+
+      const b1 = (breakfast[0]?.name || '').trim();
+      const l1 = (lunch[0]?.name || '').trim();
+      const d1 = (dinner[0]?.name || '').trim();
+      const a1 = (activities[0]?.name || '').trim();
 
       const introParts = [
         "I planned a relaxed day nearby for you.",
@@ -714,10 +787,10 @@ export async function POST(req: Request) {
         kind: "itinerary",
         intro,
         sections: [
-          { title: "Breakfast", places: dayPlanPlaces.breakfast.slice(0, 2).map(toMini) },
-          { title: "Lunch", places: dayPlanPlaces.lunch.slice(0, 2).map(toMini) },
-          { title: "Dinner", places: dayPlanPlaces.dinner.slice(0, 2).map(toMini) },
-          { title: "Things to do", places: dayPlanPlaces.activities.slice(0, 2).map(toMini) },
+          { title: "Breakfast", places: breakfast.map(toMini) },
+          { title: "Lunch", places: lunch.map(toMini) },
+          { title: "Dinner", places: dinner.map(toMini) },
+          { title: "Things to do", places: activities.map(toMini) },
         ],
         model: "fast-itinerary",
       };
@@ -727,9 +800,11 @@ export async function POST(req: Request) {
 
     if (fastPathEnabled && (wantsLocal || wantsWeather) && !wantsDayPlan) {
       if (wantsLocal) {
+        const rot = wantsMoreOptions ? Math.max(0, variant) : 0;
+        const rotated = rotate(livePlaces, rot);
         const payload: ChatOkResponse = {
           kind: "places",
-          places: livePlaces.slice(0, 5).map((p) => ({
+          places: rotated.slice(0, 5).map((p) => ({
             name: p.name,
             cuisine: inferCuisine(p),
             formattedAddress: p.formattedAddress,
@@ -810,7 +885,11 @@ export async function POST(req: Request) {
       weatherSummary,
       weatherSummary ? "" : null,
       "If the guest asks about the local area:",
-      "- Recommend places ONLY from the list above. Do not invent places.",
+      "- Prefer recommending places from the Live local search results above.",
+      "- If the live list is empty or irrelevant, do NOT say you can't help. Instead:",
+      "  - Suggest useful categories (e.g. museums, galleries, indoor markets, breweries, aquariums, bowling, escape rooms, cinemas, spas),",
+      "  - Ask one concise clarifying question (e.g. budget, distance, vibe),",
+      "  - Offer to try again with refined criteria.",
       "- Provide 2–5 options unless the guest asked for one.",
       "- For every recommended place, include direct links when available: add `Website: <url>` and `Maps: <url>`.",
       "- Prefer a compact, scannable format using ` | ` separators (e.g. `1) Name | Address: ... | Website: ... | Maps: ...`).",
@@ -853,21 +932,13 @@ export async function POST(req: Request) {
       throw e;
     }
   } catch (e) {
-    if (isOverloadedError(e)) {
-      const retryAfterMs = Math.max(
-        500,
-        Number(process.env.CHAT_OVERLOADED_RETRY_AFTER_MS || 2500)
-      );
-      const payload: OverloadedError = {
-        code: "OVERLOADED",
-        message:
-          "High demand right now. Please wait a moment and try again (Pillar will also retry automatically).",
-        retryAfterMs,
-      };
-      return Response.json(payload, { status: 503 });
-    }
-
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return Response.json({ error: message }, { status: 500 });
+    console.error("[chat] request failed", e);
+    return Response.json(
+      {
+        error:
+          "Oh No! We apologize for this inconvience, and are actively working on fixing this issue",
+      },
+      { status: 500 }
+    );
   }
 }

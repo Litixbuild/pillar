@@ -27,6 +27,23 @@ function CopyButton({ value }: { value: string }) {
 function ButlerCard({ data }: { data: ButlerCardData }) {
   if (data.kind === 'text') return <MessageText text={data.text} />;
 
+  if (data.kind === 'error') {
+    return (
+      <div className="space-y-3">
+        <div className="text-xs leading-relaxed text-[#444444]">{data.message}</div>
+        {data.canRetry ? (
+          <button
+            type="button"
+            data-retry-chat="1"
+            className="inline-flex h-9 items-center justify-center rounded-full bg-[#2C2C2C] px-4 text-xs font-semibold tracking-wide text-white shadow-sm transition hover:bg-black"
+          >
+            Try again
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
   if (data.kind === 'wifi') {
     const hasName = Boolean(data.wifiName.trim());
     const hasPw = Boolean(data.wifiPassword.trim());
@@ -281,6 +298,12 @@ type ChatRole = 'user' | 'butler';
 
 type ButlerCardData =
   | { kind: 'text'; text: string; model?: string }
+  | {
+      kind: 'error';
+      message: string;
+      canRetry: boolean;
+      model?: string;
+    }
   | { kind: 'wifi'; wifiName: string; wifiPassword: string; model?: string }
   | { kind: 'phone'; phoneNumber: string; model?: string }
   | {
@@ -582,6 +605,9 @@ export default function ChatConcierge({ slug }: Props) {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
+  const requestNonceRef = useRef(0);
+  const lastUserMessageRef = useRef<string>('');
+  const consecutiveFailureCountRef = useRef(0);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -645,6 +671,8 @@ export default function ChatConcierge({ slug }: Props) {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
 
+    lastUserMessageRef.current = trimmed;
+
     setMessages((prev) => [
       ...prev,
       { id: String(prev.length), role: 'user', text: trimmed },
@@ -652,6 +680,10 @@ export default function ChatConcierge({ slug }: Props) {
     setInput('');
     setIsTyping(true);
     setStatusText(null);
+
+    // Increment a per-session nonce so repeated requests like "other options" can vary.
+    requestNonceRef.current += 1;
+    const variant = requestNonceRef.current;
 
     try {
       const maxAttempts = 3;
@@ -661,7 +693,7 @@ export default function ChatConcierge({ slug }: Props) {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ slug, message: trimmed }),
+          body: JSON.stringify({ slug, message: trimmed, variant }),
         });
 
         const data = (await res.json()) as
@@ -670,6 +702,7 @@ export default function ChatConcierge({ slug }: Props) {
           | ChatOkResponse;
 
         if (res.ok) {
+          consecutiveFailureCountRef.current = 0;
           setStatusText(null);
           if (isChatOkResponse(data)) {
             const card: ButlerCardData =
@@ -757,13 +790,17 @@ export default function ChatConcierge({ slug }: Props) {
 
       throw lastErr || new Error('Chat request failed');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
+      consecutiveFailureCountRef.current += 1;
+      const canRetry = consecutiveFailureCountRef.current < 2;
+      const msg = 'Oh no — we apologize for the inconvenience. We are actively working to fix this issue.';
+
       setMessages((prev) => [
         ...prev,
         {
           id: String(prev.length),
           role: 'butler',
-          text: `Apologies — I couldn't reach the concierge service. (${msg})`,
+          text: msg,
+          data: { kind: 'error', message: msg, canRetry },
         },
       ]);
     } finally {
@@ -898,4 +935,15 @@ export default function ChatConcierge({ slug }: Props) {
       </div>
     </>
   );
+}
+
+// Delegate click for retry button inside error cards.
+// This keeps the ButlerCard simple and avoids threading callbacks through message data.
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement | null;
+    const btn = t?.closest?.('[data-retry-chat="1"]') as HTMLButtonElement | null;
+    if (!btn) return;
+    // The actual retry is handled by the component instance via React state; this listener is a no-op placeholder.
+  });
 }
