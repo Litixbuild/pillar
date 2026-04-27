@@ -2,10 +2,7 @@ import Airtable from 'airtable';
 
 // Cache the Airtable base + property lookups to reduce repeated network latency.
 let cachedBase: ReturnType<Airtable['base']> | null = null;
-const propertyBySlugCache = new Map<
-  string,
-  { atMs: number; value: Property | null }
->();
+const propertyBySlugCache = new Map<string, { atMs: number; value: Property | null }>();
 
 function firstNonEmptyEnv(...names: string[]): string | undefined {
   for (const name of names) {
@@ -75,6 +72,137 @@ export interface Property {
   PoolHeater?: string;
   Television?: string;
   CoffeeMachine?: string;
+}
+
+export type AirtableFieldValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<Record<string, unknown>>;
+
+export type AirtableFields = Record<string, AirtableFieldValue>;
+
+export type ManagerLayoutItem = {
+  field: string;
+};
+
+function getPropertiesLayoutFieldName(): string {
+  return (process.env.AIRTABLE_PROPERTIES_LAYOUT_FIELD || 'ManagerLayout').trim();
+}
+
+export function parseManagerLayout(raw: unknown): ManagerLayoutItem[] {
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try {
+    const data = JSON.parse(raw) as unknown;
+    if (!Array.isArray(data)) return [];
+    return data
+      .map((x) => {
+        if (!x || typeof x !== 'object') return null;
+        const f = (x as { field?: unknown }).field;
+        if (typeof f !== 'string' || !f.trim()) return null;
+        return { field: f.trim() } satisfies ManagerLayoutItem;
+      })
+      .filter((x): x is ManagerLayoutItem => Boolean(x));
+  } catch {
+    return [];
+  }
+}
+
+export async function getPropertyFieldsBySlug(
+  slug: string
+): Promise<AirtableFields | null> {
+  const base = getBase();
+  const tableName = getPropertiesTableName();
+  const slugFieldName = getPropertiesSlugFieldName();
+
+  const sanitizedSlug = slug.trim().replace(/'/g, "\\'");
+  const records = await base(tableName)
+    .select({
+      filterByFormula: `{${slugFieldName}} = '${sanitizedSlug}'`,
+      maxRecords: 1,
+    })
+    .firstPage();
+
+  if (!records.length) return null;
+  const fields = records[0].fields as Record<string, unknown>;
+  return fields as AirtableFields;
+}
+
+export async function getManagerLayoutBySlug(
+  slug: string
+): Promise<ManagerLayoutItem[] | null> {
+  const fields = await getPropertyFieldsBySlug(slug);
+  if (!fields) return null;
+  const layoutField = getPropertiesLayoutFieldName();
+  return parseManagerLayout(fields[layoutField]);
+}
+
+export async function setManagerLayoutBySlug(
+  slug: string,
+  items: ManagerLayoutItem[]
+): Promise<void> {
+  const base = getBase();
+  const tableName = getPropertiesTableName();
+  const slugFieldName = getPropertiesSlugFieldName();
+  const layoutField = getPropertiesLayoutFieldName();
+
+  const sanitizedSlug = slug.trim().replace(/'/g, "\\'");
+  const records = await base(tableName)
+    .select({
+      filterByFormula: `{${slugFieldName}} = '${sanitizedSlug}'`,
+      maxRecords: 1,
+    })
+    .firstPage();
+
+  if (!records.length) {
+    throw new Error('Property not found');
+  }
+
+  const recordId = records[0].id;
+  try {
+    await base(tableName).update([
+      {
+        id: recordId,
+        fields: {
+          [layoutField]: serializeManagerLayout(items),
+        },
+      },
+    ]);
+  } catch (e) {
+    const err = e as unknown;
+    const statusCode =
+      typeof err === 'object' && err && 'statusCode' in err
+        ? (err as { statusCode?: unknown }).statusCode
+        : undefined;
+    const airtableMessage =
+      typeof err === 'object' && err && 'message' in err
+        ? (err as { message?: unknown }).message
+        : undefined;
+    const nestedErrorMessage =
+      typeof err === 'object' && err && 'error' in err
+        ? (err as { error?: { message?: unknown } }).error?.message
+        : undefined;
+
+    const message =
+      (err instanceof Error ? err.message : undefined) ||
+      (typeof nestedErrorMessage === 'string' ? nestedErrorMessage : undefined) ||
+      (typeof airtableMessage === 'string' ? airtableMessage : undefined) ||
+      'Unknown Airtable error';
+
+    throw new Error(
+      `Failed to update Airtable layout field '${layoutField}' on table '${tableName}' for slug '${slug.trim()}': ${typeof statusCode === 'number' ? `HTTP ${statusCode}: ` : ''}${message}`
+    );
+  }
+}
+
+export function serializeManagerLayout(items: ManagerLayoutItem[]): string {
+  return JSON.stringify(
+    items
+      .map((x) => ({ field: typeof x.field === 'string' ? x.field.trim() : '' }))
+      .filter((x) => x.field)
+  );
 }
 
 export async function getPropertiesByManagerEmail(email: string): Promise<Property[]> {

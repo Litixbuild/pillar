@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import ChatConcierge from '@/components/ChatConcierge';
+import CopyPasswordButton from './CopyPasswordButton';
+import type { AirtableFields, ManagerLayoutItem, Property } from '@/lib/airtable';
 
 function ChevronLeft({ className }: { className?: string }) {
   return (
@@ -19,6 +22,38 @@ function ChevronLeft({ className }: { className?: string }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return <h2 className="text-base text-white">{children}</h2>;
+}
+
+function GlassCard({ children }: { children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-white/20 bg-white/12 p-6 shadow-xl backdrop-blur-sm">
+      {children}
+    </section>
   );
 }
 
@@ -49,45 +84,16 @@ function AmenityRow({
     </div>
   );
 }
-import ChatConcierge from '@/components/ChatConcierge';
-import CopyPasswordButton from './CopyPasswordButton';
-import type { AirtableFields, ManagerLayoutItem, Property } from '@/lib/airtable';
 
-
-function SectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <h2 className="text-base text-white">
-      {children}
-    </h2>
-  );
+function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
+  return Array.isArray(v) && v.every((x) => x && typeof x === 'object');
 }
 
-function GlassCard({ children }: { children: ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-white/20 bg-white/12 p-6 shadow-xl backdrop-blur-sm">
-      {children}
-    </section>
-  );
-}
-
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M9 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+function guessAttachmentKind(url: string): 'image' | 'video' | 'other' {
+  const u = url.toLowerCase();
+  if (/(\.mp4|\.mov|\.webm)(\?|$)/.test(u)) return 'video';
+  if (/(\.png|\.jpg|\.jpeg|\.webp|\.gif)(\?|$)/.test(u)) return 'image';
+  return 'other';
 }
 
 export default function PropertyExperience({
@@ -95,15 +101,23 @@ export default function PropertyExperience({
   property,
   managerLayout,
   rawFields,
+  editableCustomWindows = false,
+  onAddWindow,
+  onRemoveWindow,
+  onReorderWindows,
 }: {
   slug: string;
   property: Property;
   managerLayout: ManagerLayoutItem[];
   rawFields: AirtableFields;
+  editableCustomWindows?: boolean;
+  onAddWindow?: () => void;
+  onRemoveWindow?: (index: number) => void;
+  onReorderWindows?: (fromIndex: number, toIndex: number) => void;
 }) {
   const PREVIEW_FADE_MS = 450;
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(editableCustomWindows ? true : false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [fullView, setFullView] = useState<'content' | 'amenities'>('content');
   const [isFullViewTransitioning, setIsFullViewTransitioning] = useState(false);
@@ -117,21 +131,16 @@ export default function PropertyExperience({
   const bio = property.DetailedHouseBio || '';
   const wordCount = bio.trim() ? bio.trim().split(/\s+/).length : 0;
 
-  // Continuous sizing based on Airtable word count.
-  // Roughly: ~18 words/line at this font size; clamp to keep it sane.
   const previewLines = Math.max(3, Math.min(12, Math.ceil(wordCount / 18) || 3));
   const previewMinHeightRem = Math.max(10, Math.min(26, 7.5 + previewLines * 1.55));
 
-  // Keep title block above the actual rendered sheet (bio length varies per property).
-  // Use word-count based estimate as a fallback until we can measure.
   const previewSheetHeightFallbackPx = previewMinHeightRem * 16;
-  const previewSheetOuterPaddingBottomPx = 24; // matches the pb-6 on the fixed preview container
+  const previewSheetOuterPaddingBottomPx = 24;
   const previewTitleGapPx = 36;
   const previewSheetBottomPx =
     (previewSheetHeightPx ?? previewSheetHeightFallbackPx) +
     previewSheetOuterPaddingBottomPx +
     previewTitleGapPx;
-  // No truncation: always show the full bio. (We may cap max-height + scroll for extremely long bios.)
 
   const backgroundUrl = useMemo(
     () => property.HeroImage || '/images/heroimage.jpg',
@@ -140,7 +149,6 @@ export default function PropertyExperience({
 
   useEffect(() => {
     if (!expanded) return;
-    // Ensure the "new page" feels like a fresh view (no leftover scroll position).
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [expanded]);
 
@@ -167,35 +175,33 @@ export default function PropertyExperience({
 
   return (
     <div className={`min-h-screen bg-[#F9F7F2] font-sans ${rootOverflow}`}>
-      {/* Full-screen hero background */}
       <div
         className="pointer-events-none fixed inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${backgroundUrl})` }}
       />
-      {/* Subtle gradient for legibility */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-black/25 via-black/35 to-black/65" />
 
-      {/* Temporary Property Manager logo (preview screen only) */}
-      {!expanded ? (
-        <div
-          className={
-            'pointer-events-none fixed inset-x-0 top-10 z-[22] mx-auto flex w-full max-w-md justify-center px-6 transition-opacity duration-[450ms] ease-in-out ' +
-            previewOpacityClass
-          }
-          style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/pillarlogowhite.png"
-            alt="Property Manager"
-            className="h-60 w-auto opacity-95 drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] sm:h-72"
-          />
+      {editableCustomWindows ? (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[30] mx-auto w-full max-w-md px-6 pt-4">
+          <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/15 bg-black/20 px-4 py-2.5 text-white backdrop-blur-md">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Edit mode</div>
+            <div className="flex items-center gap-3">
+              <div className="text-[11px] font-semibold text-white/70">Reorder: drag or use ↑↓</div>
+              <button
+                type="button"
+                onClick={onAddWindow}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white hover:bg-white/15"
+              >
+                <span className="text-base leading-none">+</span>
+                Add window
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
       {!expanded ? (
         <>
-          {/* Background-only top so the house reads visually */}
           <div
             className="relative mx-auto flex min-h-screen max-w-md flex-col px-6"
             style={{ paddingBottom: `${previewSheetBottomPx}px` }}
@@ -203,7 +209,6 @@ export default function PropertyExperience({
             <header className="h-[70vh] w-full" />
           </div>
 
-          {/* Always-visible title block (stays above the sheet) */}
           <div
             className={
               'fixed inset-x-0 z-[21] mx-auto w-full max-w-md px-6 transition-[bottom,opacity] duration-300 ease-out ' +
@@ -217,19 +222,15 @@ export default function PropertyExperience({
                   {property.PropertyAddress}
                 </p>
               ) : null}
-              <h1 className="text-3xl text-white">
-                {property.PropertyName}
-              </h1>
+              <h1 className="text-3xl text-white">{property.PropertyName}</h1>
             </div>
           </div>
 
-          {/* Bottom frosted preview */}
           <div className="fixed inset-x-0 bottom-0 z-[20] mx-auto w-full max-w-md px-6 pb-6">
             <button
               data-preview-sheet="1"
               type="button"
               onClick={() => {
-                // Cross-fade: fade OUT the preview screen, then mount the full view and fade it IN.
                 setIsTransitioning(true);
                 window.setTimeout(() => setExpanded(true), PREVIEW_FADE_MS);
                 window.setTimeout(() => setIsTransitioning(false), PREVIEW_FADE_MS * 2);
@@ -242,7 +243,10 @@ export default function PropertyExperience({
               aria-label="Open full property details"
             >
               <div className="min-w-0">
-                <div className="text-sm leading-relaxed text-white/85" style={{ maxHeight: 'calc(70vh - 3rem)', overflow: 'auto' }}>
+                <div
+                  className="text-sm leading-relaxed text-white/85"
+                  style={{ maxHeight: 'calc(70vh - 3rem)', overflow: 'auto' }}
+                >
                   {property.DetailedHouseBio || 'Welcome. Tap to view house details.'}
                 </div>
               </div>
@@ -256,9 +260,7 @@ export default function PropertyExperience({
 
       {expanded ? (
         <>
-          {/* Foreground content */}
           <div className="relative">
-            {/* CONTENT screen */}
             <div
               className={
                 'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-[450ms] ease-in-out ' +
@@ -266,12 +268,13 @@ export default function PropertyExperience({
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100')
               }
-              style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
+              style={{
+                transitionDuration: `${PREVIEW_FADE_MS}ms`,
+                paddingTop: editableCustomWindows ? '56px' : undefined,
+              }}
             >
-              {/* Hero spacer (lets background read like a hero) */}
               <header className="h-[38vh] w-full flex-none" />
 
-              {/* Floating panel */}
               <div className="-mt-16 flex min-h-0 flex-1 flex-col space-y-6 overflow-auto pb-10">
                 <div className="space-y-2">
                   {property.PropertyAddress ? (
@@ -279,12 +282,9 @@ export default function PropertyExperience({
                       {property.PropertyAddress}
                     </p>
                   ) : null}
-                  <h1 className="text-3xl text-white">
-                    {property.PropertyName}
-                  </h1>
+                  <h1 className="text-3xl text-white">{property.PropertyName}</h1>
                 </div>
 
-                {/* Home Amenities */}
                 <button
                   type="button"
                   onClick={() => {
@@ -297,9 +297,7 @@ export default function PropertyExperience({
                   className="group flex w-full items-center justify-between gap-4 rounded-2xl border border-white/20 bg-white/12 px-6 py-5 text-left shadow-xl backdrop-blur-sm transition hover:bg-white/14"
                 >
                   <div>
-                    <div className="lux-title text-base text-white">
-                      Home Amenities
-                    </div>
+                    <div className="lux-title text-base text-white">Home Amenities</div>
                     <div className="mt-1 text-sm text-white/75">
                       WiFi, Garage Code, Pool Heater, Television, Coffee Machine
                     </div>
@@ -323,29 +321,31 @@ export default function PropertyExperience({
                 {managerLayout.length ? (
                   <GlassCard>
                     <div className="space-y-4">
-                      <SectionTitle>Amenities</SectionTitle>
+                      <div className="flex items-center justify-between gap-3">
+                        <SectionTitle>Amenities</SectionTitle>
+                        {editableCustomWindows ? (
+                          <button
+                            type="button"
+                            onClick={onAddWindow}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-lg font-semibold text-white hover:bg-white/15"
+                            aria-label="Add window"
+                            title="Add window"
+                          >
+                            +
+                          </button>
+                        ) : null}
+                      </div>
+
                       <div className="space-y-4">
                         {managerLayout.map((item, idx) => {
                           const key = (item.field || '').trim();
                           if (!key) return null;
                           const value = (rawFields as Record<string, unknown>)[key];
 
-                          const isAttachmentArray = (v: unknown): v is Array<Record<string, unknown>> =>
-                            Array.isArray(v) && v.every((x) => x && typeof x === 'object');
-
-                          const guessAttachmentKind = (url: string): 'image' | 'video' | 'other' => {
-                            const u = url.toLowerCase();
-                            if (/(\.mp4|\.mov|\.webm)(\?|$)/.test(u)) return 'video';
-                            if (/(\.png|\.jpg|\.jpeg|\.webp|\.gif)(\?|$)/.test(u)) return 'image';
-                            return 'other';
-                          };
-
                           const renderValue = () => {
                             if (typeof value === 'string') {
                               return value.trim() ? (
-                                <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">
-                                  {value}
-                                </p>
+                                <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">{value}</p>
                               ) : (
                                 <p className="text-sm text-white/70">(empty)</p>
                               );
@@ -399,11 +399,65 @@ export default function PropertyExperience({
                           };
 
                           return (
-                            <div key={`${key}-${idx}`} className="space-y-2">
-                              <div className="text-xs font-medium uppercase tracking-[0.2em] text-white/65">
-                                {key}
+                            <div
+                              key={`${key}-${idx}`}
+                              className={editableCustomWindows ? 'rounded-xl border border-white/10 p-3' : 'space-y-2'}
+                              draggable={editableCustomWindows}
+                              onDragStart={(e) => {
+                                if (!editableCustomWindows) return;
+                                e.dataTransfer.setData('text/plain', String(idx));
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
+                              onDragOver={(e) => {
+                                if (!editableCustomWindows) return;
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                              }}
+                              onDrop={(e) => {
+                                if (!editableCustomWindows) return;
+                                e.preventDefault();
+                                const from = Number(e.dataTransfer.getData('text/plain'));
+                                const to = idx;
+                                if (Number.isFinite(from) && onReorderWindows) {
+                                  onReorderWindows(from, to);
+                                }
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="text-xs font-medium uppercase tracking-[0.2em] text-white/65">
+                                  {key}
+                                </div>
+                                {editableCustomWindows ? (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))}
+                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                                      aria-label="Move up"
+                                      title="Move up"
+                                    >
+                                      ↑
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))}
+                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                                      aria-label="Move down"
+                                      title="Move down"
+                                    >
+                                      ↓
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => onRemoveWindow?.(idx)}
+                                      className="text-xs font-semibold text-white/70 underline decoration-white/30 underline-offset-4 hover:decoration-white/60"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ) : null}
                               </div>
-                              {renderValue()}
+                              <div className="mt-2">{renderValue()}</div>
                             </div>
                           );
                         })}
@@ -417,9 +471,7 @@ export default function PropertyExperience({
                     <div className="space-y-3">
                       <SectionTitle>Property Manager</SectionTitle>
                       <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/65">
-                          Contact
-                        </p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/65">Contact</p>
                         <a
                           href={`tel:${property.ManagerPhone}`}
                           className="inline-flex items-center gap-2 text-sm font-medium text-white underline decoration-white/40 underline-offset-4 hover:decoration-white/70"
@@ -435,7 +487,6 @@ export default function PropertyExperience({
               </div>
             </div>
 
-            {/* AMENITIES screen */}
             <div
               className={
                 'absolute inset-0 transition-opacity duration-[900ms] ease-in-out ' +
@@ -469,7 +520,6 @@ export default function PropertyExperience({
                       Home Amenities
                     </div>
 
-                    {/* spacer to keep title centered (matches back button width) */}
                     <div className="h-10 w-10 flex-none" />
                   </div>
 
@@ -478,9 +528,7 @@ export default function PropertyExperience({
                       title="WiFi"
                       open={openAmenity === 'wifi'}
                       onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) =>
-                          v === 'wifi' ? null : 'wifi'
-                        )
+                        setOpenAmenity((v: typeof openAmenity) => (v === 'wifi' ? null : 'wifi'))
                       }
                     >
                       <div className="space-y-3">
@@ -513,9 +561,7 @@ export default function PropertyExperience({
                           <p className="font-mono text-sm text-white/90 whitespace-pre-wrap">{property.GarageCode}</p>
                         </div>
                       ) : (
-                        <div className="text-sm text-white/75">
-                          Garage code not provided in Airtable.
-                        </div>
+                        <div className="text-sm text-white/75">Garage code not provided in Airtable.</div>
                       )}
                     </AmenityRow>
 
@@ -536,9 +582,7 @@ export default function PropertyExperience({
                           </video>
                         </div>
                       ) : (
-                        <div className="text-sm text-white/75">
-                          Pool heater video not provided in Airtable.
-                        </div>
+                        <div className="text-sm text-white/75">Pool heater video not provided in Airtable.</div>
                       )}
                     </AmenityRow>
 
@@ -559,9 +603,7 @@ export default function PropertyExperience({
                           </video>
                         </div>
                       ) : (
-                        <div className="text-sm text-white/75">
-                          Television video not provided in Airtable.
-                        </div>
+                        <div className="text-sm text-white/75">Television video not provided in Airtable.</div>
                       )}
                     </AmenityRow>
 
@@ -603,7 +645,6 @@ export default function PropertyExperience({
             </div>
           </div>
 
-          {/* AI Concierge (full view only) */}
           {!isTransitioning ? (
             <div className="transition-opacity duration-[900ms] ease-in-out">
               <ChatConcierge slug={slug} />

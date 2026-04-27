@@ -58,7 +58,11 @@ export default async function ManagerDashboardPage() {
                     key={`${p.PropertyName}-${p.PropertyAddress}`}
                     className="rounded-2xl border border-black/5 bg-white/70 p-4 transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
                   >
-                    <div className="lux-title text-base">{p.PropertyName || "—"}</div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="lux-title text-base">{p.PropertyName || "—"}</div>
+                      </div>
+                    </div>
                     <div className="mt-1 text-xs text-black/55 dark:text-white/65">
                       {(p.PropertyAddress || "").trim()}
                     </div>
@@ -73,11 +77,13 @@ export default async function ManagerDashboardPage() {
                             →
                           </span>
                         </Link>
-                      ) : (
+                      ) : null}
+
+                      {!href ? (
                         <span className="text-xs text-black/50 dark:text-white/50">
                           (Missing Slug field in Airtable record)
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 );
