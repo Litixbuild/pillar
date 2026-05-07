@@ -21,7 +21,7 @@ export function getManagerCookieName() {
   return COOKIE_NAME;
 }
 
-export function signManagerSession(payload: { email: string; name?: string; iat: number }): string {
+export function signManagerSession(payload: { email: string; name?: string; userId?: string; iat: number }): string {
   const json = JSON.stringify(payload);
   const b64 = Buffer.from(json, "utf8").toString("base64url");
   const h = crypto
@@ -31,7 +31,7 @@ export function signManagerSession(payload: { email: string; name?: string; iat:
   return `${b64}.${h}`;
 }
 
-export function verifyManagerSession(token: string): { email: string; name?: string; iat: number } | null {
+export function verifyManagerSession(token: string): { email: string; name?: string; userId?: string; iat: number } | null {
   const secret = getSecretOrNull();
   if (!secret) return null;
   const [b64, sig] = token.split(".");
@@ -44,11 +44,12 @@ export function verifyManagerSession(token: string): { email: string; name?: str
 
   try {
     const json = Buffer.from(b64, "base64url").toString("utf8");
-    const data = JSON.parse(json) as { email?: unknown; name?: unknown; iat?: unknown };
+    const data = JSON.parse(json) as { email?: unknown; name?: unknown; userId?: unknown; iat?: unknown };
     if (typeof data.email !== "string" || typeof data.iat !== "number") return null;
     return {
       email: data.email,
       name: typeof data.name === "string" && data.name.trim() ? data.name.trim() : undefined,
+      userId: typeof data.userId === "string" ? data.userId : undefined,
       iat: data.iat,
     };
   } catch {

@@ -2,9 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
-    // Netlify/CI builds should not fail due to local lint config issues.
-    // Run `npm run lint` separately when you want lint enforcement.
     ignoreDuringBuilds: true,
+  },
+  webpack: (config) => {
+    // Prevent noisy Windows file events from triggering unnecessary restarts
+    config.watchOptions = {
+      ignored: ["**/node_modules/**", "**/.git/**", "**/.next/**"],
+      aggregateTimeout: 500,
+    };
+    return config;
   },
 };
 

@@ -1,14 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-function looksLikeIndoorQuestion(userMessage: string): boolean {
-  const m = userMessage.toLowerCase();
-  return (
-    m.includes('indoor') ||
-    m.includes('inside') ||
-    m.includes('rainy') ||
-    m.includes('rain')
-  );
-}
 
 function looksLikeMoreOptionsRequest(userMessage: string): boolean {
   const m = userMessage.toLowerCase();
@@ -51,7 +42,7 @@ function takeUniquePlaces(
   return out;
 }
 
-import { getPropertyBySlug } from "@/lib/airtable";
+import { getPropertyBySlug } from "@/lib/properties";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,6 +57,14 @@ type ChatRequestBody = {
   message: string;
   slug: string;
   variant?: number;
+  history?: Array<{ role: 'user' | 'model'; text: string }>;
+};
+
+type IntentResult = {
+  needsPlaces: boolean;
+  isDayPlan: boolean;
+  needsWeather: boolean;
+  placesQuery: string;
 };
 
 type LatLng = { lat: number; lng: number };
@@ -614,31 +613,136 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
   return [...enrichedTop, ...rest];
 }
 
+// AI-powered intent classifier — uses conversation history so follow-ups like
+// "spa sounds great" are understood in context rather than keyword-matched blindly.
+async function classifyWithAI(
+  genAI: GoogleGenerativeAI,
+  modelId: string,
+  history: Array<{ role: "user" | "model"; text: string }>,
+  message: string,
+  near: string
+): Promise<IntentResult> {
+  const ctx = history
+    .slice(-6)
+    .map((h) => `${h.role === "user" ? "Guest" : "Concierge"}: ${h.text.slice(0, 300)}`)
+    .join("\n");
+
+  const prompt = `You are classifying a hotel guest’s message to determine what data to fetch.
+Property location: ${near}
+
+Recent conversation:
+${ctx}
+
+Guest’s latest message: "${message}"
+
+Reply with ONLY valid JSON, no markdown fences:
+{"needsPlaces":boolean,"isDayPlan":boolean,"needsWeather":boolean,"placesQuery":"specific Google Places search query"}
+
+Rules:
+- needsPlaces: true if guest wants local recommendations (restaurant, spa, gym, museum, shop, activity, entertainment, etc.)
+- isDayPlan: true ONLY if guest explicitly asks for a full-day itinerary
+- needsWeather: true if guest asks about current weather or forecast
+- placesQuery: infer the ACTUAL intent from the FULL conversation — e.g. if earlier turns discussed wellness and guest now says "spa sounds great", return "spa near ${near}"
+- If needsPlaces is false, placesQuery can be an empty string`;
+
+  const model = genAI.getGenerativeModel({ model: modelId });
+  const result = await withOverloadRetry(() => model.generateContent(prompt));
+  const raw = result.response
+    .text()
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  const parsed = JSON.parse(raw) as Partial<IntentResult>;
+  return {
+    needsPlaces: parsed.needsPlaces === true,
+    isDayPlan: parsed.isDayPlan === true,
+    needsWeather: parsed.needsWeather === true,
+    placesQuery:
+      typeof parsed.placesQuery === "string" && parsed.placesQuery.trim()
+        ? parsed.placesQuery.trim()
+        : `${message} near ${near}`,
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Partial<ChatRequestBody>;
     const message = body.message?.toString().trim();
     const slug = body.slug?.toString().trim();
-    const variant = typeof body.variant === 'number' && Number.isFinite(body.variant) ? body.variant : 0;
+    const variant =
+      typeof body.variant === "number" && Number.isFinite(body.variant) ? body.variant : 0;
 
-    if (!message) {
-      return Response.json({ error: "Missing 'message'" }, { status: 400 });
-    }
-    if (!slug) {
-      return Response.json({ error: "Missing 'slug'" }, { status: 400 });
-    }
+    // Parse and validate conversation history sent from the frontend
+    const rawHistory = Array.isArray(body.history) ? body.history : [];
+    const history = (rawHistory as Array<{ role?: unknown; text?: unknown }>).filter(
+      (h): h is { role: "user" | "model"; text: string } =>
+        (h.role === "user" || h.role === "model") &&
+        typeof h.text === "string" &&
+        h.text.trim() !== ""
+    );
+    const hasHistory = history.length > 0;
+
+    if (!message) return Response.json({ error: "Missing ‘message’" }, { status: 400 });
+    if (!slug) return Response.json({ error: "Missing ‘slug’" }, { status: 400 });
 
     const property = await getPropertyBySlug(slug);
-    if (!property) {
-      return Response.json({ error: "Property not found" }, { status: 404 });
+    if (!property) return Response.json({ error: "Property not found" }, { status: 404 });
+
+    const near = `${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
+    const geminiKey = requireGeminiApiKey();
+    const modelId = getPinnedGeminiModelId();
+    const genAI = new GoogleGenerativeAI(geminiKey);
+
+    // ── Reliable fast paths: WiFi / phone / property profile ─────────────────
+    // These are stateless lookups that don’t need conversation context.
+    const propertyFastPathEnabled = (process.env.CHAT_PROPERTY_FAST_PATH || "1") !== "0";
+    if (propertyFastPathEnabled && looksLikePropertyInfoQuestion(message) && !hasHistory) {
+      if (looksLikeWifiQuestion(message) || looksLikeWifiPasswordQuestion(message)) {
+        return Response.json(
+          { kind: "wifi", wifiName: property.WiFiName || "", wifiPassword: property.WiFiPassword || "", model: "fast-wifi" } satisfies ChatOkResponse,
+          { status: 200 }
+        );
+      }
+      if (looksLikePhoneQuestion(message)) {
+        return Response.json(
+          { kind: "phone", phoneNumber: property.ManagerPhone || "", model: "fast-phone" } satisfies ChatOkResponse,
+          { status: 200 }
+        );
+      }
+      if (looksLikePropertyProfileQuestion(message)) {
+        return Response.json(
+          { kind: "property", address: property.PropertyAddress || "", zip: property.PropertyZipCode || "", houseRules: property.HouseRules || "", managerPhone: property.ManagerPhone || "", wifiName: property.WiFiName || "", model: "fast-property" } satisfies ChatOkResponse,
+          { status: 200 }
+        );
+      }
     }
 
-    const wantsLocal = looksLikeLocalBusinessQuestion(message);
-    const wantsDayPlan = wantsLocal && looksLikeDayPlanQuestion(message);
-    const wantsWeather = looksLikeWeatherQuestion(message);
-    const wantsPropertyInfo = looksLikePropertyInfoQuestion(message);
-    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
+    // ── Determine intent ──────────────────────────────────────────────────────
+    // When conversation history exists, use the AI to classify intent with full context.
+    // This prevents "spa sounds great" (a follow-up) from being matched as a keyword
+    // and returning irrelevant Google Places results.
+    let wantsLocal = looksLikeLocalBusinessQuestion(message);
+    let wantsDayPlan = wantsLocal && looksLikeDayPlanQuestion(message);
+    let wantsWeather = looksLikeWeatherQuestion(message);
+    let smartPlacesQuery = shapePlacesQuery(message, property);
 
+    if (hasHistory) {
+      try {
+        const intent = await classifyWithAI(genAI, modelId, history, message, near);
+        wantsLocal = intent.needsPlaces;
+        wantsDayPlan = intent.isDayPlan;
+        wantsWeather = intent.needsWeather;
+        if (intent.needsPlaces) smartPlacesQuery = intent.placesQuery;
+      } catch {
+        // Fall through with keyword-based detection
+      }
+    }
+
+    // ── Fetch live data ───────────────────────────────────────────────────────
+    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
     let livePlaces: PlaceResult[] = [];
     let dayPlanPlaces: {
       breakfast: PlaceResult[];
@@ -650,30 +754,27 @@ export async function POST(req: Request) {
 
     if (wantsLocal) {
       const placesKey = requireGooglePlacesApiKey();
-
-      const fetchPlaces = async (query: string): Promise<PlaceResult[]> => {
-        const raw = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, query));
-        // We only need a small set for the prompt; keep it deterministic.
-        return raw.slice(0, 8);
-      };
+      const fetchPlaces = async (query: string): Promise<PlaceResult[]> =>
+        (await withOverloadRetry(() => placesTextSearchLegacy(placesKey, query))).slice(0, 8);
 
       if (wantsDayPlan) {
-        const near = `${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
+        // When in a conversation, use the AI-refined query for activities so that
+        // preferences like "indoors" or "family-friendly" actually change what we fetch.
+        const activityQuery = hasHistory && smartPlacesQuery
+          ? smartPlacesQuery
+          : `things to do near ${near}`;
         const [breakfast, lunch, dinner, activities] = await Promise.all([
-          fetchPlaces(`breakfast near ${near}`.trim()),
-          fetchPlaces(`lunch near ${near}`.trim()),
-          fetchPlaces(`dinner restaurant near ${near}`.trim()),
-          fetchPlaces(`things to do near ${near}`.trim()),
+          fetchPlaces(`breakfast near ${near}`),
+          fetchPlaces(`lunch near ${near}`),
+          fetchPlaces(`dinner restaurant near ${near}`),
+          fetchPlaces(activityQuery),
         ]);
-
         dayPlanPlaces = {
           breakfast: filterPlacesForIntent("breakfast", breakfast),
           lunch: filterPlacesForIntent("lunch", lunch),
           dinner: filterPlacesForIntent("dinner", dinner),
           activities,
         };
-
-        // Also keep a merged list for any fast-path payloads / fallback prompt text.
         livePlaces = [
           ...dayPlanPlaces.breakfast,
           ...dayPlanPlaces.lunch,
@@ -681,161 +782,35 @@ export async function POST(req: Request) {
           ...dayPlanPlaces.activities,
         ];
       } else {
-        const q = shapePlacesQuery(message, property);
-        const rawPlaces = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, q));
+        const rawPlaces = await withOverloadRetry(() =>
+          fetchPlaces(smartPlacesQuery)
+        );
         livePlaces = filterPlacesForIntent(message, rawPlaces);
-
-        // If we got no results (or filtering removed everything), broaden the search so we stay helpful.
-        if (!livePlaces.length) {
-          const near = `${property.PropertyZipCode || ''} ${property.PropertyAddress || ''}`.trim();
-          const broad = looksLikeIndoorQuestion(message)
-            ? `indoor activities near ${near}`.trim()
-            : `things to do near ${near}`.trim();
-          const rawBroad = await withOverloadRetry(() => placesTextSearchLegacy(placesKey, broad));
-          livePlaces = rawBroad.slice(0, 8);
-        }
+        // When no results: do NOT fall back to "things to do" — that’s what returned parks
+        // when the guest asked about spas. Let the AI respond gracefully instead.
       }
     }
 
     if (wantsWeather) {
-      const latLng = await withOverloadRetry(() =>
-        openMeteoGeocodeZip(property.PropertyZipCode || "")
-      );
-      weatherJson = await withOverloadRetry(() => fetchOpenMeteoCurrent(latLng));
+      try {
+        const latLng = await withOverloadRetry(() =>
+          openMeteoGeocodeZip(property.PropertyZipCode || "")
+        );
+        weatherJson = await withOverloadRetry(() => fetchOpenMeteoCurrent(latLng));
+      } catch {
+        // Weather is optional; fall through
+      }
     }
 
-    const fastPathEnabled = (process.env.CHAT_FAST_PATH || "1") !== "0";
-    const propertyFastPathEnabled = (process.env.CHAT_PROPERTY_FAST_PATH || "1") !== "0";
-
-    if (propertyFastPathEnabled && wantsPropertyInfo && !wantsLocal && !wantsWeather) {
-      if (looksLikeWifiQuestion(message) || looksLikeWifiPasswordQuestion(message)) {
-        const payload: ChatOkResponse = {
-          kind: "wifi",
-          wifiName: property.WiFiName || "",
-          wifiPassword: property.WiFiPassword || "",
-          model: "fast-wifi",
-        };
-        return Response.json(payload, { status: 200 });
-      }
-
-      if (looksLikePhoneQuestion(message)) {
-        const payload: ChatOkResponse = {
-          kind: "phone",
-          phoneNumber: property.ManagerPhone || "",
-          model: "fast-phone",
-        };
-        return Response.json(payload, { status: 200 });
-      }
-
-      if (looksLikePropertyProfileQuestion(message)) {
-        const payload: ChatOkResponse = {
-          kind: "property",
-          address: property.PropertyAddress || "",
-          zip: property.PropertyZipCode || "",
-          houseRules: property.HouseRules || "",
-          managerPhone: property.ManagerPhone || "",
-          wifiName: property.WiFiName || "",
-          model: "fast-property",
-        };
-        return Response.json(payload, { status: 200 });
-      }
-
+    // Weather is pure data with no conversational nuance — fast-path is fine.
+    if (wantsWeather && weatherJson) {
       return Response.json(
-        {
-          kind: "text",
-          response:
-            "I can help with WiFi, manager contact, house rules, or the address. What exactly do you need?",
-          model: "fast-property",
-        } satisfies ChatOkResponse,
+        { kind: "weather", summary: summarizeWeather(weatherJson), model: "fast-weather" } satisfies ChatOkResponse,
         { status: 200 }
       );
     }
 
-    if (fastPathEnabled && wantsDayPlan && dayPlanPlaces) {
-      const toMini = (p: PlaceResult) => ({
-        name: p.name,
-        blurb: inferCuisine(p),
-        phone: p.phone,
-        googleMapsUri: p.googleMapsUri,
-      });
-
-      // Rotate results when the guest asks for other options, and ensure we never repeat a place
-      // across breakfast/lunch/dinner/activities within a single payload.
-      const rot = wantsMoreOptions ? Math.max(0, variant) : 0;
-      const used = new Set<string>();
-      const breakfast = takeUniquePlaces(rotate(dayPlanPlaces.breakfast, rot), used, 2);
-      const activities = takeUniquePlaces(rotate(dayPlanPlaces.activities, rot), used, 2);
-      const lunch = takeUniquePlaces(rotate(dayPlanPlaces.lunch, rot), used, 2);
-      const dinner = takeUniquePlaces(rotate(dayPlanPlaces.dinner, rot), used, 2);
-
-      const b1 = (breakfast[0]?.name || '').trim();
-      const l1 = (lunch[0]?.name || '').trim();
-      const d1 = (dinner[0]?.name || '').trim();
-      const a1 = (activities[0]?.name || '').trim();
-
-      const introParts = [
-        "I planned a relaxed day nearby for you.",
-        b1 ? `Start with breakfast at ${b1}.` : null,
-        a1 ? `Then I’d spend late morning at ${a1}.` : null,
-        l1 ? `For lunch, I’d do ${l1}.` : null,
-        d1 ? `And finish with dinner at ${d1}.` : null,
-      ].filter(Boolean);
-
-      const intro = introParts.join(" ");
-
-      const payload: ChatOkResponse = {
-        kind: "itinerary",
-        intro,
-        sections: [
-          { title: "Breakfast", places: breakfast.map(toMini) },
-          { title: "Lunch", places: lunch.map(toMini) },
-          { title: "Dinner", places: dinner.map(toMini) },
-          { title: "Things to do", places: activities.map(toMini) },
-        ],
-        model: "fast-itinerary",
-      };
-
-      return Response.json(payload, { status: 200 });
-    }
-
-    if (fastPathEnabled && (wantsLocal || wantsWeather) && !wantsDayPlan) {
-      if (wantsLocal) {
-        const rot = wantsMoreOptions ? Math.max(0, variant) : 0;
-        const rotated = rotate(livePlaces, rot);
-        const payload: ChatOkResponse = {
-          kind: "places",
-          places: rotated.slice(0, 5).map((p) => ({
-            name: p.name,
-            cuisine: inferCuisine(p),
-            formattedAddress: p.formattedAddress,
-            phone: p.phone,
-            websiteUri: p.websiteUri,
-            googleMapsUri: p.googleMapsUri,
-            rating: p.rating,
-          })),
-          model: "fast-places",
-        };
-        return Response.json(payload, { status: 200 });
-      }
-      if (wantsWeather) {
-        const weatherSummary = weatherJson ? summarizeWeather(weatherJson) : "(unavailable)";
-        const payload: ChatOkResponse = {
-          kind: "weather",
-          summary: weatherSummary,
-          model: "fast-weather",
-        };
-        return Response.json(payload, { status: 200 });
-      }
-      const payload: ChatOkResponse = {
-        kind: "text",
-        response: "—",
-        model: "fast-path",
-      };
-      return Response.json(payload, { status: 200 });
-    }
-
-    const geminiKey = requireGeminiApiKey();
-
+    // ── Gemini text response with full conversation history ───────────────────
     const fmtPlace = (p: PlaceResult) => {
       const parts = [
         p.name,
@@ -851,62 +826,73 @@ export async function POST(req: Request) {
     const placesText = dayPlanPlaces
       ? [
           "Breakfast options:",
-          ...(dayPlanPlaces.breakfast.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          ...dayPlanPlaces.breakfast.slice(0, 5).map(fmtPlace),
           "",
           "Lunch options:",
-          ...(dayPlanPlaces.lunch.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          ...dayPlanPlaces.lunch.slice(0, 5).map(fmtPlace),
           "",
           "Dinner options:",
-          ...(dayPlanPlaces.dinner.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          ...dayPlanPlaces.dinner.slice(0, 5).map(fmtPlace),
           "",
           "Things to do:",
-          ...(dayPlanPlaces.activities.slice(0, 5).map(fmtPlace) || ["- (none)"]),
+          ...dayPlanPlaces.activities.slice(0, 5).map(fmtPlace),
         ].join("\n")
       : livePlaces.length > 0
         ? livePlaces.slice(0, 5).map(fmtPlace).join("\n")
-        : "- (none)";
+        : null;
 
     const weatherSummary = weatherJson ? summarizeWeather(weatherJson) : null;
 
     const systemInstruction = [
-      "Your name is the Pillar. You are an elite, sophisticated concierge for a multi-million dollar estate.",
+      "You are Pillar — an intelligent, warm, and genuinely attentive concierge for a luxury private estate.",
       "",
-      "You have access to the following house data:",
-      `- WiFiName: ${property.WiFiName || ""}`,
-      `- WiFiPassword: ${property.WiFiPassword || ""}`,
-      `- DetailedHouseBio: ${property.DetailedHouseBio || ""}`,
-      `- PropertyAddress: ${property.PropertyAddress || ""}`,
-      `- PropertyZipCode: ${property.PropertyZipCode || ""}`,
+      "## MOST IMPORTANT RULE",
+      "Read the ENTIRE conversation history before every response. If the guest has expressed ANY preference, refinement, or correction — even a casual one like \"I’d rather stay indoors\", \"not a fan of seafood\", \"something quieter\", \"show me different ones\" — you MUST honor it immediately and completely. NEVER suggest something the guest has already rejected or said they don’t want. Adapt as if you were a real, attentive human concierge who actually listened.",
       "",
-      "Live local search results (Google Places):",
+      "## Property data",
+      `WiFi: ${property.WiFiName || "(not set)"}  |  Password: ${property.WiFiPassword || "(not set)"}`,
+      `Address: ${property.PropertyAddress || "(not set)"}  |  ZIP: ${property.PropertyZipCode || "(not set)"}`,
+      property.HouseRules ? `House rules: ${property.HouseRules}` : null,
+      property.DetailedHouseBio ? `About the property: ${property.DetailedHouseBio}` : null,
+      "",
+      placesText ? "## Live local data (Google Places — use these as your source)" : null,
       placesText,
       "",
-      weatherSummary ? "Live weather (current):" : null,
-      weatherSummary,
-      weatherSummary ? "" : null,
-      "If the guest asks about the local area:",
-      "- Prefer recommending places from the Live local search results above.",
-      "- If the live list is empty or irrelevant, do NOT say you can't help. Instead:",
-      "  - Suggest useful categories (e.g. museums, galleries, indoor markets, breweries, aquariums, bowling, escape rooms, cinemas, spas),",
-      "  - Ask one concise clarifying question (e.g. budget, distance, vibe),",
-      "  - Offer to try again with refined criteria.",
-      "- Provide 2–5 options unless the guest asked for one.",
-      "- For every recommended place, include direct links when available: add `Website: <url>` and `Maps: <url>`.",
-      "- Prefer a compact, scannable format using ` | ` separators (e.g. `1) Name | Address: ... | Website: ... | Maps: ...`).",
-      "Tone: elegant, concise, and professional.",
+      weatherSummary ? `## Live weather\n${weatherSummary}` : null,
+      "",
+      "## How to respond",
+      "- ALWAYS read and respect prior conversation turns. If a preference was stated earlier, apply it now.",
+      "- When you pivot based on feedback, acknowledge it naturally: \"Of course — here are some great indoor options instead:\"",
+      "- Format each place recommendation on its own line as: `N) Place Name | detail | Maps: URL` — this renders as a clickable card.",
+      "- For day plans, use clear time-of-day headers (Morning, Afternoon, Evening) then list places below each.",
+      "- If the live data above doesn’t match the guest’s preference (e.g. they want indoor but results show parks), say so honestly and suggest they ask you to refine it.",
+      "- For questions not covered by property data, use your broad knowledge helpfully.",
+      "- Be concise, warm, and specific. Never give a generic or templated answer.",
     ]
-      .filter(Boolean)
+      .filter((l): l is string => l !== null)
       .join("\n");
 
-    const genAI = new GoogleGenerativeAI(geminiKey);
-    const modelId = getPinnedGeminiModelId();
+    // Build Gemini chat history so the model has full conversation context
+    const geminiHistory = history
+      .filter((h) => h.text.trim())
+      .map((h) => ({ role: h.role, parts: [{ text: h.text }] }));
+
     const model = genAI.getGenerativeModel({ model: modelId, systemInstruction });
 
     try {
-      const result = await withOverloadRetry(() => model.generateContent(message));
-      const text = result.response.text();
-      const payload: ChatOkResponse = { kind: "text", response: text, model: modelId };
-      return Response.json(payload, { status: 200 });
+      let text: string;
+      if (geminiHistory.length > 0) {
+        const chat = model.startChat({ history: geminiHistory });
+        const result = await withOverloadRetry(() => chat.sendMessage(message));
+        text = result.response.text();
+      } else {
+        const result = await withOverloadRetry(() => model.generateContent(message));
+        text = result.response.text();
+      }
+      return Response.json(
+        { kind: "text", response: text, model: modelId } satisfies ChatOkResponse,
+        { status: 200 }
+      );
     } catch (e) {
       if (isOverloadedError(e)) {
         const vertexKey = getVertexApiKey();
@@ -918,13 +904,8 @@ export async function POST(req: Request) {
             systemInstruction,
             userText: message,
           });
-          const payload: ChatOkResponse = {
-            kind: "text",
-            response: text || "—",
-            model: `vertex:${vertexModel}`,
-          };
           return Response.json(
-            payload,
+            { kind: "text", response: text || "—", model: `vertex:${vertexModel}` } satisfies ChatOkResponse,
             { status: 200 }
           );
         }
@@ -934,10 +915,7 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error("[chat] request failed", e);
     return Response.json(
-      {
-        error:
-          "Oh No! We apologize for this inconvience, and are actively working on fixing this issue",
-      },
+      { error: "Oh No! We apologize for this inconvience, and are actively working on fixing this issue" },
       { status: 500 }
     );
   }

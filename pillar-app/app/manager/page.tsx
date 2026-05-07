@@ -1,9 +1,8 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getPropertiesByManagerEmail } from "@/lib/airtable";
+import { getPropertiesByManagerId } from "@/lib/properties";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
-import ManagerThemeToggle from "@/components/ManagerThemeToggle";
+import ManagerDashboardClient from "./ManagerDashboardClient";
 
 export const dynamic = "force-dynamic";
 
@@ -12,114 +11,84 @@ export default async function ManagerDashboardPage() {
   const token = jar.get(getManagerCookieName())?.value || "";
   const session = token ? verifyManagerSession(token) : null;
 
-  if (!session) {
+  if (!session?.userId) {
     redirect("/manager/login");
   }
 
-  const properties = await getPropertiesByManagerEmail(session.email);
-  const managerName =
-    (session.name || "").trim() ||
-    (properties.find((p) => (p.ManagerName || "").trim())?.ManagerName || "").trim();
+  const properties = await getPropertiesByManagerId(session.userId);
+  const managerName = (session.name || "").trim() || "Manager";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5F3EE] via-white to-[#F5F3EE] text-[#2C2C2C] dark:from-[#0F0F0F] dark:via-[#1B1B1B] dark:to-black dark:text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-6">
-        <div className="relative">
-          <div>
-            <h1 className="lux-title mt-2 text-3xl">Hello {managerName || "Manager"}</h1>
-          </div>
+    <div
+      className="min-h-screen text-white"
+      style={{ background: "linear-gradient(160deg, #070e17 0%, #0a1720 50%, #060d14 100%)" }}
+    >
+      {/* Ambient teal glow */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 90% 40% at 50% -5%, rgba(20,184,166,0.07) 0%, transparent 68%)",
+        }}
+      />
 
-          <div className="absolute right-0 top-0">
-            <ManagerThemeToggle className="shrink-0" />
-          </div>
+      <div className="relative mx-auto max-w-2xl px-5 pb-24 pt-8 sm:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-teal-400/50">
+            Manager Portal
+          </p>
+          <h1 className="mt-1 text-[1.75rem] font-light leading-tight tracking-tight text-white">
+            Hello, {managerName}
+          </h1>
         </div>
 
-        <div className="mt-12 grid gap-4">
-          <div className="rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur dark:border-white/10 dark:bg-white/5 dark:shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <div className="lux-title text-lg">Your properties</div>
-                <div className="mt-1 text-xs text-black/50 dark:text-white/60">
-                  Click a property to open the guest-facing experience.
-                </div>
-              </div>
-              <div className="whitespace-nowrap rounded-full bg-[#D4AF6A]/15 px-3 py-1 text-xs font-semibold text-[#7A5A1E] dark:text-[#E8D4A8]">
+        <div className="space-y-4">
+          {/* Properties card */}
+          <div className="overflow-hidden rounded-2xl border border-white/6 bg-[#0f1e2d]/80 shadow-[0_4px_32px_rgba(0,0,0,0.4)] backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-teal-400/60">
+                Your Properties
+              </p>
+              <span className="rounded-full border border-teal-500/20 bg-teal-500/8 px-2.5 py-0.5 text-[10px] font-semibold text-teal-300/60">
                 {properties.length} total
-              </div>
+              </span>
             </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {properties.map((p) => {
-                const slug = (p.Slug || "").trim();
-                const href = slug ? `/p/${slug}` : null;
-
-                return (
-                  <div
-                    key={`${p.PropertyName}-${p.PropertyAddress}`}
-                    className="rounded-2xl border border-black/5 bg-white/70 p-4 transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="lux-title text-base">{p.PropertyName || "—"}</div>
-                      </div>
-                    </div>
-                    <div className="mt-1 text-xs text-black/55 dark:text-white/65">
-                      {(p.PropertyAddress || "").trim()}
-                    </div>
-                    <div className="mt-3">
-                      {href ? (
-                        <Link
-                          href={href}
-                          className="inline-flex items-center gap-2 text-sm font-semibold text-[#7A5A1E] underline decoration-[#D4AF6A]/60 underline-offset-4 hover:decoration-[#D4AF6A] dark:text-[#E8D4A8]"
-                        >
-                          Open property
-                          <span aria-hidden>
-                            →
-                          </span>
-                        </Link>
-                      ) : null}
-
-                      {!href ? (
-                        <span className="text-xs text-black/50 dark:text-white/50">
-                          (Missing Slug field in Airtable record)
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {!properties.length ? (
-                <div className="text-sm text-black/60 dark:text-white/70">
-                  No properties found for this manager email.
-                </div>
-              ) : null}
+            <div className="p-6">
+              <ManagerDashboardClient properties={properties} />
             </div>
           </div>
 
-          <div className="rounded-3xl border border-black/5 bg-white/70 p-6 backdrop-blur dark:border-white/10 dark:bg-white/5">
-            <div className="lux-title text-lg">Billing</div>
-            <p className="mt-2 text-sm text-black/60 dark:text-white/70">
-              Stripe integration will live here. Once you add Stripe keys, we’ll enable subscription checkout + invoices.
-            </p>
-            <div className="mt-4 text-xs text-black/45 dark:text-white/55">
-              (Scaffold only — no payments are being collected yet.)
+          {/* Billing placeholder */}
+          <div className="overflow-hidden rounded-2xl border border-white/6 bg-[#0f1e2d]/80 shadow-[0_4px_32px_rgba(0,0,0,0.4)] backdrop-blur-sm">
+            <div className="border-b border-white/5 px-6 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-teal-400/60">
+                Billing
+              </p>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-white/40">
+                Stripe integration coming soon. Once connected, subscription checkout and invoices
+                will appear here.
+              </p>
+              <p className="mt-2 text-xs text-white/22">No payments are being collected yet.</p>
             </div>
           </div>
         </div>
 
-        <div className="pt-5">
-          <form action={"/api/manager/logout"} method="post" className="flex flex-col items-center gap-1.5">
+        {/* Sign out */}
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <form action="/api/manager/logout" method="post" className="w-full max-w-xs">
             <button
               type="submit"
-              className="inline-flex h-11 w-full max-w-xs items-center justify-center rounded-2xl bg-[#2C2C2C] text-sm font-semibold tracking-wide text-white shadow-lg transition hover:bg-black dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
+              className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-white/[0.07] bg-white/4 text-sm font-semibold text-white/55 transition-all duration-200 hover:bg-white/8 hover:text-white/75"
             >
               Sign out
             </button>
-            <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-black/40 dark:text-white/55">
-              Powered by Pillar
-            </div>
           </form>
+          <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/20">
+            Powered by Pillar
+          </p>
         </div>
       </div>
     </div>

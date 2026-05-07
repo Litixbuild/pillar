@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import { getManagerLayoutBySlug, getPropertyBySlug, getPropertyFieldsBySlug } from "@/lib/airtable";
+import { getManagerLayoutBySlug, getPropertyBySlug, getPropertyFieldsBySlug } from "@/lib/properties";
 import PropertyExperience from "@/components/property/PropertyExperience";
 
-// Force dynamic rendering to fetch data at request time
 export const dynamic = "force-dynamic";
 
 interface PageProps {

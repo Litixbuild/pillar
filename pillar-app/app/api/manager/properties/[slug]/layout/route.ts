@@ -1,11 +1,10 @@
 import { cookies } from "next/headers";
 import {
   getManagerLayoutBySlug,
-  getPropertiesByManagerEmail,
-  parseManagerLayout,
+  requirePropertyAccess,
   setManagerLayoutBySlug,
-  type ManagerLayoutItem,
-} from "@/lib/airtable";
+} from "@/lib/properties";
+import { parseManagerLayout, type ManagerLayoutItem } from "@/lib/types";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
 
 export const runtime = "nodejs";
@@ -14,16 +13,7 @@ export const dynamic = "force-dynamic";
 async function requireManagerSession() {
   const jar = await cookies();
   const token = jar.get(getManagerCookieName())?.value || "";
-  const session = token ? verifyManagerSession(token) : null;
-  if (!session) {
-    return null;
-  }
-  return session;
-}
-
-async function requirePropertyAccess(email: string, slug: string): Promise<boolean> {
-  const props = await getPropertiesByManagerEmail(email);
-  return props.some((p) => (p.Slug || "").trim() === slug.trim());
+  return token ? verifyManagerSession(token) : null;
 }
 
 export async function GET(
@@ -31,18 +21,18 @@ export async function GET(
   ctx: { params: Promise<{ slug: string }> }
 ) {
   const session = await requireManagerSession();
-  if (!session) {
+  if (!session?.userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { slug } = await ctx.params;
-  const ok = await requirePropertyAccess(session.email, slug);
+  const ok = await requirePropertyAccess(session.userId, slug);
   if (!ok) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const layout = await getManagerLayoutBySlug(slug);
-  if (!layout) {
+  if (layout === null) {
     return Response.json({ error: "Property not found" }, { status: 404 });
   }
 
@@ -52,21 +42,19 @@ export async function GET(
 export async function POST(req: Request, ctx: { params: Promise<{ slug: string }> }) {
   try {
     const session = await requireManagerSession();
-    if (!session) {
+    if (!session?.userId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { slug } = await ctx.params;
-    const ok = await requirePropertyAccess(session.email, slug);
+    const ok = await requirePropertyAccess(session.userId, slug);
     if (!ok) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = (await req.json().catch(() => null)) as
-      | { layout?: unknown }
-      | null;
-
+    const body = (await req.json().catch(() => null)) as { layout?: unknown } | null;
     const layoutRaw = body?.layout;
+
     const layout: ManagerLayoutItem[] = Array.isArray(layoutRaw)
       ? layoutRaw
           .map((x) => {

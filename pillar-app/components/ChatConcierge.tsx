@@ -2,396 +2,131 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+/* ─── Icons ──────────────────────────────────────────────────── */
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ClocheIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M4 14.5c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M3.5 16.5h17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 5.2V4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MapIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M9 18l-4 2V6l4-2 6 2 4-2v14l-4 2-6-2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 4v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15 6v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BikeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M5.5 17.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M18.5 17.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8.2 17.5l4.4-8h3.2l2 4.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.6 9.5H8.7L7.6 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SlidingTriggerIcon() {
+  return (
+    <div className="relative h-6 w-6 overflow-hidden">
+      <div className="flex h-6 w-24 animate-[conciergeIconSlide_4.2s_ease-in-out_infinite]">
+        <ClocheIcon className="h-6 w-6" />
+        <MapIcon className="h-6 w-6" />
+        <BikeIcon className="h-6 w-6" />
+        <ClocheIcon className="h-6 w-6" />
+      </div>
+      <style jsx>{`
+        @keyframes conciergeIconSlide {
+          0%, 22%  { transform: translateX(0px);   }
+          33%, 55% { transform: translateX(-24px);  }
+          66%, 88% { transform: translateX(-48px);  }
+          100%     { transform: translateX(-72px);  }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ButlerIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M4.5 18.5c1.3-2.9 4.1-4.8 7.5-4.8s6.2 1.9 7.5 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 10.2c0-2.3 1.8-4.2 4-4.2s4 1.9 4 4.2c0 2.3-1.8 4.1-4 4.1s-4-1.8-4-4.1Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9 6.4c.9-.7 1.9-1.1 3-1.1s2.1.4 3 1.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* ─── Typing indicator ───────────────────────────────────────── */
+
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60 [animation-delay:-0.2s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60 [animation-delay:-0.1s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60" />
+    </div>
+  );
+}
+
+/* ─── Copy button ────────────────────────────────────────────── */
+
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-
   return (
     <button
       type="button"
       onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(value);
-          setCopied(true);
-          window.setTimeout(() => setCopied(false), 1200);
-        } catch {
-          // ignore
-        }
+        try { await navigator.clipboard.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1200); }
+        catch { /* ignore */ }
       }}
-      className="rounded-full border border-[#D4AF6A]/35 bg-white/60 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-[#6E5A2E] hover:bg-white/80"
+      className="rounded-full border border-teal-500/22 bg-teal-500/8 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-teal-300/70 transition-all duration-200 hover:bg-teal-500/15 hover:text-teal-300"
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
   );
 }
 
-function ButlerCard({ data }: { data: ButlerCardData }) {
-  if (data.kind === 'text') return <MessageText text={data.text} />;
+/* ─── Google Maps mini button ────────────────────────────────── */
 
-  if (data.kind === 'error') {
-    return (
-      <div className="space-y-3">
-        <div className="text-xs leading-relaxed text-[#444444]">{data.message}</div>
-        {data.canRetry ? (
-          <button
-            type="button"
-            data-retry-chat="1"
-            className="inline-flex h-9 items-center justify-center rounded-full bg-[#2C2C2C] px-4 text-xs font-semibold tracking-wide text-white shadow-sm transition hover:bg-black"
-          >
-            Try again
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (data.kind === 'wifi') {
-    const hasName = Boolean(data.wifiName.trim());
-    const hasPw = Boolean(data.wifiPassword.trim());
-
-    return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm text-[#333333]">WiFi</div>
-        {hasName ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-[#444444]">
-              <span className="font-semibold">Network:</span> {data.wifiName}
-            </div>
-            <CopyButton value={data.wifiName} />
-          </div>
-        ) : null}
-        {hasPw ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-[#444444]">
-              <span className="font-semibold">Password:</span> {data.wifiPassword}
-            </div>
-            <CopyButton value={data.wifiPassword} />
-          </div>
-        ) : (
-          <div className="text-xs text-[#444444]">No WiFi password on file.</div>
-        )}
-      </div>
-    );
-  }
-
-  if (data.kind === 'phone') {
-    const tel = data.phoneNumber.replace(/[^\d+]/g, '');
-    return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm text-[#333333]">Manager Contact</div>
-        <div className="flex items-center justify-between gap-2">
-          <a
-            href={tel ? `tel:${tel}` : undefined}
-            className="text-xs text-[#444444] underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
-          >
-            {data.phoneNumber || '—'}
-          </a>
-          <CopyButton value={data.phoneNumber || ''} />
-        </div>
-      </div>
-    );
-  }
-
-  if (data.kind === 'weather') {
-    return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm text-[#333333]">Current Weather</div>
-        <div className="text-xs text-[#444444]">{data.summary || '—'}</div>
-      </div>
-    );
-  }
-
-  if (data.kind === 'property') {
-    return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm text-[#333333]">Property</div>
-        {data.address ? (
-          <div className="text-xs text-[#444444]">
-            <span className="font-semibold">Address:</span> {data.address}
-          </div>
-        ) : null}
-        {data.zip ? (
-          <div className="text-xs text-[#444444]">
-            <span className="font-semibold">ZIP:</span> {data.zip}
-          </div>
-        ) : null}
-        {data.managerPhone ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-[#444444]">
-              <span className="font-semibold">Manager Phone:</span> {data.managerPhone}
-            </div>
-            <CopyButton value={data.managerPhone} />
-          </div>
-        ) : null}
-        {data.houseRules ? (
-          <div className="text-xs text-[#444444] whitespace-pre-wrap">
-            <span className="font-semibold">House Rules:</span> {data.houseRules}
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (data.kind === 'places') {
-    if (!data.places.length) return <div className="text-xs text-[#444444]">No results.</div>;
-
-    return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm text-[#333333]">Nearby options</div>
-        <div className="space-y-2">
-          {data.places.map((p, idx) => (
-            <div
-              key={idx}
-              className="rounded-xl border border-[#D4AF6A]/30 bg-white/60 p-3 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="lux-title text-sm text-[#333333]">
-                    {(() => {
-                      const href = p.websiteUri || p.googleMapsUri;
-                      const title = (
-                        <>
-                          {p.name}{' '}
-                          {p.cuisine ? (
-                            <span className="text-xs font-normal italic text-[#666666]">
-                              ({p.cuisine})
-                            </span>
-                          ) : null}
-                        </>
-                      );
-
-                      return href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
-                        >
-                          {title}
-                        </a>
-                      ) : (
-                        title
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {p.googleMapsUri ? (
-                  <a
-                    href={p.googleMapsUri}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[#D4AF6A]/30 bg-white/80 shadow-sm hover:bg-white"
-                    aria-label="Open in Google Maps"
-                    title="Open in Google Maps"
-                  >
-                    <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-                      <path
-                        fill="#EA4335"
-                        d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z"
-                      />
-                      <path
-                        fill="#4285F4"
-                        d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z"
-                      />
-                    </svg>
-                  </a>
-                ) : null}
-              </div>
-
-              <div className="mt-1 space-y-1 text-xs text-[#444444]">
-                {typeof p.rating === 'number' ? <div>Rating: {p.rating}</div> : null}
-                {p.phone ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <div>{linkifyLine(`Phone: ${p.phone}`)}</div>
-                    <CopyButton value={p.phone} />
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (data.kind === 'itinerary') {
-    const sections = Array.isArray(data.sections) ? data.sections : [];
-    return (
-      <div className="space-y-3">
-        {data.intro ? (
-          <div className="text-xs leading-relaxed text-[#444444]">{data.intro}</div>
-        ) : null}
-        {sections.map((s, si) => (
-          <div key={si} className="space-y-2">
-            <div className="lux-title text-sm text-[#333333]">{s.title}</div>
-            <div className="space-y-2">
-              {(s.places || []).map((p, pi) => (
-                <div
-                  key={pi}
-                  className="rounded-xl border border-[#D4AF6A]/30 bg-white/60 p-3 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-[#333333]">{p.name || '—'}</div>
-                      {p.blurb ? (
-                        <div className="mt-0.5 text-xs text-[#666666]">{p.blurb}</div>
-                      ) : null}
-                      {p.phone ? (
-                        <div className="mt-1 flex items-center justify-between gap-2 text-xs text-[#444444]">
-                          <div>{linkifyLine(`Phone: ${p.phone}`)}</div>
-                          <CopyButton value={p.phone} />
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {p.googleMapsUri ? (
-                      <a
-                        href={p.googleMapsUri}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[#D4AF6A]/30 bg-white/80 shadow-sm hover:bg-white"
-                        aria-label="Open in Google Maps"
-                        title="Open in Google Maps"
-                      >
-                        <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-                          <path
-                            fill="#EA4335"
-                            d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z"
-                          />
-                          <path
-                            fill="#4285F4"
-                            d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z"
-                          />
-                          <path
-                            fill="#FBBC05"
-                            d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z"
-                          />
-                          <path
-                            fill="#34A853"
-                            d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z"
-                          />
-                        </svg>
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return <MessageText text="—" />;
+function MapsButton({ href }: { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-white/[0.07] bg-[#0f1e2d]/80 shadow-sm transition-all duration-200 hover:bg-[#0f1e2d]"
+      aria-label="Open in Google Maps"
+      title="Open in Google Maps"
+    >
+      <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z" />
+        <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z" />
+        <path fill="#FBBC05" d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z" />
+        <path fill="#34A853" d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z" />
+      </svg>
+    </a>
+  );
 }
 
-type ChatRole = 'user' | 'butler';
-
-type ButlerCardData =
-  | { kind: 'text'; text: string; model?: string }
-  | {
-      kind: 'error';
-      message: string;
-      canRetry: boolean;
-      model?: string;
-    }
-  | { kind: 'wifi'; wifiName: string; wifiPassword: string; model?: string }
-  | { kind: 'phone'; phoneNumber: string; model?: string }
-  | {
-      kind: 'property';
-      address: string;
-      zip: string;
-      houseRules: string;
-      managerPhone: string;
-      wifiName: string;
-      model?: string;
-    }
-  | {
-      kind: 'itinerary';
-      intro?: string;
-      sections: Array<{
-        title: string;
-        places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }>;
-      }>;
-      model?: string;
-    }
-  | {
-      kind: 'places';
-      places: Array<{
-        name: string;
-        cuisine?: string;
-        formattedAddress?: string;
-        phone?: string;
-        websiteUri?: string;
-        googleMapsUri?: string;
-        rating?: number;
-      }>;
-      model?: string;
-    }
-  | { kind: 'weather'; summary: string; model?: string };
-
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  text: string;
-  data?: ButlerCardData;
-};
-
-type Props = {
-  slug: string;
-};
-
-type OverloadedErrorPayload = {
-  code: 'OVERLOADED';
-  message: string;
-  retryAfterMs: number;
-};
-
-type ChatOkResponse =
-  | { kind: 'text'; response: string; model: string }
-  | { kind: 'wifi'; wifiName: string; wifiPassword: string; model: string }
-  | { kind: 'phone'; phoneNumber: string; model: string }
-  | {
-      kind: 'property';
-      address: string;
-      zip: string;
-      houseRules: string;
-      managerPhone: string;
-      wifiName: string;
-      model: string;
-    }
-  | {
-      kind: 'itinerary';
-      intro: string;
-      sections: Array<{
-        title: string;
-        places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }>;
-      }>;
-      model: string;
-    }
-  | {
-      kind: 'places';
-      places: Array<{
-        name: string;
-        cuisine?: string;
-        formattedAddress?: string;
-        phone?: string;
-        websiteUri?: string;
-        googleMapsUri?: string;
-        rating?: number;
-      }>;
-      model: string;
-    }
-  | { kind: 'weather'; summary: string; model: string };
+/* ─── Link helpers ───────────────────────────────────────────── */
 
 function prettyUrlLabel(raw: string) {
   try {
@@ -407,111 +142,53 @@ function prettyUrlLabel(raw: string) {
 }
 
 function linkifyLine(line: string) {
-  // URLs
   const urlRe = /(https?:\/\/[^\s]+)/g;
-  const parts = line.split(urlRe);
-
-  return parts.map((part, idx) => {
-    if (urlRe.test(part)) {
-      return (
-        <a
-          key={idx}
-          href={part}
-          target="_blank"
-          rel="noreferrer"
-          className="max-w-full break-words underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A] [overflow-wrap:anywhere]"
-        >
-          {prettyUrlLabel(part)}
-        </a>
-      );
-    }
-    return <span key={idx}>{part}</span>;
-  });
+  return line.split(urlRe).map((part, idx) =>
+    urlRe.test(part) ? (
+      <a key={idx} href={part} target="_blank" rel="noreferrer" className="max-w-full wrap-anywhere underline decoration-teal-400/35 underline-offset-2 transition-all duration-200 hover:decoration-teal-400/65">
+        {prettyUrlLabel(part)}
+      </a>
+    ) : (
+      <span key={idx}>{part}</span>
+    )
+  );
 }
+
+/* ─── Message text renderer ──────────────────────────────────── */
 
 function MessageText({ text }: { text: string }) {
   const lines = text.split(/\r?\n/);
   return (
-    <div className="space-y-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+    <div className="space-y-1 whitespace-pre-wrap wrap-anywhere">
       {lines.map((line, i) => {
         const placeLine = line.match(/^\s*(\d+)\)\s+(.+)$/);
         if (placeLine) {
-          const body = placeLine[2];
-          const chunks = body.split(' | ').map((x) => x.trim());
+          const chunks = placeLine[2].split(' | ').map((x) => x.trim());
           const title = chunks[0] || '—';
           const details = chunks.slice(1);
-
           const website = details.find((d) => d.toLowerCase().startsWith('website:'));
           const maps = details.find((d) => d.toLowerCase().startsWith('maps:'));
           const websiteHref = (website || '').split(/\s+/).slice(1).join(' ').trim();
           const mapsHref = (maps || '').split(/\s+/).slice(1).join(' ').trim();
           const href = websiteHref || mapsHref;
-          const titleNode = href ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
-            >
-              {title}
-            </a>
-          ) : (
-            title
-          );
-
-          // Keep the UI clean: if we already used Website/Maps to build the title hyperlink,
-          // don't show the raw URLs as separate lines.
+          const titleNode = href
+            ? <a href={href} target="_blank" rel="noreferrer" className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{title}</a>
+            : title;
           const cleanedDetails = details.filter((d) => {
             const low = d.toLowerCase();
             if (href && (low.startsWith('website:') || low.startsWith('maps:'))) return false;
-            // Hide Address lines in itinerary cards; user wants a clean list + a Google button.
             if (low.startsWith('address:')) return false;
             return true;
           });
-
           return (
-            <div
-              key={i}
-              className="rounded-xl border border-[#D4AF6A]/30 bg-white/60 p-3 shadow-sm"
-            >
+            <div key={i} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
               <div className="flex items-start justify-between gap-3">
-                <div className="text-sm font-semibold text-[#333333]">{titleNode}</div>
-
-                {mapsHref ? (
-                  <a
-                    href={mapsHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[#D4AF6A]/30 bg-white/80 shadow-sm hover:bg-white"
-                    aria-label="Open in Google Maps"
-                    title="Open in Google Maps"
-                  >
-                    <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-                      <path
-                        fill="#EA4335"
-                        d="M24 9.5c3.2 0 5.9 1.1 8.1 3.2l6-6C34.4 2.6 29.6.5 24 .5 14.7.5 6.7 5.8 2.9 13.5l7 5.4C11.7 13.2 17.4 9.5 24 9.5z"
-                      />
-                      <path
-                        fill="#4285F4"
-                        d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.8h12.5c-.3 2-1.7 5-4.9 7.1l7.6 5.9c4.5-4.2 7-10.3 7-17.7z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M9.9 28.9c-.5-1.4-.8-2.8-.8-4.4s.3-3 .8-4.4l-7-5.4C1.3 17.8.5 21 .5 24.5s.8 6.7 2.4 9.8l7-5.4z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M24 47.5c5.6 0 10.4-1.8 13.9-5l-7.6-5.9c-2 1.4-4.7 2.4-6.3 2.4-6.6 0-12.3-3.7-14.1-9.4l-7 5.4c3.8 7.7 11.8 12.5 21.1 12.5z"
-                      />
-                    </svg>
-                  </a>
-                ) : null}
+                <div className="text-sm font-semibold text-white/90">{titleNode}</div>
+                {mapsHref ? <MapsButton href={mapsHref} /> : null}
               </div>
               {cleanedDetails.length ? (
-                <div className="mt-1 space-y-1 text-xs text-[#444444]">
-                  {cleanedDetails.map((d, di) => (
-                    <div key={di}>{linkifyLine(d)}</div>
-                  ))}
+                <div className="mt-1 space-y-1 text-xs text-white/55">
+                  {cleanedDetails.map((d, di) => <div key={di}>{linkifyLine(d)}</div>)}
                 </div>
               ) : null}
             </div>
@@ -522,103 +199,217 @@ function MessageText({ text }: { text: string }) {
         if (phoneMatch) {
           const raw = phoneMatch[1].trim();
           const tel = raw.replace(/[^\d+]/g, '');
-          // Render the full line, but linkify the phone segment.
           const before = line.slice(0, phoneMatch.index || 0) + 'Phone: ';
           const after = line.slice((phoneMatch.index || 0) + phoneMatch[0].length - (phoneMatch[2] ? 1 : 0));
-
           return (
             <div key={i}>
               {linkifyLine(before)}
-              <a
-                href={tel ? `tel:${tel}` : undefined}
-                className="underline decoration-[#D4AF6A]/70 underline-offset-2 hover:decoration-[#D4AF6A]"
-              >
-                {raw}
-              </a>
+              <a href={tel ? `tel:${tel}` : undefined} className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{raw}</a>
               {after ? linkifyLine(after) : null}
             </div>
           );
         }
-
         return <div key={i}>{linkifyLine(line)}</div>;
       })}
     </div>
   );
 }
 
-function ButlerIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M4.5 18.5c1.3-2.9 4.1-4.8 7.5-4.8s6.2 1.9 7.5 4.8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8 10.2c0-2.3 1.8-4.2 4-4.2s4 1.9 4 4.2c0 2.3-1.8 4.1-4 4.1s-4-1.8-4-4.1Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M9 6.4c.9-.7 1.9-1.1 3-1.1s2.1.4 3 1.1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+/* ─── Butler card ────────────────────────────────────────────── */
+
+function ButlerCard({ data }: { data: ButlerCardData }) {
+  if (data.kind === 'text') return <MessageText text={data.text} />;
+
+  if (data.kind === 'error') {
+    return (
+      <div className="space-y-3">
+        <div className="text-xs leading-relaxed text-white/65">{data.message}</div>
+        {data.canRetry ? (
+          <button
+            type="button"
+            data-retry-chat="1"
+            className="inline-flex h-9 items-center justify-center rounded-full border border-teal-500/22 bg-teal-500/8 px-4 text-xs font-semibold tracking-wide text-teal-300/80 transition-all duration-200 hover:bg-teal-500/15"
+          >
+            Try again
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (data.kind === 'wifi') {
+    return (
+      <div className="space-y-2">
+        <div className="lux-title text-sm text-white/90">WiFi</div>
+        {data.wifiName.trim() ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Network:</span> {data.wifiName}</div>
+            <CopyButton value={data.wifiName} />
+          </div>
+        ) : null}
+        {data.wifiPassword.trim() ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Password:</span> {data.wifiPassword}</div>
+            <CopyButton value={data.wifiPassword} />
+          </div>
+        ) : (
+          <div className="text-xs text-white/45">No WiFi password on file.</div>
+        )}
+      </div>
+    );
+  }
+
+  if (data.kind === 'phone') {
+    const tel = data.phoneNumber.replace(/[^\d+]/g, '');
+    return (
+      <div className="space-y-2">
+        <div className="lux-title text-sm text-white/90">Manager Contact</div>
+        <div className="flex items-center justify-between gap-2">
+          <a href={tel ? `tel:${tel}` : undefined} className="text-xs text-white/65 underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">
+            {data.phoneNumber || '—'}
+          </a>
+          <CopyButton value={data.phoneNumber || ''} />
+        </div>
+      </div>
+    );
+  }
+
+  if (data.kind === 'weather') {
+    return (
+      <div className="space-y-2">
+        <div className="lux-title text-sm text-white/90">Current Weather</div>
+        <div className="text-xs text-white/65">{data.summary || '—'}</div>
+      </div>
+    );
+  }
+
+  if (data.kind === 'property') {
+    return (
+      <div className="space-y-2">
+        <div className="lux-title text-sm text-white/90">Property</div>
+        {data.address ? <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Address:</span> {data.address}</div> : null}
+        {data.zip ? <div className="text-xs text-white/65"><span className="font-semibold text-white/80">ZIP:</span> {data.zip}</div> : null}
+        {data.managerPhone ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Manager Phone:</span> {data.managerPhone}</div>
+            <CopyButton value={data.managerPhone} />
+          </div>
+        ) : null}
+        {data.houseRules ? <div className="text-xs text-white/65 whitespace-pre-wrap"><span className="font-semibold text-white/80">House Rules:</span> {data.houseRules}</div> : null}
+      </div>
+    );
+  }
+
+  if (data.kind === 'places') {
+    if (!data.places.length) return <div className="text-xs text-white/45">No results.</div>;
+    return (
+      <div className="space-y-2">
+        <div className="lux-title text-sm text-white/90">Nearby options</div>
+        <div className="space-y-2">
+          {data.places.map((p, idx) => (
+            <div key={idx} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="lux-title text-sm text-white/90 min-w-0">
+                  {(() => {
+                    const href = p.websiteUri || p.googleMapsUri;
+                    const title = <>{p.name}{p.cuisine ? <span className="ml-1 text-xs font-normal italic text-white/45">({p.cuisine})</span> : null}</>;
+                    return href ? <a href={href} target="_blank" rel="noreferrer" className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{title}</a> : title;
+                  })()}
+                </div>
+                {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
+              </div>
+              <div className="mt-1 space-y-1 text-xs text-white/55">
+                {typeof p.rating === 'number' ? <div>Rating: {p.rating}</div> : null}
+                {p.phone ? <div className="flex items-center justify-between gap-2"><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (data.kind === 'itinerary') {
+    const sections = Array.isArray(data.sections) ? data.sections : [];
+    return (
+      <div className="space-y-3">
+        {data.intro ? <div className="text-xs leading-relaxed text-white/65">{data.intro}</div> : null}
+        {sections.map((s, si) => (
+          <div key={si} className="space-y-2">
+            <div className="lux-title text-sm text-white/90">{s.title}</div>
+            <div className="space-y-2">
+              {(s.places || []).map((p, pi) => (
+                <div key={pi} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-white/90">{p.name || '—'}</div>
+                      {p.blurb ? <div className="mt-0.5 text-xs text-white/50">{p.blurb}</div> : null}
+                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-xs text-white/60"><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
+                    </div>
+                    {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <MessageText text="—" />;
 }
 
-function TypingDots() {
-  return (
-    <div className="flex items-center gap-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/80 [animation-delay:-0.2s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/80 [animation-delay:-0.1s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/80" />
-    </div>
-  );
-}
+/* ─── Types ──────────────────────────────────────────────────── */
 
-const SUGGESTED = [
-  "What's the WiFi?",
-  'Local dinner spots',
-  'Plan my day',
-  'Check-out instructions',
-] as const;
+type ChatRole = 'user' | 'butler';
 
-export default function ChatConcierge({ slug }: Props) {
+type ButlerCardData =
+  | { kind: 'text'; text: string; model?: string }
+  | { kind: 'error'; message: string; canRetry: boolean; model?: string }
+  | { kind: 'wifi'; wifiName: string; wifiPassword: string; model?: string }
+  | { kind: 'phone'; phoneNumber: string; model?: string }
+  | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model?: string }
+  | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model?: string }
+  | { kind: 'places'; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
+  | { kind: 'weather'; summary: string; model?: string };
+
+type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
+
+type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string };
+
+type OverloadedErrorPayload = { code: 'OVERLOADED'; message: string; retryAfterMs: number };
+
+type ChatOkResponse =
+  | { kind: 'text'; response: string; model: string }
+  | { kind: 'wifi'; wifiName: string; wifiPassword: string; model: string }
+  | { kind: 'phone'; phoneNumber: string; model: string }
+  | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model: string }
+  | { kind: 'itinerary'; intro: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model: string }
+  | { kind: 'places'; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
+  | { kind: 'weather'; summary: string; model: string };
+
+const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Check-out instructions'] as const;
+
+/* ─── Main export ────────────────────────────────────────────── */
+
+export default function ChatConcierge({ slug, placement = 'floating', triggerClassName }: Props) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    {
-      id: '0',
-      role: 'butler',
-      text: "Good evening. I'm Pillar — your private estate concierge. How may I assist?",
-    },
+    { id: '0', role: 'butler', text: "Good evening. I'm Pillar — your private estate concierge. How may I assist?" },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
   const requestNonceRef = useRef(0);
   const lastUserMessageRef = useRef<string>('');
   const consecutiveFailureCountRef = useRef(0);
-
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Workaround for eslint false-positive on JSX component usage in this config.
   void ButlerCard;
 
-  const canSend = useMemo(
-    () => input.trim().length > 0 && !isTyping,
-    [input, isTyping]
-  );
+  const canSend = useMemo(() => input.trim().length > 0 && !isTyping, [input, isTyping]);
 
   useEffect(() => {
     if (!open) return;
@@ -627,40 +418,27 @@ export default function ChatConcierge({ slug }: Props) {
   }, [open]);
 
   useEffect(() => {
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages.length, isTyping]);
 
-  function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)); }
 
   function isOverloadedResponse(data: unknown): data is OverloadedErrorPayload {
     if (!data || typeof data !== 'object') return false;
     const v = data as Partial<OverloadedErrorPayload>;
-    return (
-      v.code === 'OVERLOADED' &&
-      typeof v.message === 'string' &&
-      typeof v.retryAfterMs === 'number'
-    );
+    return v.code === 'OVERLOADED' && typeof v.message === 'string' && typeof v.retryAfterMs === 'number';
   }
 
   function isChatOkResponse(data: unknown): data is ChatOkResponse {
     if (!data || typeof data !== 'object') return false;
     const v = data as Partial<ChatOkResponse>;
-    return (
-      typeof v.kind === 'string' &&
-      typeof (v as { model?: unknown }).model === 'string'
-    );
+    return typeof v.kind === 'string' && typeof (v as { model?: unknown }).model === 'string';
   }
 
   async function countdown(ms: number, label: string) {
     let remaining = ms;
     while (remaining > 0) {
-      const s = Math.max(1, Math.ceil(remaining / 1000));
-      setStatusText(`${label} (retrying in ${s}s)`);
+      setStatusText(`${label} (retrying in ${Math.max(1, Math.ceil(remaining / 1000))}s)`);
       const step = Math.min(1000, remaining);
       await sleep(step);
       remaining -= step;
@@ -670,139 +448,76 @@ export default function ChatConcierge({ slug }: Props) {
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
-
     lastUserMessageRef.current = trimmed;
-
-    setMessages((prev) => [
-      ...prev,
-      { id: String(prev.length), role: 'user', text: trimmed },
-    ]);
+    setMessages((prev) => [...prev, { id: String(prev.length), role: 'user', text: trimmed }]);
     setInput('');
     setIsTyping(true);
     setStatusText(null);
-
-    // Increment a per-session nonce so repeated requests like "other options" can vary.
     requestNonceRef.current += 1;
     const variant = requestNonceRef.current;
 
     try {
       const maxAttempts = 3;
       let lastErr: unknown = null;
-
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ slug, message: trimmed, variant }),
-        });
-
-        const data = (await res.json()) as
-          | { response?: string; error?: string }
-          | OverloadedErrorPayload
-          | ChatOkResponse;
+        // Build conversation history (all prior messages, excluding the initial greeting).
+        // For structured card responses, summarize what was actually shown so the AI
+        // can reason about it (e.g. see it showed outdoor activities and pivot when asked).
+        const summarizeCard = (data: ButlerCardData): string => {
+          if (data.kind === 'text') return data.text;
+          if (data.kind === 'itinerary') {
+            const names = data.sections.flatMap(s => s.places.map(p => p.name)).filter(Boolean);
+            return `[Showed a day plan itinerary. ${data.intro || ''} Places included: ${names.join(', ')}]`;
+          }
+          if (data.kind === 'places') {
+            const names = data.places.map(p => p.name).filter(Boolean);
+            return `[Showed place recommendations: ${names.join(', ')}]`;
+          }
+          if (data.kind === 'weather') return `[Showed current weather: ${data.summary}]`;
+          if (data.kind === 'wifi') return `[Showed WiFi credentials]`;
+          if (data.kind === 'phone') return `[Showed manager phone number]`;
+          if (data.kind === 'property') return `[Showed property info including address and house rules]`;
+          return `[Showed ${data.kind} information]`;
+        };
+        const conversationHistory = messages
+          .filter(m => m.id !== '0')
+          .map(m => ({
+            role: m.role === 'user' ? 'user' as const : 'model' as const,
+            text: m.data ? summarizeCard(m.data) : m.text,
+          }));
+        const res = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ slug, message: trimmed, variant, history: conversationHistory }) });
+        const data = (await res.json()) as { response?: string; error?: string } | OverloadedErrorPayload | ChatOkResponse;
 
         if (res.ok) {
           consecutiveFailureCountRef.current = 0;
           setStatusText(null);
           if (isChatOkResponse(data)) {
             const card: ButlerCardData =
-              data.kind === 'text'
-                ? { kind: 'text', text: data.response || '—', model: data.model }
-                : data.kind === 'wifi'
-                  ? {
-                      kind: 'wifi',
-                      wifiName: data.wifiName || '',
-                      wifiPassword: data.wifiPassword || '',
-                      model: data.model,
-                    }
-                  : data.kind === 'phone'
-                    ? {
-                        kind: 'phone',
-                        phoneNumber: data.phoneNumber || '',
-                        model: data.model,
-                      }
-                    : data.kind === 'itinerary'
-                      ? {
-                          kind: 'itinerary',
-                          intro: typeof (data as { intro?: unknown }).intro === 'string'
-                            ? (data as { intro: string }).intro
-                            : undefined,
-                          sections: Array.isArray(data.sections) ? data.sections : [],
-                          model: data.model,
-                        }
-                    : data.kind === 'weather'
-                      ? { kind: 'weather', summary: data.summary || '—', model: data.model }
-                      : data.kind === 'property'
-                        ? {
-                            kind: 'property',
-                            address: data.address || '',
-                            zip: data.zip || '',
-                            houseRules: data.houseRules || '',
-                            managerPhone: data.managerPhone || '',
-                            wifiName: data.wifiName || '',
-                            model: data.model,
-                          }
-                        : {
-                            kind: 'places',
-                            places: Array.isArray(data.places) ? data.places : [],
-                            model: data.model,
-                          };
+              data.kind === 'text' ? { kind: 'text', text: data.response || '—', model: data.model }
+              : data.kind === 'wifi' ? { kind: 'wifi', wifiName: data.wifiName || '', wifiPassword: data.wifiPassword || '', model: data.model }
+              : data.kind === 'phone' ? { kind: 'phone', phoneNumber: data.phoneNumber || '', model: data.model }
+              : data.kind === 'itinerary' ? { kind: 'itinerary', intro: typeof (data as { intro?: unknown }).intro === 'string' ? (data as { intro: string }).intro : undefined, sections: Array.isArray(data.sections) ? data.sections : [], model: data.model }
+              : data.kind === 'weather' ? { kind: 'weather', summary: data.summary || '—', model: data.model }
+              : data.kind === 'property' ? { kind: 'property', address: data.address || '', zip: data.zip || '', houseRules: data.houseRules || '', managerPhone: data.managerPhone || '', wifiName: data.wifiName || '', model: data.model }
+              : { kind: 'places', places: Array.isArray(data.places) ? data.places : [], model: data.model };
 
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: String(prev.length),
-                role: 'butler',
-                text:
-                  card.kind === 'text'
-                    ? (card.text || '').trim() || '—'
-                    : '—',
-                data: card,
-              },
-            ]);
+            setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: card.kind === 'text' ? (card.text || '').trim() || '—' : '—', data: card }]);
             return;
           }
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: String(prev.length),
-              role: 'butler',
-              text: (('response' in data ? data.response : '') || '').trim() || '—',
-            },
-          ]);
+          setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: (('response' in data ? data.response : '') || '').trim() || '—' }]);
           return;
         }
 
-        if (isOverloadedResponse(data) && attempt < maxAttempts) {
-          const waitMs = Math.max(500, data.retryAfterMs);
-          await countdown(waitMs, data.message);
-          continue;
-        }
-
-        lastErr = new Error(
-          'error' in data && typeof data.error === 'string'
-            ? data.error
-            : 'Chat request failed'
-        );
+        if (isOverloadedResponse(data) && attempt < maxAttempts) { await countdown(Math.max(500, data.retryAfterMs), data.message); continue; }
+        lastErr = new Error('error' in data && typeof data.error === 'string' ? data.error : 'Chat request failed');
         break;
       }
-
       throw lastErr || new Error('Chat request failed');
-    } catch (e) {
+    } catch {
       consecutiveFailureCountRef.current += 1;
       const canRetry = consecutiveFailureCountRef.current < 2;
       const msg = 'Oh no — we apologize for the inconvenience. We are actively working to fix this issue.';
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: String(prev.length),
-          role: 'butler',
-          text: msg,
-          data: { kind: 'error', message: msg, canRetry },
-        },
-      ]);
+      setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: msg, data: { kind: 'error', message: msg, canRetry } }]);
     } finally {
       setStatusText(null);
       setIsTyping(false);
@@ -811,90 +526,100 @@ export default function ChatConcierge({ slug }: Props) {
 
   return (
     <>
-      {/* Floating trigger (hide while open so it doesn't overlap the panel) */}
+      {/* ── Trigger ── */}
       {!open ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-[9999] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white shadow-2xl backdrop-blur-md transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/40"
+          className={
+            placement === 'floating'
+              ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border border-teal-500/28 bg-linear-to-br from-[#0d2535] to-[#091e2c] text-teal-400 shadow-[0_0_24px_rgba(20,184,166,0.15)] transition-all duration-300 hover:border-teal-400/48 hover:shadow-[0_0_36px_rgba(20,184,166,0.28)] focus:outline-none'
+              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-teal-500/20 bg-linear-to-br from-[#0d2535] to-[#091e2c] px-6 py-5 text-left shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-teal-400/35 hover:shadow-[0_4px_24px_rgba(0,0,0,0.5),0_0_28px_rgba(20,184,166,0.14)] focus:outline-none ' + (triggerClassName ?? '')
+          }
           aria-label="Open concierge"
         >
-          <ButlerIcon className="h-6 w-6 opacity-95" />
+          {placement === 'floating' ? (
+            <SlidingTriggerIcon />
+          ) : (
+            <>
+              {/* Shine line */}
+              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-teal-400/25 to-transparent" />
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-teal-500/12 text-teal-400 ring-1 ring-teal-500/20">
+                  <SlidingTriggerIcon />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</div>
+                  <div className="mt-0.5 text-xs text-teal-400/52">Ask about the home or local area</div>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-teal-400/38 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-teal-400/68" />
+            </>
+          )}
         </button>
       ) : null}
 
-      {/* Panel layer */}
+      {/* ── Panel ── */}
       <div
         className={
-          'fixed inset-x-0 bottom-0 z-[9998] mx-auto w-full max-w-md px-4 pb-4 transition duration-300 ' +
-          (open
-            ? 'pointer-events-auto translate-y-0 opacity-100'
-            : 'pointer-events-none translate-y-8 opacity-0')
+          'fixed inset-x-0 bottom-0 z-9998 mx-auto w-full max-w-md px-4 pb-4 transition duration-300 ' +
+          (open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0')
         }
       >
-        <div className="overflow-hidden rounded-3xl border border-white/25 bg-white/70 shadow-2xl backdrop-blur-xl">
-          <div className="flex items-center justify-between px-5 py-4">
+        <div className="overflow-hidden rounded-3xl border border-white/[0.07] bg-[#070e17]/97 shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl">
+          {/* Top glow line */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-white/5 bg-[#0d1e2d]/50 px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D4AF6A]/20 text-[#6E5A2E]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 ring-1 ring-teal-500/18">
                 <ButlerIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold tracking-wide text-[#333333]">
-                  Pillar Concierge
-                </p>
-                <p className="text-xs tracking-wide text-[#666666]">
-                  Elegant. Concise. Professional.
-                </p>
-                {statusText ? (
-                  <p className="mt-1 text-xs tracking-wide text-[#6E5A2E]">
-                    {statusText}
-                  </p>
-                ) : null}
+                <p className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</p>
+                <p className="text-xs text-teal-400/50">Elegant. Concise. Professional.</p>
+                {statusText ? <p className="mt-0.5 text-xs text-teal-300/70">{statusText}</p> : null}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full px-2 py-1 text-sm text-[#333333]/70 hover:text-[#333333]"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/60 text-white/45 transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/70"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
 
-          <div ref={listRef} className="max-h-[55vh] space-y-3 overflow-auto px-5 pb-4">
+          {/* Messages */}
+          <div ref={listRef} className="max-h-[55vh] space-y-3 overflow-auto px-5 pb-4 pt-4">
             {messages.map((m) => (
               <div key={m.id} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div
                   className={
-                    'max-w-[85%] break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm [overflow-wrap:anywhere] ' +
+                    'max-w-[85%] wrap-anywhere rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' +
                     (m.role === 'user'
-                      ? 'bg-[#2C2C2C] text-white'
-                      : 'border border-[#D4AF6A]/30 bg-[#F5F3EE] text-[#333333]')
+                      ? 'border border-teal-500/22 bg-linear-to-br from-[#0d2535] to-[#091e2c] text-white'
+                      : 'border border-white/6 bg-[#0f1e2d]/80 text-white/88')
                   }
                 >
-                  {m.role === 'butler' ? (
-                    m.data ? (
-                      <ButlerCard data={m.data} />
-                    ) : (
-                      <MessageText text={m.text} />
-                    )
-                  ) : (
-                    m.text
-                  )}
+                  {m.role === 'butler'
+                    ? (m.data ? <ButlerCard data={m.data} /> : <MessageText text={m.text} />)
+                    : m.text}
                 </div>
               </div>
             ))}
-
             {isTyping ? (
               <div className="flex justify-start">
-                <div className="rounded-2xl bg-[#2C2C2C]/90 px-4 py-3 shadow-sm">
+                <div className="rounded-2xl border border-white/6 bg-[#0f1e2d]/80 px-4 py-3 shadow-sm">
                   <TypingDots />
                 </div>
               </div>
             ) : null}
           </div>
 
+          {/* Suggested pills */}
           <div className="flex gap-2 overflow-x-auto px-5 pb-3">
             {SUGGESTED.map((p) => (
               <button
@@ -902,31 +627,29 @@ export default function ChatConcierge({ slug }: Props) {
                 type="button"
                 onClick={() => send(p)}
                 disabled={isTyping}
-                className="whitespace-nowrap rounded-full border border-white/40 bg-white/60 px-3 py-1.5 text-xs font-medium tracking-wide text-[#333333] shadow-sm backdrop-blur-md transition hover:bg-white/70 disabled:opacity-60"
+                className="whitespace-nowrap rounded-full border border-teal-500/15 bg-teal-500/6 px-3 py-1.5 text-xs font-medium tracking-wide text-teal-300/65 transition-all duration-200 hover:border-teal-400/30 hover:bg-teal-500/12 hover:text-teal-300/90 disabled:opacity-45"
               >
                 {p}
               </button>
             ))}
           </div>
 
+          {/* Input row */}
           <form
-            className="flex items-center gap-2 border-t border-white/35 bg-white/60 px-4 py-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void send(input);
-            }}
+            className="flex items-center gap-2 border-t border-white/5 bg-[#0d1e2d]/40 px-4 py-3"
+            onSubmit={(e) => { e.preventDefault(); void send(input); }}
           >
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about the home or the local area…"
-              className="h-11 flex-1 rounded-2xl border border-white/40 bg-white/70 px-4 text-sm text-[#333333] placeholder:text-[#666666] shadow-inner outline-none focus:ring-2 focus:ring-[#D4AF6A]/40"
+              className="h-11 flex-1 rounded-2xl border border-white/[0.07] bg-[#0f1e2d]/70 px-4 text-sm text-white placeholder:text-white/22 shadow-inner outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/18"
             />
             <button
               type="submit"
               disabled={!canSend}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#2C2C2C] px-4 text-sm font-semibold tracking-wide text-white shadow-lg transition hover:bg-black disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center rounded-2xl bg-linear-to-r from-teal-500 to-cyan-400 px-5 text-sm font-bold tracking-wide text-[#070e17] shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all duration-300 hover:shadow-[0_0_32px_rgba(20,184,166,0.45)] disabled:opacity-40 disabled:shadow-none"
             >
               Send
             </button>
@@ -937,13 +660,10 @@ export default function ChatConcierge({ slug }: Props) {
   );
 }
 
-// Delegate click for retry button inside error cards.
-// This keeps the ButlerCard simple and avoids threading callbacks through message data.
 if (typeof window !== 'undefined') {
   window.addEventListener('click', (e) => {
     const t = e.target as HTMLElement | null;
     const btn = t?.closest?.('[data-retry-chat="1"]') as HTMLButtonElement | null;
     if (!btn) return;
-    // The actual retry is handled by the component instance via React state; this listener is a no-op placeholder.
   });
 }

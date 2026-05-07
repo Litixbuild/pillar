@@ -1,57 +1,269 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import ChatConcierge from '@/components/ChatConcierge';
 import CopyPasswordButton from './CopyPasswordButton';
-import type { AirtableFields, ManagerLayoutItem, Property } from '@/lib/airtable';
+import type { PropertyFields, ManagerLayoutItem, Property, AmenityWindow } from '@/lib/types';
 
-function ChevronLeft({ className }: { className?: string }) {
+/* ─── Icons ──────────────────────────────────────────────────── */
+
+function ChevronDown({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M15 6l-6 6 6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function ChevronRight({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M9 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
+function ChevronLeft({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PaperPlaneIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M21 3L3.8 10.3c-.95.4-.9 1.78.08 2.12l6.55 2.24 2.24 6.55c.34.98 1.72 1.03 2.12.08L21 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M21 3L10.35 14.65" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function HomeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 21v-8h6v8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ─── Primitive UI pieces ─────────────────────────────────────── */
+
+function GradientButton({
+  children,
+  variant = 'primary',
+  onClick,
+  type,
+  className,
+}: {
+  children: ReactNode;
+  variant?: 'primary' | 'danger';
+  onClick?: () => void;
+  type?: 'button' | 'submit';
+  className?: string;
+}) {
+  const base =
+    'inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-semibold tracking-wide transition-all duration-300 focus:outline-none ';
+
+  if (variant === 'danger') {
+    return (
+      <button
+        type={type ?? 'button'}
+        onClick={onClick}
+        className={
+          base +
+          'border border-rose-500/20 bg-linear-to-r from-[#1c0d18] to-[#130d15] text-rose-300/75 shadow-[0_0_20px_rgba(244,63,94,0.06)] hover:border-rose-400/38 hover:shadow-[0_0_30px_rgba(244,63,94,0.18)] ' +
+          (className ?? '')
+        }
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type={type ?? 'button'}
+      onClick={onClick}
+      className={
+        base +
+        'border border-teal-500/25 bg-linear-to-r from-[#0d2535] to-[#091e2c] text-teal-300/85 shadow-[0_0_20px_rgba(20,184,166,0.07)] hover:border-teal-400/42 hover:shadow-[0_0_30px_rgba(20,184,166,0.2)] ' +
+        (className ?? '')
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="text-base text-white">{children}</h2>;
+  return <h2 className="text-base font-semibold tracking-wide text-white/90">{children}</h2>;
+}
+
+function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () => void; phone: string }) {
+  const [category, setCategory] = useState<'Air Conditioning' | 'Electric' | 'Plumbing' | 'Other' | ''>('');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [otherMessage, setOtherMessage] = useState('');
+  const [description, setDescription] = useState('');
+  const [sent, setSent] = useState(false);
+  const [lateCheckoutSent, setLateCheckoutSent] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const tel = phone.replace(/[^\d+]/g, '');
+  const categoryOptions = ['Air Conditioning', 'Electric', 'Plumbing', 'Other'] as const;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center px-6 pb-6">
+      <button type="button" onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-label="Close" />
+
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080f18]/96 text-white shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-rose-400/28 to-transparent" />
+
+        <div className="max-h-[84vh] overflow-y-auto px-6 pb-7 pt-6">
+          {/* Header */}
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-light text-white">Need Help?</h2>
+              <p className="mt-1 text-sm text-white/40">Tell us what needs attention.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/[0.08] bg-[#0f1e2d]/60 text-white/50 transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/75"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Work order form */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Type</div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCategoryOpen((v) => !v)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/[0.13] focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+                  aria-haspopup="listbox"
+                  aria-expanded={categoryOpen}
+                >
+                  <span className={category ? 'text-white' : 'text-white/35'}>{category || 'Select…'}</span>
+                  <ChevronDown className={`h-4 w-4 text-white/40 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {categoryOpen ? (
+                  <div role="listbox" className="absolute z-[5] mt-1.5 w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#080f18]/98 shadow-2xl backdrop-blur-xl">
+                    {categoryOptions.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => { setCategory(opt); setSent(false); setCategoryOpen(false); if (opt !== 'Other') setOtherMessage(''); }}
+                        className={'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150 ' + (category === opt ? 'bg-teal-500/10 text-white' : 'text-white/75 hover:bg-white/[0.04]')}
+                      >
+                        <span>{opt}</span>
+                        {category === opt ? <span className="text-teal-400/70">✓</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {category === 'Other' ? (
+              <div className="space-y-2">
+                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Message</div>
+                <input
+                  value={otherMessage}
+                  onChange={(e) => { setOtherMessage(e.target.value); setSent(false); }}
+                  placeholder="What is this about?"
+                  className="w-full rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+                />
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Describe the problem</div>
+              <textarea
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); setSent(false); }}
+                placeholder="Add details (location, urgency, anything helpful)"
+                className="min-h-[100px] w-full resize-none rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+              />
+            </div>
+
+            {sent ? <div className="text-sm text-emerald-400/80">Sent. Thank you.</div> : null}
+
+            <GradientButton
+              type="button"
+              onClick={() => {
+                setSent(true);
+                console.log('[work-order]', { category, otherMessage, description });
+                window.setTimeout(() => { setCategory(''); setOtherMessage(''); setDescription(''); setSent(false); onClose(); }, 850);
+              }}
+            >
+              <PaperPlaneIcon className="h-4 w-4" />
+              Send
+            </GradientButton>
+          </div>
+
+          {/* Late Checkout */}
+          <div className="mt-5">
+            <div className="h-px bg-white/[0.06]" />
+            <div className="mt-5">
+              {lateCheckoutSent ? (
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-4 py-3.5 text-sm leading-relaxed text-amber-200/85">
+                  Your request has been submitted! We will contact you shortly with an update.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLateCheckoutSent(true);
+                    console.log('[late-checkout-request]');
+                  }}
+                  className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 py-3.5 text-sm font-semibold tracking-wide text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.08)] transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-400/16 hover:shadow-[0_0_24px_rgba(251,191,36,0.18)]"
+                >
+                  Request Late Checkout
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Manager contact */}
+          {phone ? (
+            <>
+              <div className="mt-5 h-px bg-white/[0.06]" />
+              <div className="text-center">
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">Property Manager</p>
+                <a
+                  href={tel ? `tel:${tel}` : undefined}
+                  className="text-sm text-white/50 transition-colors duration-200 hover:text-white/80"
+                >
+                  {phone}
+                </a>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function GlassCard({ children }: { children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/20 bg-white/12 p-6 shadow-xl backdrop-blur-sm">
+    <section className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0f1e2d]/80 p-6 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
       {children}
     </section>
   );
@@ -69,24 +281,49 @@ function AmenityRow({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/20 bg-white/12 backdrop-blur-sm">
+    <div className={`overflow-hidden rounded-2xl border transition-all duration-200 ${open ? 'border-teal-500/22 bg-[#0d1e2d]/90' : 'border-white/[0.06] bg-[#0f1e2d]/70 hover:border-teal-500/15'} backdrop-blur-sm`}>
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
       >
-        <div className="text-sm font-semibold tracking-wide text-white">{title}</div>
-        <div className="text-white/85">
-          <ChevronRight className={`h-5 w-5 transition-transform ${open ? 'rotate-90' : ''}`} />
+        <div className="text-sm font-semibold tracking-wide text-white/88">{title}</div>
+        <div className={`transition-colors duration-200 ${open ? 'text-teal-400/70' : 'text-white/30'}`}>
+          <ChevronRight className={`h-5 w-5 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
         </div>
       </button>
-      {open ? <div className="border-t border-white/15 px-5 py-4">{children}</div> : null}
+      {open ? <div className="border-t border-white/[0.05] px-5 py-4">{children}</div> : null}
     </div>
   );
 }
 
+
+/* ─── Helpers ─────────────────────────────────────────────────── */
+
 function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
   return Array.isArray(v) && v.every((x) => x && typeof x === 'object');
+}
+
+function renderWindowContent(w: AmenityWindow): ReactNode {
+  if (w.type === 'text') {
+    return w.body
+      ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">{w.body}</p>
+      : <p className="text-sm text-white/35">No content added yet.</p>;
+  }
+  if (w.type === 'pdf') {
+    return w.url
+      ? <a href={w.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-teal-300/80 underline decoration-teal-400/30 underline-offset-4 transition-all duration-200 hover:decoration-teal-400/60">Open PDF</a>
+      : <p className="text-sm text-white/35">No PDF uploaded yet.</p>;
+  }
+  if (w.type === 'image') {
+    return w.url
+      // eslint-disable-next-line @next/next/no-img-element
+      ? <img src={w.url} alt={w.title} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
+      : <p className="text-sm text-white/35">No image uploaded yet.</p>;
+  }
+  return w.url
+    ? <div className="overflow-hidden rounded-xl border border-white/[0.07]"><video controls className="w-full" preload="metadata"><source src={w.url} />Your browser does not support the video tag.</video></div>
+    : <p className="text-sm text-white/35">No video uploaded yet.</p>;
 }
 
 function guessAttachmentKind(url: string): 'image' | 'video' | 'other' {
@@ -95,6 +332,8 @@ function guessAttachmentKind(url: string): 'image' | 'video' | 'other' {
   if (/(\.png|\.jpg|\.jpeg|\.webp|\.gif)(\?|$)/.test(u)) return 'image';
   return 'other';
 }
+
+/* ─── Main component ──────────────────────────────────────────── */
 
 export default function PropertyExperience({
   slug,
@@ -109,38 +348,21 @@ export default function PropertyExperience({
   slug: string;
   property: Property;
   managerLayout: ManagerLayoutItem[];
-  rawFields: AirtableFields;
+  rawFields: PropertyFields;
   editableCustomWindows?: boolean;
   onAddWindow?: () => void;
   onRemoveWindow?: (index: number) => void;
   onReorderWindows?: (fromIndex: number, toIndex: number) => void;
 }) {
   const PREVIEW_FADE_MS = 450;
+  const FULL_VIEW_FADE_MS = 450;
 
   const [expanded, setExpanded] = useState(editableCustomWindows ? true : false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [fullView, setFullView] = useState<'content' | 'amenities'>('content');
   const [isFullViewTransitioning, setIsFullViewTransitioning] = useState(false);
-
-  const [previewSheetHeightPx, setPreviewSheetHeightPx] = useState<number | null>(null);
-
-  const [openAmenity, setOpenAmenity] = useState<
-    null | 'wifi' | 'garageCode' | 'poolHeater' | 'television' | 'coffeeMachine'
-  >(null);
-
-  const bio = property.DetailedHouseBio || '';
-  const wordCount = bio.trim() ? bio.trim().split(/\s+/).length : 0;
-
-  const previewLines = Math.max(3, Math.min(12, Math.ceil(wordCount / 18) || 3));
-  const previewMinHeightRem = Math.max(10, Math.min(26, 7.5 + previewLines * 1.55));
-
-  const previewSheetHeightFallbackPx = previewMinHeightRem * 16;
-  const previewSheetOuterPaddingBottomPx = 24;
-  const previewTitleGapPx = 36;
-  const previewSheetBottomPx =
-    (previewSheetHeightPx ?? previewSheetHeightFallbackPx) +
-    previewSheetOuterPaddingBottomPx +
-    previewTitleGapPx;
+  const [openAmenityId, setOpenAmenityId] = useState<string | null>(null);
+  const [needHelpOpen, setNeedHelpOpen] = useState(false);
 
   const backgroundUrl = useMemo(
     () => property.HeroImage || '/images/heroimage.jpg',
@@ -152,45 +374,54 @@ export default function PropertyExperience({
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [expanded]);
 
-  useLayoutEffect(() => {
-    if (expanded) return;
-    const el = document.querySelector<HTMLButtonElement>('[data-preview-sheet="1"]');
-    if (!el) return;
-
-    const update = () => {
-      const rect = el.getBoundingClientRect();
-      if (rect.height > 0) setPreviewSheetHeightPx(rect.height);
-    };
-
-    update();
-
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => update());
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [expanded, property.DetailedHouseBio]);
-
   const rootOverflow = expanded ? '' : 'overflow-hidden';
-  const previewOpacityClass = isTransitioning ? 'opacity-0' : 'opacity-100';
+  const showExpandedContent = expanded && !isTransitioning && !isFullViewTransitioning && fullView === 'content';
 
   return (
-    <div className={`min-h-screen bg-[#F9F7F2] font-sans ${rootOverflow}`}>
-      <div
-        className="pointer-events-none fixed inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundUrl})` }}
-      />
-      <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-black/25 via-black/35 to-black/65" />
+    <div className={`min-h-screen font-sans ${rootOverflow}`}>
 
+      {/* ── Layer 1: hero image — visible on preview, fades away when expanded ── */}
+      <div
+        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out"
+        style={{ backgroundImage: `url(${backgroundUrl})`, opacity: expanded ? 0 : 1 }}
+      />
+
+      {/* ── Layer 2: background.png — visible when expanded ── */}
+      <div
+        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-450 ease-in-out"
+        style={{
+          opacity: expanded && !isTransitioning ? 1 : 0,
+          backgroundImage: 'url(/images/background.png)',
+        }}
+      />
+
+      {/* ── Logo — visible on content view only, not amenities list ── */}
+      {expanded && fullView !== 'amenities' && property.LogoUrl ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 top-0 z-10 flex justify-center pt-6 transition-opacity duration-700 ease-in-out"
+          style={{ opacity: isTransitioning || isFullViewTransitioning ? 0 : 1 }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={property.LogoUrl}
+            alt="Property logo"
+            className="object-contain drop-shadow-lg"
+            style={{ width: `${property.LogoSize ?? 100}px`, maxHeight: `${property.LogoSize ?? 100}px` }}
+          />
+        </div>
+      ) : null}
+
+      {/* ── Edit mode bar ── */}
       {editableCustomWindows ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-[30] mx-auto w-full max-w-md px-6 pt-4">
-          <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/15 bg-black/20 px-4 py-2.5 text-white backdrop-blur-md">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Edit mode</div>
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md px-6 pt-4">
+          <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/[0.07] bg-[#0f1e2d]/80 px-4 py-2.5 text-white backdrop-blur-md">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">Edit mode</div>
             <div className="flex items-center gap-3">
-              <div className="text-[11px] font-semibold text-white/70">Reorder: drag or use ↑↓</div>
+              <div className="text-[11px] text-white/40">Reorder: drag or ↑↓</div>
               <button
                 type="button"
                 onClick={onAddWindow}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white hover:bg-white/15"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-teal-500/22 bg-teal-500/8 px-3 text-xs font-semibold text-teal-300/80 transition-all duration-200 hover:bg-teal-500/14"
               >
                 <span className="text-base leading-none">+</span>
                 Add window
@@ -200,124 +431,117 @@ export default function PropertyExperience({
         </div>
       ) : null}
 
+      {/* ════════════════════════════════════════════════════════
+          PREVIEW (unexpanded) — full-screen editorial hero
+          ════════════════════════════════════════════════════════ */}
       {!expanded ? (
-        <>
+        <button
+          type="button"
+          onClick={() => {
+            setIsTransitioning(true);
+            window.setTimeout(() => setExpanded(true), PREVIEW_FADE_MS);
+            window.setTimeout(() => setIsTransitioning(false), PREVIEW_FADE_MS * 2);
+          }}
+          className={'fixed inset-0 w-full text-left transition-opacity ease-in-out ' + (isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100')}
+          style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
+          aria-label="Open full property details"
+        >
+          {/* Soft gradient — transparent top, gentle dark fade at bottom */}
           <div
-            className="relative mx-auto flex min-h-screen max-w-md flex-col px-6"
-            style={{ paddingBottom: `${previewSheetBottomPx}px` }}
-          >
-            <header className="h-[70vh] w-full" />
-          </div>
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, transparent 28%, rgba(0,0,0,0.22) 58%, rgba(0,0,0,0.78) 100%)' }}
+          />
 
-          <div
-            className={
-              'fixed inset-x-0 z-[21] mx-auto w-full max-w-md px-6 transition-[bottom,opacity] duration-300 ease-out ' +
-              previewOpacityClass
-            }
-            style={{ bottom: `${previewSheetBottomPx}px` }}
-          >
-            <div className="space-y-2">
-              {property.PropertyAddress ? (
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/75">
-                  {property.PropertyAddress}
-                </p>
-              ) : null}
-              <h1 className="text-3xl text-white">{property.PropertyName}</h1>
+          {/* Bottom content */}
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-md px-7 pb-12">
+            {property.PropertyAddress ? (
+              <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.38em] text-white/52 drop-shadow-sm">
+                {property.PropertyAddress}
+              </p>
+            ) : null}
+            <h1 className="mb-5 text-[2.6rem] font-light leading-none tracking-tight text-white drop-shadow-lg">
+              {property.PropertyName}
+            </h1>
+            <div className="mb-4 h-px w-10 bg-white/22" />
+            {property.DetailedHouseBio ? (
+              <p className="text-[13px] leading-relaxed text-white/55 drop-shadow-sm">
+                {property.DetailedHouseBio}
+              </p>
+            ) : null}
+            <div className="mt-6 flex items-center justify-end gap-1.5 text-white/75">
+              <span className="text-[10px] font-medium uppercase tracking-[0.3em]">Explore</span>
+              <ChevronRight className="h-3.5 w-3.5" />
             </div>
           </div>
-
-          <div className="fixed inset-x-0 bottom-0 z-[20] mx-auto w-full max-w-md px-6 pb-6">
-            <button
-              data-preview-sheet="1"
-              type="button"
-              onClick={() => {
-                setIsTransitioning(true);
-                window.setTimeout(() => setExpanded(true), PREVIEW_FADE_MS);
-                window.setTimeout(() => setIsTransitioning(false), PREVIEW_FADE_MS * 2);
-              }}
-              className={
-                'group flex w-full items-start justify-between gap-4 rounded-2xl border border-white/20 bg-white/12 px-6 py-5 text-left shadow-xl backdrop-blur-sm transition-opacity duration-[450ms] ease-in-out ' +
-                (isTransitioning ? 'opacity-0' : 'opacity-100 hover:bg-white/14')
-              }
-              style={{ maxHeight: '70vh', transitionDuration: `${PREVIEW_FADE_MS}ms` }}
-              aria-label="Open full property details"
-            >
-              <div className="min-w-0">
-                <div
-                  className="text-sm leading-relaxed text-white/85"
-                  style={{ maxHeight: 'calc(70vh - 3rem)', overflow: 'auto' }}
-                >
-                  {property.DetailedHouseBio || 'Welcome. Tap to view house details.'}
-                </div>
-              </div>
-              <div className="flex flex-none items-center justify-center self-center text-white/85">
-                <ChevronRight className="h-5 w-5" />
-              </div>
-            </button>
-          </div>
-        </>
+        </button>
       ) : null}
 
+      {/* ════════════════════════════════════════════════════════
+          EXPANDED — dark teal content
+          ════════════════════════════════════════════════════════ */}
       {expanded ? (
         <>
           <div className="relative">
+            {/* Content view */}
             <div
               className={
-                'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-[450ms] ease-in-out ' +
+                'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-450 ease-in-out ' +
                 (isTransitioning || isFullViewTransitioning || fullView !== 'content'
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100')
               }
-              style={{
-                transitionDuration: `${PREVIEW_FADE_MS}ms`,
-                paddingTop: editableCustomWindows ? '56px' : undefined,
-              }}
+              style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
             >
-              <header className="h-[38vh] w-full flex-none" />
-
-              <div className="-mt-16 flex min-h-0 flex-1 flex-col space-y-6 overflow-auto pb-10">
-                <div className="space-y-2">
+              <div
+                className="flex min-h-0 flex-1 flex-col space-y-4 overflow-auto pb-10"
+                style={{ paddingTop: editableCustomWindows ? '110px' : 'clamp(200px, 48vh, 320px)' }}
+              >
+                {/* Property name */}
+                <div className="space-y-1 pb-1">
                   {property.PropertyAddress ? (
-                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/75">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-sky-400">
                       {property.PropertyAddress}
                     </p>
                   ) : null}
-                  <h1 className="text-3xl text-white">{property.PropertyName}</h1>
+                  <h1 className="text-[2.05rem] font-light leading-tight tracking-[-0.01em] text-white">
+                    {property.PropertyName}
+                  </h1>
+                  <div className="mt-2.5 h-px w-10 bg-linear-to-r from-teal-400/50 to-transparent" />
                 </div>
 
+                {/* Home Amenities button */}
                 <button
                   type="button"
                   onClick={() => {
                     setIsFullViewTransitioning(true);
-                    window.setTimeout(() => {
-                      setFullView('amenities');
-                      setIsFullViewTransitioning(false);
-                    }, 420);
+                    window.setTimeout(() => { setFullView('amenities'); }, FULL_VIEW_FADE_MS);
+                    window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                   }}
-                  className="group flex w-full items-center justify-between gap-4 rounded-2xl border border-white/20 bg-white/12 px-6 py-5 text-left shadow-xl backdrop-blur-sm transition hover:bg-white/14"
+                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-sky-500/18 bg-linear-to-br from-[#0d2030] to-[#091928] px-6 py-5 text-left shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-sky-400/32 hover:shadow-[0_4px_24px_rgba(0,0,0,0.5),0_0_28px_rgba(56,189,248,0.12)]"
                 >
-                  <div>
-                    <div className="lux-title text-base text-white">Home Amenities</div>
-                    <div className="mt-1 text-sm text-white/75">
-                      WiFi, Garage Code, Pool Heater, Television, Coffee Machine
+                  <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-sky-400/22 to-transparent" />
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/18">
+                      <HomeIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold tracking-wide text-white">Home Amenities</div>
+                      <div className="mt-0.5 text-xs text-teal-400/52">
+                        {(() => {
+                          const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
+                          const preview = all.slice(0, 2);
+                          return preview.join(', ') + (all.length > 2 ? ', and more!' : '');
+                        })()}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-none items-center justify-center self-center text-white/85">
-                    <ChevronRight className="h-5 w-5" />
-                  </div>
+                  <ChevronRight className="h-5 w-5 flex-none text-sky-400/35 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-sky-400/65" />
                 </button>
 
-                {property.HouseRules ? (
-                  <GlassCard>
-                    <div className="space-y-3">
-                      <SectionTitle>House Rules</SectionTitle>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">
-                        {property.HouseRules}
-                      </p>
-                    </div>
-                  </GlassCard>
-                ) : null}
+                {/* Pillar Concierge inline button */}
+                <ChatConcierge slug={slug} placement="inline" />
 
+                {/* Manager layout windows */}
                 {managerLayout.length ? (
                   <GlassCard>
                     <div className="space-y-4">
@@ -327,9 +551,8 @@ export default function PropertyExperience({
                           <button
                             type="button"
                             onClick={onAddWindow}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-lg font-semibold text-white hover:bg-white/15"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-teal-500/22 bg-teal-500/8 text-lg font-semibold text-teal-300/80 transition-all duration-200 hover:bg-teal-500/14"
                             aria-label="Add window"
-                            title="Add window"
                           >
                             +
                           </button>
@@ -344,116 +567,52 @@ export default function PropertyExperience({
 
                           const renderValue = () => {
                             if (typeof value === 'string') {
-                              return value.trim() ? (
-                                <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">{value}</p>
-                              ) : (
-                                <p className="text-sm text-white/70">(empty)</p>
-                              );
+                              return value.trim()
+                                ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">{value}</p>
+                                : <p className="text-sm text-white/35">(empty)</p>;
                             }
-
                             if (typeof value === 'number' || typeof value === 'boolean') {
-                              return <p className="text-sm text-white/85">{String(value)}</p>;
+                              return <p className="text-sm text-white/75">{String(value)}</p>;
                             }
-
                             if (isAttachmentArray(value)) {
                               const first = value[0] as { url?: unknown };
                               const url = typeof first?.url === 'string' ? first.url : '';
-                              if (!url) return <p className="text-sm text-white/70">(no attachment)</p>;
-
+                              if (!url) return <p className="text-sm text-white/35">(no attachment)</p>;
                               const kind = guessAttachmentKind(url);
-                              if (kind === 'video') {
-                                return (
-                                  <div className="overflow-hidden rounded-xl border border-white/15">
-                                    <video controls className="w-full" preload="metadata">
-                                      <source src={url} />
-                                      Your browser does not support the video tag.
-                                    </video>
-                                  </div>
-                                );
-                              }
-                              if (kind === 'image') {
+                              if (kind === 'video') return (
+                                <div className="overflow-hidden rounded-xl border border-white/[0.07]">
+                                  <video controls className="w-full" preload="metadata"><source src={url} />Your browser does not support the video tag.</video>
+                                </div>
+                              );
+                              if (kind === 'image') return (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                return (
-                                  <img
-                                    src={url}
-                                    alt={key}
-                                    className="w-full rounded-xl border border-white/15"
-                                    loading="lazy"
-                                  />
-                                );
-                              }
-
+                                <img src={url} alt={key} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
+                              );
                               return (
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-sm font-medium text-white underline decoration-white/40 underline-offset-4 hover:decoration-white/70"
-                                >
+                                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium text-teal-300/80 underline decoration-teal-400/30 underline-offset-4 transition-all duration-200 hover:decoration-teal-400/60">
                                   Open attachment
                                 </a>
                               );
                             }
-
-                            return <p className="text-sm text-white/70">(no content)</p>;
+                            return <p className="text-sm text-white/35">(no content)</p>;
                           };
 
                           return (
                             <div
                               key={`${key}-${idx}`}
-                              className={editableCustomWindows ? 'rounded-xl border border-white/10 p-3' : 'space-y-2'}
+                              className={editableCustomWindows ? 'rounded-xl border border-white/6 p-3' : 'space-y-2'}
                               draggable={editableCustomWindows}
-                              onDragStart={(e) => {
-                                if (!editableCustomWindows) return;
-                                e.dataTransfer.setData('text/plain', String(idx));
-                                e.dataTransfer.effectAllowed = 'move';
-                              }}
-                              onDragOver={(e) => {
-                                if (!editableCustomWindows) return;
-                                e.preventDefault();
-                                e.dataTransfer.dropEffect = 'move';
-                              }}
-                              onDrop={(e) => {
-                                if (!editableCustomWindows) return;
-                                e.preventDefault();
-                                const from = Number(e.dataTransfer.getData('text/plain'));
-                                const to = idx;
-                                if (Number.isFinite(from) && onReorderWindows) {
-                                  onReorderWindows(from, to);
-                                }
-                              }}
+                              onDragStart={(e) => { if (!editableCustomWindows) return; e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move'; }}
+                              onDragOver={(e) => { if (!editableCustomWindows) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                              onDrop={(e) => { if (!editableCustomWindows) return; e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isFinite(from) && onReorderWindows) onReorderWindows(from, idx); }}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="text-xs font-medium uppercase tracking-[0.2em] text-white/65">
-                                  {key}
-                                </div>
+                                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/45">{key}</div>
                                 {editableCustomWindows ? (
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))}
-                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
-                                      aria-label="Move up"
-                                      title="Move up"
-                                    >
-                                      ↑
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))}
-                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
-                                      aria-label="Move down"
-                                      title="Move down"
-                                    >
-                                      ↓
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => onRemoveWindow?.(idx)}
-                                      className="text-xs font-semibold text-white/70 underline decoration-white/30 underline-offset-4 hover:decoration-white/60"
-                                    >
-                                      Remove
-                                    </button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-[#0f1e2d]/50 text-white/55 transition-colors duration-200 hover:bg-[#0f1e2d]" aria-label="Move up">↑</button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-[#0f1e2d]/50 text-white/55 transition-colors duration-200 hover:bg-[#0f1e2d]" aria-label="Move down">↓</button>
+                                    <button type="button" onClick={() => onRemoveWindow?.(idx)} className="text-xs font-semibold text-rose-300/50 underline decoration-rose-300/20 underline-offset-4 transition-all duration-200 hover:text-rose-300/75 hover:decoration-rose-300/45">Remove</button>
                                   </div>
                                 ) : null}
                               </div>
@@ -466,190 +625,103 @@ export default function PropertyExperience({
                   </GlassCard>
                 ) : null}
 
+                {/* Need Help button */}
                 {property.ManagerPhone ? (
-                  <GlassCard>
-                    <div className="space-y-3">
-                      <SectionTitle>Property Manager</SectionTitle>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/65">Contact</p>
-                        <a
-                          href={`tel:${property.ManagerPhone}`}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-white underline decoration-white/40 underline-offset-4 hover:decoration-white/70"
-                        >
-                          {property.ManagerPhone}
-                        </a>
-                      </div>
-                    </div>
-                  </GlassCard>
+                  <button
+                    type="button"
+                    onClick={() => setNeedHelpOpen(true)}
+                    className="w-full rounded-2xl border border-rose-500/30 bg-transparent py-3.5 text-sm font-semibold tracking-widest text-rose-400/80 shadow-[0_0_14px_rgba(244,63,94,0.12),inset_0_0_14px_rgba(244,63,94,0.04)] transition-all duration-300 hover:border-rose-400/55 hover:text-rose-300 hover:shadow-[0_0_28px_rgba(244,63,94,0.28),inset_0_0_20px_rgba(244,63,94,0.06)]"
+                  >
+                    Need Help?
+                  </button>
                 ) : null}
 
                 <div className="h-6" />
               </div>
             </div>
 
+            {/* House Rules — fixed footer */}
+            {property.HouseRules && showExpandedContent ? (
+              <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md px-6 pb-5 pt-8"
+                style={{ background: 'linear-gradient(to top, rgba(6,13,20,0.92) 0%, transparent 100%)' }}
+              >
+                <div className="text-center">
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">House Rules</p>
+                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/42">
+                    {property.HouseRules}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Amenities full view */}
             <div
               className={
-                'absolute inset-0 transition-opacity duration-[900ms] ease-in-out ' +
-                (fullView === 'amenities' && !isTransitioning
-                  ? 'opacity-100'
-                  : 'opacity-0 pointer-events-none')
+                'absolute inset-0 transition-opacity duration-450 ease-in-out ' +
+                (isTransitioning || isFullViewTransitioning || fullView !== 'amenities'
+                  ? 'opacity-0 pointer-events-none'
+                  : 'opacity-100')
               }
             >
               <div className="relative mx-auto flex h-screen max-w-md flex-col px-6">
-                <header className="h-[28vh] w-full flex-none" />
-
-                <div className="-mt-10 flex min-h-0 flex-1 flex-col overflow-auto pb-12">
+                <div className="flex min-h-0 flex-1 flex-col overflow-auto pb-12 pt-12">
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => {
-                        setOpenAmenity(null);
+                        setOpenAmenityId(null);
                         setIsFullViewTransitioning(true);
-                        window.setTimeout(() => {
-                          setFullView('content');
-                          setIsFullViewTransitioning(false);
-                        }, 420);
+                        window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
+                        window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                       }}
-                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white/90 backdrop-blur-sm hover:bg-white/12"
+                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 text-white/60 backdrop-blur-sm transition-all duration-200 hover:border-teal-500/25 hover:bg-[#0f1e2d] hover:text-white/90"
                       aria-label="Back"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-
-                    <div className="lux-title flex-1 text-center text-xl text-white whitespace-nowrap">
-                      Home Amenities
-                    </div>
-
+                    <div className="lux-title flex-1 text-center text-xl text-white whitespace-nowrap">Home Amenities</div>
                     <div className="h-10 w-10 flex-none" />
                   </div>
 
-                  <div className="mt-5 space-y-4">
-                    <AmenityRow
-                      title="WiFi"
-                      open={openAmenity === 'wifi'}
-                      onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) => (v === 'wifi' ? null : 'wifi'))
-                      }
-                    >
+                  <div className="mt-5 space-y-3">
+                    <AmenityRow title="WiFi" open={openAmenityId === 'wifi'} onToggle={() => setOpenAmenityId((v) => (v === 'wifi' ? null : 'wifi'))}>
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.2em] text-white/65">Network</p>
-                          <p className="text-sm text-white/90">{property.WiFiName}</p>
+                          <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Network</p>
+                          <p className="text-sm text-white/85">{property.WiFiName}</p>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.2em] text-white/65">Password</p>
-                            <p className="font-mono text-sm text-white/90">{property.WiFiPassword}</p>
+                            <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Password</p>
+                            <p className="font-mono text-sm text-white/85">{property.WiFiPassword}</p>
                           </div>
                           <CopyPasswordButton password={property.WiFiPassword} />
                         </div>
                       </div>
                     </AmenityRow>
 
-                    <AmenityRow
-                      title="Garage Code"
-                      open={openAmenity === 'garageCode'}
-                      onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) =>
-                          v === 'garageCode' ? null : 'garageCode'
-                        )
-                      }
-                    >
-                      {property.GarageCode ? (
-                        <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.2em] text-white/65">Code</p>
-                          <p className="font-mono text-sm text-white/90 whitespace-pre-wrap">{property.GarageCode}</p>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-white/75">Garage code not provided in Airtable.</div>
-                      )}
+                    <AmenityRow title="Garage Code" open={openAmenityId === 'garage'} onToggle={() => setOpenAmenityId((v) => (v === 'garage' ? null : 'garage'))}>
+                      {property.GarageCode
+                        ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap">{property.GarageCode}</p></div>
+                        : <div className="text-sm text-white/45">Garage code not provided.</div>}
                     </AmenityRow>
 
-                    <AmenityRow
-                      title="Pool Heater"
-                      open={openAmenity === 'poolHeater'}
-                      onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) =>
-                          v === 'poolHeater' ? null : 'poolHeater'
-                        )
-                      }
-                    >
-                      {property.PoolHeater ? (
-                        <div className="overflow-hidden rounded-xl border border-white/15">
-                          <video controls className="w-full" preload="metadata">
-                            <source src={property.PoolHeater} type="video/mp4" />
-                            Your browser does not support the video tag.
-                          </video>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-white/75">Pool heater video not provided in Airtable.</div>
-                      )}
-                    </AmenityRow>
-
-                    <AmenityRow
-                      title="Television"
-                      open={openAmenity === 'television'}
-                      onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) =>
-                          v === 'television' ? null : 'television'
-                        )
-                      }
-                    >
-                      {property.Television ? (
-                        <div className="overflow-hidden rounded-xl border border-white/15">
-                          <video controls className="w-full" preload="metadata">
-                            <source src={property.Television} type="video/mp4" />
-                            Your browser does not support the video tag.
-                          </video>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-white/75">Television video not provided in Airtable.</div>
-                      )}
-                    </AmenityRow>
-
-                    <AmenityRow
-                      title="Coffee Machine"
-                      open={openAmenity === 'coffeeMachine'}
-                      onToggle={() =>
-                        setOpenAmenity((v: typeof openAmenity) =>
-                          v === 'coffeeMachine' ? null : 'coffeeMachine'
-                        )
-                      }
-                    >
-                      {property.CoffeeMachine ? (
-                        <div className="overflow-hidden rounded-xl border border-white/15 bg-black/10">
-                          {/\.mp4($|\?)/i.test(property.CoffeeMachine) ? (
-                            <video controls className="w-full" preload="metadata">
-                              <source src={property.CoffeeMachine} type="video/mp4" />
-                              Your browser does not support the video tag.
-                            </video>
-                          ) : (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={property.CoffeeMachine}
-                              alt="Coffee machine"
-                              className="w-full"
-                              loading="lazy"
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-white/75">
-                          Coffee machine attachment not provided in Airtable.
-                        </div>
-                      )}
-                    </AmenityRow>
+                    {(property.windows ?? []).map((w) => (
+                      <AmenityRow key={w.id} title={w.title} open={openAmenityId === w.id} onToggle={() => setOpenAmenityId((v) => (v === w.id ? null : w.id))}>
+                        {renderWindowContent(w)}
+                      </AmenityRow>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {!isTransitioning ? (
-            <div className="transition-opacity duration-[900ms] ease-in-out">
-              <ChatConcierge slug={slug} />
-            </div>
-          ) : null}
+          <NeedHelpModal
+            open={needHelpOpen}
+            onClose={() => setNeedHelpOpen(false)}
+            phone={property.ManagerPhone ?? ''}
+          />
         </>
       ) : null}
     </div>

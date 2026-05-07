@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getPropertiesByManagerEmail } from "@/lib/airtable";
+import { createClient } from "@/lib/supabase";
 import { getManagerCookieName, signManagerSession } from "@/lib/managerAuth";
 
 export const runtime = "nodejs";
@@ -17,52 +17,36 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing email or password" }, { status: 400 });
   }
 
-  // Demo fallback (optional)
-  const demoEmail = process.env.MANAGER_DEMO_EMAIL?.trim().toLowerCase();
-  const demoPassword = process.env.MANAGER_DEMO_PASSWORD || "";
-  const demoOk = demoEmail && demoPassword && email === demoEmail && password === demoPassword;
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  let ok = demoOk;
-  let managerName: string | undefined = undefined;
-
-  // Pull manager name from Airtable whenever possible (even when demo creds are used).
-  // Also use Airtable-backed password verification when demo creds are not enabled.
-  const props = await getPropertiesByManagerEmail(email);
-  managerName = props.find((p) => (p.ManagerName || "").trim())?.ManagerName;
-
-  if (!ok) {
-    const expected = props.find((p) => (p.ManagerPassword || "").trim())?.ManagerPassword || "";
-    ok = Boolean(expected) && expected === password;
+  if (error || !data.user) {
+    return Response.json({ error: error?.message ?? "Invalid credentials" }, { status: 401 });
   }
 
-  if (!ok) {
-    return Response.json({ error: "Invalid credentials" }, { status: 401 });
-  }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", data.user.id)
+    .single();
+
+  const managerName = profile?.full_name ?? undefined;
 
   let token = "";
   try {
-    token = signManagerSession({ email, name: managerName, iat: Date.now() });
+    token = signManagerSession({
+      email,
+      name: managerName,
+      userId: data.user.id,
+      iat: Date.now(),
+    });
   } catch (e) {
     return Response.json(
-      {
-        error:
-          e instanceof Error
-            ? e.message
-            : "Missing MANAGER_SESSION_SECRET. Set it in .env.local / host env vars.",
-        debug: {
-          hasManagerSessionSecret: Boolean(process.env.MANAGER_SESSION_SECRET?.trim()),
-          nodeEnv: process.env.NODE_ENV,
-          netlify: {
-            CONTEXT: process.env.CONTEXT,
-            NETLIFY: process.env.NETLIFY,
-            SITE_NAME: process.env.SITE_NAME,
-            BRANCH: process.env.BRANCH,
-          },
-        },
-      },
+      { error: e instanceof Error ? e.message : "Missing MANAGER_SESSION_SECRET." },
       { status: 500 }
     );
   }
+
   const jar = await cookies();
   jar.set({
     name: getManagerCookieName(),
