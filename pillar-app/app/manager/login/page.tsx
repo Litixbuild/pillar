@@ -1,36 +1,63 @@
 "use client";
 
-import ManagerThemeToggle from "@/components/ManagerThemeToggle";
+import Image from "next/image";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default function ManagerLoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5F3EE] via-white to-[#F5F3EE] text-[#2C2C2C] dark:from-[#0F0F0F] dark:via-[#1B1B1B] dark:to-black dark:text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-start px-6 pt-10 pb-12">
-        <div className="mb-8 flex w-full justify-center">
-          <img
-            src="/images/pillarlogoblack.png"
-            alt="Pillar"
-            className="h-48 w-auto dark:hidden"
-          />
-          <img
-            src="/images/pillarlogowhite.png"
-            alt="Pillar"
-            className="hidden h-48 w-auto dark:block"
-          />
-        </div>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative"
+      style={{
+        backgroundImage: "url(/images/background.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay */}
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.62)" }}
+      />
 
-        <div className="w-full rounded-3xl border border-black/5 bg-white/70 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur dark:border-white/10 dark:bg-white/5 dark:shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
-          <div className="space-y-2 text-center">
-            <div className="lux-title text-2xl">Manager Login</div>
-            <div className="text-sm text-black/60 dark:text-white/70">
-              Sign in to view your properties.
-            </div>
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+
+        {/* Logo */}
+        <Image
+          src="/images/pillarlogowhite.png"
+          alt="Pillar"
+          width={150}
+          height={100}
+          className="mb-8 opacity-90"
+          priority
+        />
+
+        {/* Card */}
+        <div
+          className="w-full rounded-2xl p-8"
+          style={{
+            backgroundColor: "rgba(6, 9, 14, 0.72)",
+            border: "1px solid rgba(212,175,106,0.2)",
+            backdropFilter: "blur(20px)",
+          }}
+        >
+          {/* Heading */}
+          <div className="text-center mb-8">
+            <h1
+              className="font-serif text-2xl text-white mb-2"
+            >
+              Manager Login
+            </h1>
+            <p className="text-xs uppercase tracking-[0.3em]" style={{ color: "rgba(212,175,106,0.7)" }}>
+              Property Portal
+            </p>
           </div>
 
+          {/* Form */}
           <form
-            className="mt-6 space-y-4"
+            className="space-y-5"
             onSubmit={async (e) => {
               e.preventDefault();
               const form = e.currentTarget as HTMLFormElement;
@@ -53,8 +80,11 @@ export default function ManagerLoginPage() {
               window.location.href = "/manager";
             }}
           >
-            <div className="space-y-1">
-              <label className="text-xs font-medium tracking-wide text-[#2C2C2C]/70 dark:text-white/70">
+            <div className="space-y-1.5">
+              <label
+                className="block text-[11px] uppercase tracking-[0.2em]"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
                 Email
               </label>
               <input
@@ -62,13 +92,27 @@ export default function ManagerLoginPage() {
                 type="email"
                 autoComplete="username"
                 required
-                className="h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm text-[#2C2C2C] outline-none placeholder:text-black/40 focus:ring-2 focus:ring-[#D4AF6A]/40 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
                 placeholder="manager@domain.com"
+                className="w-full h-11 rounded-xl px-4 text-sm outline-none transition-all duration-200 placeholder:text-white/25"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.border = "1px solid rgba(212,175,106,0.6)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
+                }}
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium tracking-wide text-[#2C2C2C]/70 dark:text-white/70">
+            <div className="space-y-1.5">
+              <label
+                className="block text-[11px] uppercase tracking-[0.2em]"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
                 Password
               </label>
               <input
@@ -76,23 +120,40 @@ export default function ManagerLoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-11 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm text-[#2C2C2C] outline-none placeholder:text-black/40 focus:ring-2 focus:ring-[#D4AF6A]/40 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
                 placeholder="••••••••"
+                className="w-full h-11 rounded-xl px-4 text-sm outline-none transition-all duration-200 placeholder:text-white/25"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.border = "1px solid rgba(212,175,106,0.6)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
+                }}
               />
             </div>
 
             <button
               type="submit"
-              className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-[#2C2C2C] text-sm font-semibold tracking-wide text-white shadow-lg transition hover:bg-black dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
+              className="w-full h-11 rounded-xl text-sm uppercase tracking-[0.22em] font-semibold transition-all duration-300 hover:opacity-85 mt-2"
+              style={{ background: "#D4AF6A", color: "#06090e" }}
             >
-              Sign in
+              Sign In
             </button>
-
-            <div className="pt-4 flex justify-center">
-              <ManagerThemeToggle />
-            </div>
           </form>
         </div>
+
+        {/* Back link */}
+        <Link
+          href="/"
+          className="mt-8 text-[11px] uppercase tracking-[0.2em] transition-opacity duration-300 hover:opacity-60"
+          style={{ color: "rgba(212,175,106,0.55)" }}
+        >
+          ← Back to Pillar
+        </Link>
       </div>
     </div>
   );
