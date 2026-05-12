@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import ChatConcierge from '@/components/ChatConcierge';
 import CopyPasswordButton from './CopyPasswordButton';
 import type { PropertyFields, ManagerLayoutItem, Property, AmenityWindow } from '@/lib/types';
+import { AMENITY_ICONS_MAP } from '@/lib/amenityIcons';
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 
@@ -45,6 +46,26 @@ function HomeIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
       <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <path d="M9 21v-8h6v8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ─── Amenity icon renderer ───────────────────────────────────── */
+
+function AmenityIconSvg({ iconKey, className }: { iconKey?: string; className?: string }) {
+  const def = iconKey ? AMENITY_ICONS_MAP[iconKey] : undefined;
+  if (!def) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      {def.paths.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
     </svg>
   );
 }
@@ -269,33 +290,45 @@ function GlassCard({ children }: { children: ReactNode }) {
   );
 }
 
-function AmenityRow({
+function AmenityTile({
+  id,
+  iconKey,
   title,
-  open,
+  selected,
   onToggle,
-  children,
 }: {
+  id: string;
+  iconKey?: string;
   title: string;
-  open: boolean;
+  selected: boolean;
   onToggle: () => void;
-  children: ReactNode;
 }) {
   return (
-    <div className={`overflow-hidden rounded-2xl border transition-all duration-200 ${open ? 'border-teal-500/22 bg-[#0d1e2d]/90' : 'border-white/[0.06] bg-[#0f1e2d]/70 hover:border-teal-500/15'} backdrop-blur-sm`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-      >
-        <div className="text-sm font-semibold tracking-wide text-white/88">{title}</div>
-        <div className={`transition-colors duration-200 ${open ? 'text-teal-400/70' : 'text-white/30'}`}>
-          <ChevronRight className={`h-5 w-5 transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
-        </div>
-      </button>
-      {open ? <div className="border-t border-white/[0.05] px-5 py-4">{children}</div> : null}
-    </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`group flex items-center gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${
+        selected
+          ? 'border-teal-500/40 bg-[#0d1e2d]/90 shadow-[0_0_20px_rgba(20,184,166,0.1)]'
+          : 'border-white/6 bg-[#0f1e2d]/70 hover:border-teal-500/20 hover:bg-[#0d1e2d]/80'
+      }`}
+    >
+      <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200 ${
+        selected ? 'bg-teal-500/18 text-teal-300' : 'bg-white/5 text-white/45 group-hover:bg-teal-500/10 group-hover:text-teal-300/70'
+      }`}>
+        <AmenityIconSvg iconKey={iconKey} className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={`truncate text-sm font-semibold leading-tight transition-colors duration-200 ${selected ? 'text-white' : 'text-white/75 group-hover:text-white/90'}`}>
+          {title}
+        </p>
+        <div className={`mt-1.5 h-1 w-1 rounded-full ${selected ? 'bg-teal-400' : 'bg-white/20'}`} />
+      </div>
+    </button>
   );
 }
+
+
 
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
@@ -683,34 +716,100 @@ export default function PropertyExperience({
                     <div className="h-10 w-10 flex-none" />
                   </div>
 
-                  <div className="mt-5 space-y-3">
-                    <AmenityRow title="WiFi" open={openAmenityId === 'wifi'} onToggle={() => setOpenAmenityId((v) => (v === 'wifi' ? null : 'wifi'))}>
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Network</p>
-                          <p className="text-sm text-white/85">{property.WiFiName}</p>
+                  {/* Amenity grid */}
+                  <div className="mt-5">
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* WiFi tile */}
+                      <AmenityTile
+                        id="wifi"
+                        iconKey="wifi"
+                        title="WiFi"
+                        selected={openAmenityId === 'wifi'}
+                        onToggle={() => setOpenAmenityId((v) => (v === 'wifi' ? null : 'wifi'))}
+                      />
+
+                      {/* Garage tile */}
+                      <AmenityTile
+                        id="garage"
+                        iconKey="key"
+                        title="Garage Code"
+                        selected={openAmenityId === 'garage'}
+                        onToggle={() => setOpenAmenityId((v) => (v === 'garage' ? null : 'garage'))}
+                      />
+
+                      {/* Custom window tiles */}
+                      {(property.windows ?? []).map((w) => (
+                        <AmenityTile
+                          key={w.id}
+                          id={w.id}
+                          iconKey={w.icon}
+                          title={w.title}
+                          selected={openAmenityId === w.id}
+                          onToggle={() => setOpenAmenityId((v) => (v === w.id ? null : w.id))}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Detail panel — appears below the grid when a tile is selected */}
+                    {openAmenityId ? (
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-teal-500/22 bg-[#0d1e2d]/90 backdrop-blur-sm">
+                        <div className="border-b border-white/5 px-5 py-3.5">
+                          {openAmenityId === 'wifi' ? (
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                                <AmenityIconSvg iconKey="wifi" className="h-4 w-4" />
+                              </div>
+                              <p className="text-sm font-semibold text-white/90">WiFi</p>
+                            </div>
+                          ) : openAmenityId === 'garage' ? (
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                                <AmenityIconSvg iconKey="key" className="h-4 w-4" />
+                              </div>
+                              <p className="text-sm font-semibold text-white/90">Garage Code</p>
+                            </div>
+                          ) : (
+                            (() => {
+                              const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
+                              return w ? (
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                                    <AmenityIconSvg iconKey={w.icon} className="h-4 w-4" />
+                                  </div>
+                                  <p className="text-sm font-semibold text-white/90">{w.title}</p>
+                                </div>
+                              ) : null;
+                            })()
+                          )}
                         </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Password</p>
-                            <p className="font-mono text-sm text-white/85">{property.WiFiPassword}</p>
-                          </div>
-                          <CopyPasswordButton password={property.WiFiPassword} />
+                        <div className="px-5 py-4">
+                          {openAmenityId === 'wifi' ? (
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Network</p>
+                                <p className="text-sm text-white/85">{property.WiFiName}</p>
+                              </div>
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                  <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Password</p>
+                                  <p className="font-mono text-sm text-white/85">{property.WiFiPassword}</p>
+                                </div>
+                                <CopyPasswordButton password={property.WiFiPassword} />
+                              </div>
+                            </div>
+                          ) : openAmenityId === 'garage' ? (
+                            property.GarageCode
+                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap">{property.GarageCode}</p></div>
+                              : <div className="text-sm text-white/45">Garage code not provided.</div>
+                          ) : (
+                            (() => {
+                              const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
+                              return w ? renderWindowContent(w) : null;
+                            })()
+                          )}
                         </div>
                       </div>
-                    </AmenityRow>
-
-                    <AmenityRow title="Garage Code" open={openAmenityId === 'garage'} onToggle={() => setOpenAmenityId((v) => (v === 'garage' ? null : 'garage'))}>
-                      {property.GarageCode
-                        ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap">{property.GarageCode}</p></div>
-                        : <div className="text-sm text-white/45">Garage code not provided.</div>}
-                    </AmenityRow>
-
-                    {(property.windows ?? []).map((w) => (
-                      <AmenityRow key={w.id} title={w.title} open={openAmenityId === w.id} onToggle={() => setOpenAmenityId((v) => (v === w.id ? null : w.id))}>
-                        {renderWindowContent(w)}
-                      </AmenityRow>
-                    ))}
+                    ) : null}
                   </div>
                 </div>
               </div>

@@ -17,6 +17,7 @@ function rowToWindow(row: SupabaseRow): AmenityWindow {
     id: String(row.id || ''),
     title: String(row.title || ''),
     type: isValidWindowType(row.type) ? (row.type as AmenityWindow['type']) : 'text',
+    icon: typeof row.icon === 'string' && row.icon ? row.icon : undefined,
     body: typeof row.body === 'string' && row.body ? row.body : undefined,
     url: typeof row.url === 'string' && row.url ? row.url : undefined,
   };
@@ -172,6 +173,7 @@ export async function createPropertyWindow(
     property_slug: slug.trim(),
     title: window.title,
     type: window.type,
+    icon: window.icon ?? null,
     body: window.body ?? null,
     url: window.url ?? null,
     display_order: displayOrder,
@@ -191,6 +193,7 @@ export async function savePropertyWindows(
     property_slug: slug.trim(),
     title: w.title,
     type: w.type,
+    icon: w.icon ?? null,
     body: w.body ?? null,
     url: w.url ?? null,
     display_order: idx,

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default function ManagerLoginPage() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative"
+      className="h-screen overflow-hidden flex flex-col items-center justify-center px-5 relative"
       style={{
         backgroundImage: "url(/images/background.png)",
         backgroundSize: "cover",
@@ -28,9 +28,9 @@ export default function ManagerLoginPage() {
         <Image
           src="/images/pillarlogowhite.png"
           alt="Pillar"
-          width={150}
-          height={100}
-          className="mb-8 opacity-90"
+          width={300}
+          height={200}
+          className="mb-8 opacity-90 max-w-full"
           priority
         />
 
@@ -143,6 +143,16 @@ export default function ManagerLoginPage() {
             >
               Sign In
             </button>
+
+            <div className="text-center pt-1">
+              <Link
+                href="/manager/forgot-password"
+                className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-300 hover:opacity-70"
+                style={{ color: "rgba(212,175,106,0.6)" }}
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </form>
         </div>
 

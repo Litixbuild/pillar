@@ -3,7 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname === "/manager/login") {
+  if (
+    pathname === "/manager/login" ||
+    pathname === "/manager/forgot-password" ||
+    pathname === "/manager/reset-password"
+  ) {
     return NextResponse.next();
   }
 

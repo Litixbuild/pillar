@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Property, PropertyFields, ManagerLayoutItem, AmenityWindow } from '@/lib/types';
 import { generateWindowId } from '@/lib/types';
+import { AMENITY_ICONS_MAP, DEFAULT_ICON_KEY, searchIcons } from '@/lib/amenityIcons';
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -242,6 +243,125 @@ function HeroUpload({
   );
 }
 
+/* ── Amenity icon helpers ───────────────────────────────────────────── */
+
+function AmenityIconSvg({ iconKey, className }: { iconKey?: string; className?: string }) {
+  const def = iconKey ? AMENITY_ICONS_MAP[iconKey] : undefined;
+  if (!def) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      {def.paths.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
+function IconPickerModal({
+  current,
+  onSelect,
+  onClose,
+}: {
+  current: string;
+  onSelect: (key: string) => void;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState('');
+  const results = searchIcons(query);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6 sm:items-center">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        aria-label="Close icon picker"
+      />
+      <div
+        className="relative flex w-full max-w-md flex-col overflow-hidden rounded-2xl border shadow-2xl"
+        style={{ maxHeight: '80vh', backgroundColor: 'white', borderColor: 'rgba(212,175,106,0.25)' }}
+      >
+        {/* Dark mode override via Tailwind */}
+        <div className="flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#141414]" style={{ maxHeight: '80vh' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 border-b border-black/8 px-5 py-4 dark:border-white/8">
+            <h3 className="text-sm font-semibold text-[#1a1a1a] dark:text-white">Pick an Icon</h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-black/35 transition-colors hover:text-black/65 dark:text-white/35 dark:hover:text-white/65"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="border-b border-black/5 px-5 py-3 dark:border-white/5">
+            <div className="relative">
+              <svg viewBox="0 0 24 24" fill="none" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black/30 dark:text-white/30" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search icons… (pool, tv, coffee, gym…)"
+                className="h-10 w-full rounded-xl border border-black/10 bg-black/3 pl-10 pr-4 text-sm text-[#1a1a1a] placeholder:text-black/30 outline-none transition-all focus:border-[#D4AF6A]/50 focus:ring-2 focus:ring-[#D4AF6A]/15 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30 dark:focus:border-[#D4AF6A]/40"
+              />
+            </div>
+            <p className="mt-1.5 text-[10px] text-black/35 dark:text-white/35">
+              {results.length} icon{results.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
+
+          {/* Grid */}
+          <div className="overflow-y-auto p-4">
+            {results.length === 0 ? (
+              <p className="py-6 text-center text-sm text-black/35 dark:text-white/35">
+                No icons match &ldquo;{query}&rdquo;
+              </p>
+            ) : (
+              <div className="grid grid-cols-5 gap-2">
+                {results.map((icon) => {
+                  const isSelected = icon.key === current;
+                  return (
+                    <button
+                      key={icon.key}
+                      type="button"
+                      onClick={() => { onSelect(icon.key); onClose(); }}
+                      title={icon.name}
+                      className={`group flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all duration-150 ${
+                        isSelected
+                          ? 'border-[#D4AF6A]/50 bg-[#D4AF6A]/10 text-[#7A5A1E] dark:border-[#D4AF6A]/40 dark:bg-[#D4AF6A]/12 dark:text-[#E8D4A8]'
+                          : 'border-black/8 bg-black/2 text-black/40 hover:border-[#D4AF6A]/35 hover:bg-[#D4AF6A]/6 hover:text-[#7A5A1E] dark:border-white/8 dark:bg-white/2 dark:text-white/40 dark:hover:border-[#D4AF6A]/30 dark:hover:text-[#E8D4A8]'
+                      }`}
+                    >
+                      <AmenityIconSvg iconKey={icon.key} className="h-5 w-5 flex-none" />
+                      <span className="w-full truncate text-center text-[9px] font-medium leading-tight opacity-70 group-hover:opacity-90">
+                        {icon.name.split(' ')[0]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Window Card ────────────────────────────────────────────────────── */
 
 const ACCEPT: Record<AmenityWindow['type'], string> = {
@@ -266,6 +386,7 @@ function WindowCard({
 }) {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [uploadErr, setUploadErr] = useState('');
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -294,6 +415,39 @@ function WindowCard({
 
   return (
     <div className="space-y-4 rounded-2xl border border-[#D4AF6A]/20 bg-[#FDFCFA] p-5 dark:border-[#D4AF6A]/10 dark:bg-[#1A1A1A]">
+
+      {/* Icon picker */}
+      {iconPickerOpen ? (
+        <IconPickerModal
+          current={w.icon ?? DEFAULT_ICON_KEY}
+          onSelect={(key) => onUpdate({ ...w, icon: key })}
+          onClose={() => setIconPickerOpen(false)}
+        />
+      ) : null}
+
+      {/* Icon selector button */}
+      <div className="space-y-2">
+        <FieldLabel>Icon</FieldLabel>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setIconPickerOpen(true)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 text-left transition hover:bg-[#F5F3EE] disabled:opacity-50 dark:border-white/10 dark:bg-[#1E1E1E] dark:hover:bg-white/5"
+        >
+          <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-[#D4AF6A]/30 bg-[#D4AF6A]/8 text-[#7A5A1E] dark:border-[#D4AF6A]/20 dark:bg-[#D4AF6A]/10 dark:text-[#E8D4A8]">
+            <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-[#1a1a1a] dark:text-white">
+              {AMENITY_ICONS_MAP[w.icon ?? DEFAULT_ICON_KEY]?.name ?? 'Home'}
+            </p>
+            <p className="text-xs text-black/35 dark:text-white/35">Tap to change icon</p>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 flex-none text-black/25 dark:text-white/25" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
 
       {/* Title */}
       <div className="space-y-2">
@@ -600,7 +754,7 @@ export default function ManagerPropertyDetailsClient({
 
           <button
             type="button"
-            onClick={() => setWindows((ws) => [...ws, { id: generateWindowId(), title: '', type: 'video' }])}
+            onClick={() => setWindows((ws) => [...ws, { id: generateWindowId(), title: '', type: 'video', icon: DEFAULT_ICON_KEY }])}
             className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#D4AF6A]/30 text-sm font-semibold text-[#7A5A1E]/60 transition hover:border-[#D4AF6A]/50 hover:bg-[#D4AF6A]/5 dark:border-[#D4AF6A]/20 dark:text-[#E8D4A8]/50 dark:hover:bg-[#D4AF6A]/8"
           >
             <span className="text-lg leading-none">+</span> Add window

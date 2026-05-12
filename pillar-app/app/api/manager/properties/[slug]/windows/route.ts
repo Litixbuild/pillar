@@ -46,6 +46,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ slug: string }
       id,
       title,
       type,
+      icon: typeof body.icon === 'string' && body.icon.trim() ? body.icon.trim() : undefined,
       body: typeof body.body === 'string' && body.body.trim() ? body.body.trim() : undefined,
     };
 
@@ -78,6 +79,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ slug: string 
         id: String(w.id || ''),
         title: String(w.title || ''),
         type: isValidWindowType(w.type) ? w.type : 'text',
+        icon: typeof w.icon === 'string' && w.icon.trim() ? w.icon.trim() : undefined,
         body: typeof w.body === 'string' && w.body.trim() ? w.body.trim() : undefined,
         url: typeof w.url === 'string' && w.url.trim() ? w.url.trim() : undefined,
       }))

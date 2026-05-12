@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import type { Property, AmenityWindow } from '@/lib/types';
 import { generateWindowId } from '@/lib/types';
+import { AMENITY_ICONS, AMENITY_ICONS_MAP, DEFAULT_ICON_KEY, searchIcons } from '@/lib/amenityIcons';
 
 interface WindowDraft extends AmenityWindow {
   _uploading?: boolean;
@@ -36,7 +37,7 @@ async function saveCoreFields(slug: string, fields: Partial<CoreFields>) {
 }
 
 async function saveWindowsToDb(slug: string, windows: AmenityWindow[]) {
-  const clean = windows.map(({ id, title, type, body, url }) => ({ id, title, type, body, url }));
+  const clean = windows.map(({ id, title, type, icon, body, url }) => ({ id, title, type, icon, body, url }));
   const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
@@ -50,7 +51,7 @@ async function createWindowInDb(slug: string, window: AmenityWindow, displayOrde
   const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ id: window.id, title: window.title, type: window.type, body: window.body, displayOrder }),
+    body: JSON.stringify({ id: window.id, title: window.title, type: window.type, icon: window.icon, body: window.body, displayOrder }),
   });
   const data = (await res.json().catch(() => null)) as { error?: string } | null;
   if (!res.ok) throw new Error(data?.error ?? `Create window failed (HTTP ${res.status})`);
@@ -132,6 +133,111 @@ function ChevronDownIcon() {
     <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
       <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/* ─── Icon rendering ──────────────────────────────────────────── */
+
+function AmenityIconSvg({ iconKey, className }: { iconKey: string; className?: string }) {
+  const def = AMENITY_ICONS_MAP[iconKey];
+  if (!def) return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      {def.paths.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
+function IconPickerModal({
+  current,
+  onSelect,
+  onClose,
+}: {
+  current: string;
+  onSelect: (key: string) => void;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState('');
+  const results = searchIcons(query);
+
+  return (
+    <div className="fixed inset-0 z-60 flex items-end justify-center px-4 pb-6 sm:items-center">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/85 backdrop-blur-sm"
+        aria-label="Close icon picker"
+      />
+      <div className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#080f18]/98 shadow-[0_24px_80px_rgba(0,0,0,0.9)] backdrop-blur-xl" style={{ maxHeight: '80vh' }}>
+        <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-teal-400/28 to-transparent" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 border-b border-white/6 px-5 py-4">
+          <h3 className="text-sm font-semibold text-white">Pick an Icon</h3>
+          <button type="button" onClick={onClose} className="text-white/35 transition-colors hover:text-white/65">
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-5 py-3 border-b border-white/5">
+          <div className="relative">
+            <svg viewBox="0 0 24 24" fill="none" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search icons… (pool, tv, coffee, gym…)"
+              className="h-10 w-full rounded-xl border border-white/8 bg-[#0f1e2d]/70 pl-10 pr-4 text-sm text-white placeholder:text-white/25 outline-none transition-all focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/18"
+            />
+          </div>
+          <p className="mt-1.5 text-[10px] text-white/25">{results.length} icon{results.length !== 1 ? 's' : ''} found</p>
+        </div>
+
+        {/* Grid */}
+        <div className="overflow-y-auto p-4">
+          {results.length === 0 ? (
+            <p className="py-6 text-center text-sm text-white/30">No icons match &ldquo;{query}&rdquo;</p>
+          ) : (
+            <div className="grid grid-cols-5 gap-2">
+              {results.map((icon) => {
+                const isSelected = icon.key === current;
+                return (
+                  <button
+                    key={icon.key}
+                    type="button"
+                    onClick={() => { onSelect(icon.key); onClose(); }}
+                    title={icon.name}
+                    className={`group flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all duration-150 ${
+                      isSelected
+                        ? 'border-teal-500/50 bg-teal-500/15 text-teal-300'
+                        : 'border-white/6 bg-white/2 text-white/45 hover:border-teal-500/25 hover:bg-teal-500/8 hover:text-teal-300/80'
+                    }`}
+                  >
+                    <AmenityIconSvg iconKey={icon.key} className="h-5 w-5 flex-none" />
+                    <span className="w-full truncate text-center text-[9px] font-medium leading-tight opacity-70 group-hover:opacity-90">
+                      {icon.name.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -243,9 +349,12 @@ export default function ManagerPropertyEditorClient({
   const [addOpen, setAddOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType] = useState<AmenityWindow['type']>('text');
+  const [newIcon, setNewIcon] = useState(DEFAULT_ICON_KEY);
   const [newBody, setNewBody] = useState('');
   const [addSaving, setAddSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [iconPickerFor, setIconPickerFor] = useState<string | null>(null); // window id, or 'new' for the add modal
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -255,6 +364,10 @@ export default function ManagerPropertyEditorClient({
 
   function setWindowBody(id: string, body: string) {
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, body } : w)));
+  }
+
+  function setWindowIcon(id: string, icon: string) {
+    setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, icon } : w)));
   }
 
   function moveWindow(id: string, dir: -1 | 1) {
@@ -294,6 +407,7 @@ export default function ManagerPropertyEditorClient({
       id,
       title,
       type: newType,
+      icon: newIcon || DEFAULT_ICON_KEY,
       body: newType === 'text' && newBody.trim() ? newBody.trim() : undefined,
     };
 
@@ -305,6 +419,7 @@ export default function ManagerPropertyEditorClient({
       setAddOpen(false);
       setNewTitle('');
       setNewType('text');
+      setNewIcon(DEFAULT_ICON_KEY);
       setNewBody('');
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to create window');
@@ -523,6 +638,14 @@ export default function ManagerPropertyEditorClient({
                     {/* Window header */}
                     <div className="flex items-center justify-between gap-3 px-4 py-3">
                       <div className="flex min-w-0 items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setIconPickerFor(w.id)}
+                          title="Change icon"
+                          className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border border-teal-500/20 bg-teal-500/8 text-teal-300/70 transition-all hover:border-teal-500/40 hover:bg-teal-500/14 hover:text-teal-300"
+                        >
+                          <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-4 w-4" />
+                        </button>
                         <TypeBadge type={w.type} />
                         <span className="truncate text-sm font-medium text-white/85">{w.title}</span>
                       </div>
@@ -658,12 +781,27 @@ export default function ManagerPropertyEditorClient({
         </div>
       </div>
 
+      {/* Icon picker modal */}
+      {iconPickerFor ? (
+        <IconPickerModal
+          current={iconPickerFor === 'new' ? newIcon : (windows.find((w) => w.id === iconPickerFor)?.icon ?? DEFAULT_ICON_KEY)}
+          onSelect={(key) => {
+            if (iconPickerFor === 'new') {
+              setNewIcon(key);
+            } else {
+              setWindowIcon(iconPickerFor, key);
+            }
+          }}
+          onClose={() => setIconPickerFor(null)}
+        />
+      ) : null}
+
       {/* Add window modal */}
       {addOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center px-5 pb-8 sm:items-center">
           <button
             type="button"
-            onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewBody(''); }}
+            onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             aria-label="Close"
           />
@@ -674,6 +812,24 @@ export default function ManagerPropertyEditorClient({
             <p className="mt-1 text-sm text-white/40">Creates a new amenity section guests can open.</p>
 
             <div className="mt-5 space-y-4">
+              {/* Icon picker row */}
+              <div className="space-y-1.5">
+                <Label>Icon</Label>
+                <button
+                  type="button"
+                  onClick={() => setIconPickerFor('new')}
+                  className="flex items-center gap-3 rounded-xl border border-white/8 bg-[#0f1e2d]/70 px-3 py-2.5 text-left transition-all hover:border-teal-500/30 hover:bg-[#0f1e2d]"
+                >
+                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border border-teal-500/25 bg-teal-500/10 text-teal-300/80">
+                    <AmenityIconSvg iconKey={newIcon} className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-white/75">{AMENITY_ICONS_MAP[newIcon]?.name ?? 'Home'}</p>
+                    <p className="text-xs text-white/30">Tap to change icon</p>
+                  </div>
+                </button>
+              </div>
+
               <FieldGroup label="Title">
                 <TextInput
                   value={newTitle}
@@ -721,7 +877,7 @@ export default function ManagerPropertyEditorClient({
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewBody(''); }}
+                onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
                 className="inline-flex h-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/4 px-4 text-sm font-semibold text-white/55 transition-all hover:bg-white/8 hover:text-white/75"
               >
                 Cancel

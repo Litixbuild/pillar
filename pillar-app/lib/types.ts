@@ -16,6 +16,7 @@ export interface AmenityWindow {
   id: string;
   title: string;
   type: 'video' | 'pdf' | 'text' | 'image';
+  icon?: string;
   url?: string;
   body?: string;
 }
@@ -82,6 +83,7 @@ function parseWindowItem(x: unknown): AmenityWindow | null {
     id: w.id.trim(),
     title: w.title,
     type: w.type,
+    icon: typeof w.icon === 'string' ? w.icon : undefined,
     url: typeof w.url === 'string' ? w.url : undefined,
     body: typeof w.body === 'string' ? w.body : undefined,
   };
