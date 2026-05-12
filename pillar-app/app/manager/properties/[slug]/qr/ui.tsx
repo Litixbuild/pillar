@@ -79,10 +79,6 @@ export default function QRPrintClient({
           Scan to access WiFi, house rules, and property information.
         </p>
 
-        {/* URL for reference */}
-        <p className="mt-6 font-mono text-[11px] text-black/30 break-all text-center max-w-xs">
-          {publicUrl}
-        </p>
       </div>
 
       {/* Print-only page styles */}

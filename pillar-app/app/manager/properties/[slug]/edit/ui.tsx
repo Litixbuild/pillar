@@ -277,12 +277,12 @@ const TILES = [
     id: 'qr' as View,
     label: 'QR Code',
     sub: 'Print & share',
-    border: 'border-amber-500/35',
-    shadow: '0_0_32px_rgba(245,158,11,0.14)',
-    shadowHover: '0_0_48px_rgba(245,158,11,0.28)',
-    bg: 'bg-amber-500/5',
-    iconBg: 'bg-amber-500/12 border-amber-500/25 text-amber-400',
-    text: 'text-amber-300/90',
+    border: 'border-amber-400/55',
+    shadow: '0 0 0 1px rgba(251,191,36,0.18), 0 0 40px rgba(245,158,11,0.22), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(251,191,36,0.35), 0 0 60px rgba(245,158,11,0.38), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-amber-500/6',
+    iconBg: 'bg-amber-500/15 border-amber-400/35 text-amber-300',
+    text: 'text-amber-200',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
@@ -296,12 +296,12 @@ const TILES = [
     id: 'property-info' as View,
     label: 'Property Info',
     sub: 'Name, rules & bio',
-    border: 'border-teal-500/35',
-    shadow: '0_0_32px_rgba(20,184,166,0.12)',
-    shadowHover: '0_0_48px_rgba(20,184,166,0.26)',
-    bg: 'bg-teal-500/5',
-    iconBg: 'bg-teal-500/12 border-teal-500/25 text-teal-400',
-    text: 'text-teal-300/90',
+    border: 'border-teal-400/55',
+    shadow: '0 0 0 1px rgba(45,212,191,0.18), 0 0 40px rgba(20,184,166,0.20), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(45,212,191,0.35), 0 0 60px rgba(20,184,166,0.36), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-teal-500/6',
+    iconBg: 'bg-teal-500/15 border-teal-400/35 text-teal-300',
+    text: 'text-teal-200',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
@@ -313,12 +313,12 @@ const TILES = [
     id: 'amenities' as View,
     label: 'Amenities',
     sub: 'Windows & content',
-    border: 'border-purple-500/35',
-    shadow: '0_0_32px_rgba(168,85,247,0.12)',
-    shadowHover: '0_0_48px_rgba(168,85,247,0.26)',
-    bg: 'bg-purple-500/5',
-    iconBg: 'bg-purple-500/12 border-purple-500/25 text-purple-400',
-    text: 'text-purple-300/90',
+    border: 'border-purple-400/55',
+    shadow: '0 0 0 1px rgba(192,132,252,0.18), 0 0 40px rgba(168,85,247,0.20), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(192,132,252,0.35), 0 0 60px rgba(168,85,247,0.36), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-purple-500/6',
+    iconBg: 'bg-purple-500/15 border-purple-400/35 text-purple-300',
+    text: 'text-purple-200',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
@@ -332,12 +332,12 @@ const TILES = [
     id: 'settings' as View,
     label: 'Settings',
     sub: 'Coming soon',
-    border: 'border-blue-500/25',
-    shadow: '0_0_32px_rgba(59,130,246,0.08)',
-    shadowHover: '0_0_48px_rgba(59,130,246,0.18)',
-    bg: 'bg-blue-500/4',
-    iconBg: 'bg-blue-500/10 border-blue-500/20 text-blue-400/70',
-    text: 'text-blue-300/60',
+    border: 'border-blue-400/55',
+    shadow: '0 0 0 1px rgba(96,165,250,0.18), 0 0 40px rgba(59,130,246,0.20), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(96,165,250,0.35), 0 0 60px rgba(59,130,246,0.36), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-blue-500/6',
+    iconBg: 'bg-blue-500/15 border-blue-400/35 text-blue-300',
+    text: 'text-blue-200',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
@@ -807,7 +807,6 @@ function QRView({ slug }: { slug: string }) {
           <div className="h-[220px] w-[220px] animate-pulse rounded-xl bg-black/5" />
         )}
       </div>
-      <p className="mt-5 max-w-[280px] break-all text-center font-mono text-[11px] text-white/35">{publicUrl}</p>
       <p className="mt-3 max-w-[260px] text-center text-sm leading-relaxed text-white/45">
         Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
       </p>

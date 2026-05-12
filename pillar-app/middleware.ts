@@ -3,6 +3,21 @@ import { NextResponse, type NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // --- Admin routes ---
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/admin")) {
+    const token = req.cookies.get("pillar_admin")?.value || "";
+    if (!token) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // --- Manager routes ---
   if (
     pathname === "/manager/login" ||
     pathname === "/manager/forgot-password" ||
@@ -11,7 +26,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect manager portal routes (except login + API auth endpoints)
   if (pathname.startsWith("/manager")) {
     const token = req.cookies.get("pillar_manager")?.value || "";
     if (!token) {
@@ -25,5 +39,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/manager/:path*"],
+  matcher: ["/manager/:path*", "/admin/:path*"],
 };

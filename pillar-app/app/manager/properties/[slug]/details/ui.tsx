@@ -542,9 +542,6 @@ function QRSection({ slug }: { slug: string }) {
             <div className="h-40 w-40 animate-pulse rounded-xl bg-black/5 dark:bg-white/5" />
           )}
         </div>
-        <p className="max-w-full break-all text-center font-mono text-[11px] text-black/35 dark:text-white/35">
-          {publicUrl}
-        </p>
         <a
           href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
           target="_blank"
