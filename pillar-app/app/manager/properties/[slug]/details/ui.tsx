@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 import type { Property, PropertyFields, ManagerLayoutItem, AmenityWindow } from '@/lib/types';
 import { generateWindowId } from '@/lib/types';
 import { AMENITY_ICONS_MAP, DEFAULT_ICON_KEY, searchIcons } from '@/lib/amenityIcons';
@@ -520,6 +521,48 @@ function WindowCard({
   );
 }
 
+/* ── QR Code Section ────────────────────────────────────────────────── */
+
+function QRSection({ slug }: { slug: string }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const publicUrl = mounted ? `${window.location.origin}/p/${slug}` : `/p/${slug}`;
+
+  return (
+    <section className={card}>
+      <SectionHeading
+        title="QR Code"
+        subtitle="Print and place at the property — tenants scan to access WiFi, house rules, and more."
+      />
+      <div className="flex flex-col items-center gap-4">
+        <div className="rounded-2xl border border-[#D4AF6A]/25 bg-white p-4 shadow-sm dark:bg-[#1A1A1A]">
+          {mounted ? (
+            <QRCodeSVG value={publicUrl} size={160} bgColor="#ffffff" fgColor="#1a1a1a" level="H" />
+          ) : (
+            <div className="h-40 w-40 animate-pulse rounded-xl bg-black/5 dark:bg-white/5" />
+          )}
+        </div>
+        <p className="max-w-full break-all text-center font-mono text-[11px] text-black/35 dark:text-white/35">
+          {publicUrl}
+        </p>
+        <a
+          href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-[#D4AF6A]/30 bg-[#D4AF6A]/8 text-sm font-semibold text-[#7A5A1E] transition hover:bg-[#D4AF6A]/15 dark:border-[#D4AF6A]/20 dark:bg-[#D4AF6A]/10 dark:text-[#E8D4A8] dark:hover:bg-[#D4AF6A]/18"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+            <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 14h12v8H6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Open print view
+        </a>
+      </div>
+    </section>
+  );
+}
+
 /* ── Main component ─────────────────────────────────────────────────── */
 
 export default function ManagerPropertyDetailsClient({
@@ -645,6 +688,9 @@ export default function ManagerPropertyDetailsClient({
             View live <span aria-hidden>↗</span>
           </Link>
         </div>
+
+        {/* QR Code */}
+        <QRSection slug={slug} />
 
         {saveState === 'error' ? (
           <div className="rounded-2xl border border-red-500/15 bg-red-500/8 px-4 py-3 text-sm text-red-800 dark:text-red-300">
