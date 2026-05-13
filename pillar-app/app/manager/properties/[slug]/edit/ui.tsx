@@ -793,10 +793,39 @@ function AmenitiesView({
 
 /* ─── QR view ─────────────────────────────────────────── */
 
-function QRView({ slug }: { slug: string }) {
+function QRView({ slug: initialSlug }: { slug: string }) {
+  const [slug, setSlug] = useState(initialSlug);
   const [mounted, setMounted] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [regenError, setRegenError] = useState<string | null>(null);
+  const [regenSuccess, setRegenSuccess] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
-  const publicUrl = mounted ? `${window.location.origin}/p/${slug}` : `/p/${slug}`;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (mounted ? window.location.origin : '');
+  const publicUrl = `${appUrl}/p/${slug}`;
+  const confirmed = confirmText === 'Generate';
+
+  async function handleRegenerate() {
+    if (!confirmed || isGenerating) return;
+    setIsGenerating(true);
+    setRegenError(null);
+    const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/regenerate`, { method: 'POST' });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setRegenError(data.error || 'Failed to regenerate. Please try again.');
+      setIsGenerating(false);
+      return;
+    }
+    const { slug: newSlug } = (await res.json()) as { slug: string };
+    setSlug(newSlug);
+    window.history.replaceState(null, '', `/manager/properties/${encodeURIComponent(newSlug)}/edit`);
+    setShowModal(false);
+    setIsGenerating(false);
+    setRegenSuccess(true);
+  }
 
   return (
     <div className="flex flex-col items-center px-6 pt-8 pb-32">
@@ -807,22 +836,95 @@ function QRView({ slug }: { slug: string }) {
           <div className="h-[220px] w-[220px] animate-pulse rounded-xl bg-black/5" />
         )}
       </div>
-      <p className="mt-3 max-w-[260px] text-center text-sm leading-relaxed text-white/45">
-        Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
-      </p>
-      <a
-        href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-8 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/8 text-sm font-semibold text-amber-300/85 transition-all duration-200 hover:bg-amber-500/14 hover:text-amber-300"
-      >
-        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-          <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M6 14h12v8H6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Open print view
-      </a>
+      {regenSuccess ? (
+        <p className="mt-3 text-center text-sm font-semibold text-amber-400">New QR code generated ✓</p>
+      ) : (
+        <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/45">
+          Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
+        </p>
+      )}
+
+      <div className="mt-8 flex w-full max-w-xs gap-2">
+        {/* Regenerate — left */}
+        <button
+          type="button"
+          onClick={() => { setShowModal(true); setConfirmText(''); setRegenError(null); }}
+          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/8 text-sm font-semibold text-amber-300/85 transition-all duration-200 hover:bg-amber-500/14 hover:text-amber-300"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
+            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Regenerate
+        </button>
+
+        {/* Print view — right */}
+        <a
+          href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
+            <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 14h12v8H6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Print view
+        </a>
+      </div>
+
+      {/* Regenerate confirmation modal */}
+      {showModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          style={{ background: 'rgba(0,0,0,0.72)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0f1a24] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+            <div className="h-1 w-full bg-amber-400" />
+            <div className="p-6">
+              <h2 className="text-base font-bold tracking-tight text-white">Regenerate QR Code?</h2>
+              <p className="mt-2 text-sm leading-relaxed text-white/50">
+                This creates a new unique link for this property.{' '}
+                <span className="font-semibold text-white/75">Any previously printed QR codes will stop working</span>{' '}
+                and will need to be reprinted.
+              </p>
+              <div className="mt-5 space-y-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                  Type <span className="text-amber-400">Generate</span> to confirm
+                </p>
+                <input
+                  type="text"
+                  autoFocus
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void handleRegenerate(); }}
+                  placeholder="Generate"
+                  className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition-all placeholder:text-white/20 focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/25"
+                />
+              </div>
+              {regenError ? <p className="mt-3 text-xs text-red-400">{regenError}</p> : null}
+              <div className="mt-5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleRegenerate()}
+                  disabled={!confirmed || isGenerating}
+                  className="h-10 flex-1 rounded-xl bg-amber-400 text-sm font-bold text-[#0a1015] transition hover:bg-amber-500 disabled:opacity-40"
+                >
+                  {isGenerating ? 'Generating…' : 'Generate New QR Code'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/75"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getPropertiesByManagerId } from "@/lib/properties";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
+import { createServiceClient } from "@/lib/supabase";
 import ManagerDashboardClient from "./ManagerDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,12 @@ export default async function ManagerDashboardPage() {
     redirect("/manager/login");
   }
 
-  const properties = await getPropertiesByManagerId(session.userId);
+  const supabase = createServiceClient();
+  const [properties, profileResult] = await Promise.all([
+    getPropertiesByManagerId(session.userId),
+    supabase.from("profiles").select("is_subscribed").eq("id", session.userId).single(),
+  ]);
+  const isSubscribed = profileResult.data?.is_subscribed === true;
   const managerName = (session.name || "").trim() || "Manager";
 
   return (
@@ -55,7 +61,7 @@ export default async function ManagerDashboardPage() {
               </span>
             </div>
             <div className="p-6">
-              <ManagerDashboardClient properties={properties} />
+              <ManagerDashboardClient properties={properties} isSubscribed={isSubscribed} />
             </div>
           </div>
 

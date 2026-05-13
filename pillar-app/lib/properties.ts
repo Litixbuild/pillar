@@ -225,6 +225,45 @@ export async function updateWindowUrl(slug: string, windowId: string, url: strin
   if (error) throw new Error(`Failed to update window URL: ${error.message}`);
 }
 
+export async function regeneratePropertySlug(
+  managerId: string,
+  oldSlug: string,
+  newSlug: string
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  // Update the property slug (verifies ownership via manager_id)
+  const { error: propError } = await supabase
+    .from('properties')
+    .update({ slug: newSlug })
+    .eq('slug', oldSlug.trim())
+    .eq('manager_id', managerId);
+
+  if (propError) throw new Error(`Failed to update slug: ${propError.message}`);
+
+  // Re-parent any windows to the new slug
+  await supabase
+    .from('property_windows')
+    .update({ property_slug: newSlug })
+    .eq('property_slug', oldSlug.trim());
+}
+
+export async function createProperty(managerId: string, name: string, slug: string): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from('properties').insert({
+    slug,
+    name,
+    manager_id: managerId,
+  });
+  if (error) throw new Error(`Failed to create property: ${error.message}`);
+}
+
+export async function slugExists(slug: string): Promise<boolean> {
+  const supabase = createServiceClient();
+  const { data } = await supabase.from('properties').select('id').eq('slug', slug).single();
+  return !!data;
+}
+
 export async function requirePropertyAccess(managerId: string, slug: string): Promise<boolean> {
   const supabase = createServiceClient();
   const { data, error } = await supabase

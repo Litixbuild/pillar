@@ -33,11 +33,16 @@ export default async function QRPrintPage(props: {
   const property = await getPropertyBySlug(slug);
   if (!property) redirect('/manager');
 
-  const headersList = await headers();
-  const host = headersList.get('host') || 'localhost:3000';
-  const xForwardedProto = headersList.get('x-forwarded-proto');
-  const proto = xForwardedProto || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
-  const publicUrl = `${proto}://${host}/p/${encodeURIComponent(slug)}`;
+  let publicUrl: string;
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    publicUrl = `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')}/p/${encodeURIComponent(slug)}`;
+  } else {
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const xForwardedProto = headersList.get('x-forwarded-proto');
+    const proto = xForwardedProto || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
+    publicUrl = `${proto}://${host}/p/${encodeURIComponent(slug)}`;
+  }
 
   return (
     <QRPrintClient

@@ -20,6 +20,7 @@ export function middleware(req: NextRequest) {
   // --- Manager routes ---
   if (
     pathname === "/manager/login" ||
+    pathname === "/manager/signup" ||
     pathname === "/manager/forgot-password" ||
     pathname === "/manager/reset-password"
   ) {
