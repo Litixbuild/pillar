@@ -243,11 +243,11 @@ export default function Home() {
             and we&apos;ll get back to you promptly.
           </p>
           <a
-            href="mailto:cameron@pmpillar.com"
+            href="mailto:support@pmpillar.com"
             className="text-base lg:text-xl tracking-wide transition-all duration-300 hover:opacity-70 break-all"
             style={{ color: "#D4AF6A", borderBottom: "1px solid rgba(212,175,106,0.35)" }}
           >
-            cameron@pmpillar.com
+            support@pmpillar.com
           </a>
         </div>
       </section>
