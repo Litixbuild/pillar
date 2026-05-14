@@ -39,6 +39,10 @@ function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = []): Propert
     HeroImage: (row.hero_image_url as string) || undefined,
     LogoUrl: (row.logo_url as string) || undefined,
     LogoSize: typeof row.logo_size === 'number' ? row.logo_size : undefined,
+    BackgroundKey: typeof row.background_key === 'string' && row.background_key ? row.background_key : undefined,
+    AccentColor: typeof row.accent_color === 'string' && row.accent_color ? row.accent_color : undefined,
+    HeadingColor: typeof row.heading_color === 'string' && row.heading_color ? row.heading_color : undefined,
+    TextColor: typeof row.text_color === 'string' && row.text_color ? row.text_color : undefined,
     windows,
   };
 }
@@ -64,6 +68,10 @@ const COLUMN_MAP: Record<string, string> = {
   HouseRules: 'house_rules',
   ManagerPhone: 'manager_phone',
   LogoSize: 'logo_size',
+  BackgroundKey: 'background_key',
+  AccentColor: 'accent_color',
+  HeadingColor: 'heading_color',
+  TextColor: 'text_color',
 };
 
 async function fetchWindowsBySlug(slug: string): Promise<AmenityWindow[]> {
@@ -256,6 +264,16 @@ export async function createProperty(managerId: string, name: string, slug: stri
     manager_id: managerId,
   });
   if (error) throw new Error(`Failed to create property: ${error.message}`);
+}
+
+export async function deleteProperty(managerId: string, slug: string): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('slug', slug)
+    .eq('manager_id', managerId);
+  if (error) throw new Error(`Failed to delete property: ${error.message}`);
 }
 
 export async function slugExists(slug: string): Promise<boolean> {

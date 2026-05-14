@@ -79,9 +79,9 @@ function ButlerIcon({ className }: { className?: string }) {
 function TypingDots() {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60 [animation-delay:-0.2s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60 [animation-delay:-0.1s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal-400/60" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.2s]" style={{ backgroundColor: 'var(--accent-45)' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.1s]" style={{ backgroundColor: 'var(--accent-45)' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full" style={{ backgroundColor: 'var(--accent-45)' }} />
     </div>
   );
 }
@@ -97,7 +97,8 @@ function CopyButton({ value }: { value: string }) {
         try { await navigator.clipboard.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1200); }
         catch { /* ignore */ }
       }}
-      className="rounded-full border border-teal-500/22 bg-teal-500/8 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-teal-300/70 transition-all duration-200 hover:bg-teal-500/15 hover:text-teal-300"
+      className="rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all duration-200"
+      style={{ borderColor: 'var(--accent-22)', backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
@@ -112,7 +113,8 @@ function MapsButton({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-white/[0.07] bg-[#0f1e2d]/80 shadow-sm transition-all duration-200 hover:bg-[#0f1e2d]"
+      className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-white/[0.07] shadow-sm transition-all duration-200"
+      style={{ background: 'var(--panel-card)' }}
       aria-label="Open in Google Maps"
       title="Open in Google Maps"
     >
@@ -181,7 +183,7 @@ function MessageText({ text }: { text: string }) {
             return true;
           });
           return (
-            <div key={i} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
+            <div key={i} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="text-sm font-semibold text-white/90">{titleNode}</div>
                 {mapsHref ? <MapsButton href={mapsHref} /> : null}
@@ -228,7 +230,8 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
           <button
             type="button"
             data-retry-chat="1"
-            className="inline-flex h-9 items-center justify-center rounded-full border border-teal-500/22 bg-teal-500/8 px-4 text-xs font-semibold tracking-wide text-teal-300/80 transition-all duration-200 hover:bg-teal-500/15"
+            className="inline-flex h-9 items-center justify-center rounded-full border px-4 text-xs font-semibold tracking-wide transition-all duration-200"
+            style={{ borderColor: 'var(--accent-22)', background: 'var(--accent-10)', color: 'var(--accent)' }}
           >
             Try again
           </button>
@@ -307,7 +310,7 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
         <div className="lux-title text-sm text-white/90">Nearby options</div>
         <div className="space-y-2">
           {data.places.map((p, idx) => (
-            <div key={idx} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
+            <div key={idx} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="lux-title text-sm text-white/90 min-w-0">
                   {(() => {
@@ -339,7 +342,7 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
             <div className="lux-title text-sm text-white/90">{s.title}</div>
             <div className="space-y-2">
               {(s.places || []).map((p, pi) => (
-                <div key={pi} className="rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 p-3 shadow-sm">
+                <div key={pi} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-white/90">{p.name || '—'}</div>
@@ -376,7 +379,7 @@ type ButlerCardData =
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
 
-type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string };
+type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; accentColor?: string };
 
 type OverloadedErrorPayload = { code: 'OVERLOADED'; message: string; retryAfterMs: number };
 
@@ -393,7 +396,39 @@ const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Che
 
 /* ─── Main export ────────────────────────────────────────────── */
 
-export default function ChatConcierge({ slug, placement = 'floating', triggerClassName }: Props) {
+function hexToRgba(hex: string, alpha: number): string {
+  if (!hex || hex.length < 7) return `rgba(20,184,166,${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, accentColor }: Props) {
+  const panelThemeVars = useMemo(() => {
+    const hex = accentColor && accentColor.startsWith('#') ? accentColor : '#2dd4bf';
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    // Dark neutral base (6,9,18) + small accent addition — avoids gross muddy colors
+    const tint = (f: number, a: number) =>
+      `rgba(${Math.min(255,Math.round(6+r*f))},${Math.min(255,Math.round(9+g*f))},${Math.min(255,Math.round(18+b*f))},${a})`;
+    return {
+      '--accent': hex,
+      '--accent-10': hexToRgba(hex, 0.18),
+      '--accent-18': hexToRgba(hex, 0.18),
+      '--accent-22': hexToRgba(hex, 0.22),
+      '--accent-28': hexToRgba(hex, 0.28),
+      '--accent-45': hexToRgba(hex, 0.45),
+      '--accent-50': hexToRgba(hex, 0.5),
+      '--btn-bg-from': hexToRgba(hex, 0.22),
+      '--btn-bg-to': hexToRgba(hex, 0.14),
+      '--panel-deep': tint(0.07, 0.97),
+      '--panel-mid': tint(0.09, 0.55),
+      '--panel-card': tint(0.08, 0.88),
+      '--panel-input': tint(0.06, 0.72),
+    } as React.CSSProperties;
+  }, [accentColor]);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -533,27 +568,44 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           onClick={() => setOpen(true)}
           className={
             placement === 'floating'
-              ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border border-teal-500/28 bg-linear-to-br from-[#0d2535] to-[#091e2c] text-teal-400 shadow-[0_0_24px_rgba(20,184,166,0.15)] transition-all duration-300 hover:border-teal-400/48 hover:shadow-[0_0_36px_rgba(20,184,166,0.28)] focus:outline-none'
-              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-teal-500/20 bg-linear-to-br from-[#0d2535] to-[#091e2c] px-6 py-5 text-left shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-teal-400/35 hover:shadow-[0_4px_24px_rgba(0,0,0,0.5),0_0_28px_rgba(20,184,166,0.14)] focus:outline-none ' + (triggerClassName ?? '')
+              ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border border-teal-500/28 text-teal-400 shadow-[0_0_24px_rgba(20,184,166,0.15)] transition-all duration-300 hover:border-teal-400/48 hover:shadow-[0_0_36px_rgba(20,184,166,0.28)] focus:outline-none'
+              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-teal-500/20 px-6 py-5 text-left transition-all duration-300 focus:outline-none ' + (triggerClassName ?? '')
           }
           aria-label="Open concierge"
+          style={{
+            borderColor: 'var(--accent-22)',
+            background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+          }}
         >
           {placement === 'floating' ? (
             <SlidingTriggerIcon />
           ) : (
             <>
               {/* Shine line */}
-              <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-teal-400/25 to-transparent" />
+              <div
+                className="absolute inset-x-0 top-0 h-px"
+                style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }}
+              />
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-teal-500/12 text-teal-400 ring-1 ring-teal-500/20">
+                <div
+                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
+                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
+                >
                   <SlidingTriggerIcon />
                 </div>
                 <div>
                   <div className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</div>
-                  <div className="mt-0.5 text-xs text-teal-400/52">Ask about the home or local area</div>
+                  <div
+                    className="mt-0.5 text-xs"
+                    style={{ color: 'rgba(255,255,255,0.55)' }}
+                  >
+                    Ask about the home or local area
+                  </div>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-teal-400/38 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-teal-400/68" />
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>
+                <ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </span>
             </>
           )}
         </button>
@@ -566,26 +618,30 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           (open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0')
         }
       >
-        <div className="overflow-hidden rounded-3xl border border-white/[0.07] bg-[#070e17]/97 shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl">
+        <div className="overflow-hidden rounded-3xl border border-white/[0.07] shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl" style={{ ...panelThemeVars, background: 'var(--panel-deep)' }}>
           {/* Top glow line */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
 
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/5 bg-[#0d1e2d]/50 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-white/5 px-5 py-4" style={{ background: 'var(--panel-mid)' }}>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 ring-1 ring-teal-500/18">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
+                style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
+              >
                 <ButlerIcon className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</p>
-                <p className="text-xs text-teal-400/50">Elegant. Concise. Professional.</p>
-                {statusText ? <p className="mt-0.5 text-xs text-teal-300/70">{statusText}</p> : null}
+                <p className="text-xs" style={{ color: 'var(--accent-50)' }}>Elegant. Concise. Professional.</p>
+                {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--accent-45)' }}>{statusText}</p> : null}
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/60 text-white/45 transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/70"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] text-white/45 transition-all duration-200 hover:text-white/70"
+              style={{ background: 'var(--panel-card)' }}
               aria-label="Close"
             >
               ✕
@@ -600,9 +656,15 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                   className={
                     'max-w-[85%] wrap-anywhere rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' +
                     (m.role === 'user'
-                      ? 'border border-teal-500/22 bg-linear-to-br from-[#0d2535] to-[#091e2c] text-white'
-                      : 'border border-white/6 bg-[#0f1e2d]/80 text-white/88')
+                      ? 'border border-teal-500/22 text-white'
+                      : 'border border-white/6 text-white/88')
                   }
+                  style={m.role === 'user' ? {
+                    borderColor: 'var(--accent-28)',
+                    background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+                  } : {
+                    background: 'var(--panel-card)',
+                  }}
                 >
                   {m.role === 'butler'
                     ? (m.data ? <ButlerCard data={m.data} /> : <MessageText text={m.text} />)
@@ -612,7 +674,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             ))}
             {isTyping ? (
               <div className="flex justify-start">
-                <div className="rounded-2xl border border-white/6 bg-[#0f1e2d]/80 px-4 py-3 shadow-sm">
+                <div className="rounded-2xl border border-white/6 px-4 py-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
                   <TypingDots />
                 </div>
               </div>
@@ -627,7 +689,8 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 type="button"
                 onClick={() => send(p)}
                 disabled={isTyping}
-                className="whitespace-nowrap rounded-full border border-teal-500/15 bg-teal-500/6 px-3 py-1.5 text-xs font-medium tracking-wide text-teal-300/65 transition-all duration-200 hover:border-teal-400/30 hover:bg-teal-500/12 hover:text-teal-300/90 disabled:opacity-45"
+                className="whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-45"
+                style={{ borderColor: 'var(--accent-18)', backgroundColor: 'var(--accent-10)', color: 'rgba(255,255,255,0.80)' }}
               >
                 {p}
               </button>
@@ -636,7 +699,8 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
 
           {/* Input row */}
           <form
-            className="flex items-center gap-2 border-t border-white/5 bg-[#0d1e2d]/40 px-4 py-3"
+            className="flex items-center gap-2 border-t border-white/5 px-4 py-3"
+            style={{ background: 'var(--panel-mid)' }}
             onSubmit={(e) => { e.preventDefault(); void send(input); }}
           >
             <input
@@ -644,12 +708,17 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about the home or the local area…"
-              className="h-11 flex-1 rounded-2xl border border-white/[0.07] bg-[#0f1e2d]/70 px-4 text-sm text-white placeholder:text-white/22 shadow-inner outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/18"
+              className="h-11 flex-1 rounded-2xl border border-white/[0.07] px-4 text-sm text-white placeholder:text-white/22 shadow-inner outline-none transition-all duration-200"
+              style={{ background: 'var(--panel-input)' }}
             />
             <button
               type="submit"
               disabled={!canSend}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-linear-to-r from-teal-500 to-cyan-400 px-5 text-sm font-bold tracking-wide text-[#070e17] shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all duration-300 hover:shadow-[0_0_32px_rgba(20,184,166,0.45)] disabled:opacity-40 disabled:shadow-none"
+              className="inline-flex h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold tracking-wide text-white transition-all duration-300 disabled:opacity-40"
+              style={{
+                background: `linear-gradient(to right, var(--accent), var(--accent))`,
+                boxShadow: '0 0 20px var(--accent-28)',
+              }}
             >
               Send
             </button>

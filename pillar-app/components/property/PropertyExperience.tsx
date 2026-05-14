@@ -110,9 +110,15 @@ function GradientButton({
       onClick={onClick}
       className={
         base +
-        'border border-teal-500/25 bg-linear-to-r from-[#0d2535] to-[#091e2c] text-teal-300/85 shadow-[0_0_20px_rgba(20,184,166,0.07)] hover:border-teal-400/42 hover:shadow-[0_0_30px_rgba(20,184,166,0.2)] ' +
+        'border border-teal-500/25 text-teal-300/85 shadow-[0_0_20px_rgba(20,184,166,0.07)] hover:border-teal-400/42 hover:shadow-[0_0_30px_rgba(20,184,166,0.2)] ' +
         (className ?? '')
       }
+      style={{
+        borderColor: 'var(--accent-25)',
+        color: 'rgba(255,255,255,0.92)',
+        boxShadow: '0 0 20px var(--accent-10)',
+        background: 'linear-gradient(to right, var(--btn-bg-from), var(--btn-bg-to))',
+      }}
     >
       {children}
     </button>
@@ -120,7 +126,7 @@ function GradientButton({
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="text-base font-semibold tracking-wide text-white/90">{children}</h2>;
+  return <h2 className="text-base font-semibold tracking-wide text-white/90" style={{ color: 'var(--heading-color)' }}>{children}</h2>;
 }
 
 function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () => void; phone: string }) {
@@ -147,8 +153,8 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
     <div className="fixed inset-0 z-[60] flex items-end justify-center px-6 pb-6">
       <button type="button" onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-label="Close" />
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080f18]/96 text-white shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl">
-        <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-rose-400/28 to-transparent" />
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] text-white shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl" style={{ background: 'var(--panel-deep)' }}>
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
 
         <div className="max-h-[84vh] overflow-y-auto px-6 pb-7 pt-6">
           {/* Header */}
@@ -160,7 +166,8 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/[0.08] bg-[#0f1e2d]/60 text-white/50 transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/75"
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/[0.08] text-white/50 transition-all duration-200 hover:text-white/75"
+              style={{ background: 'var(--panel-card)' }}
               aria-label="Close"
             >
               ×
@@ -170,12 +177,13 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
           {/* Work order form */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Type</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Type</div>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setCategoryOpen((v) => !v)}
-                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/[0.13] focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/13"
+                  style={{ background: 'var(--panel-input)' }}
                   aria-haspopup="listbox"
                   aria-expanded={categoryOpen}
                 >
@@ -184,16 +192,17 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
                 </button>
 
                 {categoryOpen ? (
-                  <div role="listbox" className="absolute z-[5] mt-1.5 w-full overflow-hidden rounded-xl border border-white/[0.08] bg-[#080f18]/98 shadow-2xl backdrop-blur-xl">
+                  <div role="listbox" className="absolute z-[5] mt-1.5 w-full overflow-hidden rounded-xl border border-white/[0.08] shadow-2xl backdrop-blur-xl" style={{ background: 'var(--panel-deep)' }}>
                     {categoryOptions.map((opt) => (
                       <button
                         key={opt}
                         type="button"
                         onClick={() => { setCategory(opt); setSent(false); setCategoryOpen(false); if (opt !== 'Other') setOtherMessage(''); }}
-                        className={'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150 ' + (category === opt ? 'bg-teal-500/10 text-white' : 'text-white/75 hover:bg-white/[0.04]')}
+                        className={'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150 ' + (category === opt ? 'text-white' : 'text-white/75 hover:bg-white/4')}
+                        style={category === opt ? { backgroundColor: 'var(--accent-10)' } : undefined}
                       >
                         <span>{opt}</span>
-                        {category === opt ? <span className="text-teal-400/70">✓</span> : null}
+                        {category === opt ? <span style={{ color: 'var(--accent)' }}>✓</span> : null}
                       </button>
                     ))}
                   </div>
@@ -203,23 +212,25 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
 
             {category === 'Other' ? (
               <div className="space-y-2">
-                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Message</div>
+                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Message</div>
                 <input
                   value={otherMessage}
                   onChange={(e) => { setOtherMessage(e.target.value); setSent(false); }}
                   placeholder="What is this about?"
-                  className="w-full rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+                  className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200"
+                  style={{ background: 'var(--panel-input)' }}
                 />
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50">Describe the problem</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Describe the problem</div>
               <textarea
                 value={description}
                 onChange={(e) => { setDescription(e.target.value); setSent(false); }}
                 placeholder="Add details (location, urgency, anything helpful)"
-                className="min-h-[100px] w-full resize-none rounded-xl border border-white/[0.08] bg-[#0f1e2d]/70 px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200 focus:border-teal-500/35 focus:ring-1 focus:ring-teal-500/20"
+                className="min-h-[100px] w-full resize-none rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200"
+                style={{ background: 'var(--panel-input)' }}
               />
             </div>
 
@@ -284,7 +295,7 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
 
 function GlassCard({ children }: { children: ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0f1e2d]/80 p-6 shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
+    <section className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm" style={{ background: 'var(--panel-card)' }}>
       {children}
     </section>
   );
@@ -307,22 +318,23 @@ function AmenityTile({
     <button
       type="button"
       onClick={onToggle}
-      className={`group flex items-center gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${
-        selected
-          ? 'border-teal-500/40 bg-[#0d1e2d]/90 shadow-[0_0_20px_rgba(20,184,166,0.1)]'
-          : 'border-white/6 bg-[#0f1e2d]/70 hover:border-teal-500/20 hover:bg-[#0d1e2d]/80'
-      }`}
+      className="group flex items-center gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all duration-200"
+      style={selected
+        ? { borderColor: 'var(--accent-40)', boxShadow: '0 0 20px var(--accent-10)', background: 'var(--panel-card)' }
+        : { borderColor: 'rgba(255,255,255,0.06)', background: 'var(--panel-input)' }}
     >
-      <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200 ${
-        selected ? 'bg-teal-500/18 text-teal-300' : 'bg-white/5 text-white/45 group-hover:bg-teal-500/10 group-hover:text-teal-300/70'
-      }`}>
+      <div
+        className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200 ${
+          selected ? 'bg-teal-500/18 text-teal-300' : 'bg-white/5 text-white/45 group-hover:bg-teal-500/10 group-hover:text-teal-300/70'
+        }`}
+        style={selected ? { backgroundColor: 'var(--accent-18)', color: 'var(--accent)' } : undefined}
+      >
         <AmenityIconSvg iconKey={iconKey} className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`truncate text-sm font-semibold leading-tight transition-colors duration-200 ${selected ? 'text-white' : 'text-white/75 group-hover:text-white/90'}`}>
+        <p className={`line-clamp-2 text-sm font-semibold leading-tight transition-colors duration-200 ${selected ? 'text-white' : 'text-white/75 group-hover:text-white/90'}`}>
           {title}
         </p>
-        <div className={`mt-1.5 h-1 w-1 rounded-full ${selected ? 'bg-teal-400' : 'bg-white/20'}`} />
       </div>
     </button>
   );
@@ -330,6 +342,16 @@ function AmenityTile({
 
 
 
+
+/* ─── Theme helpers ───────────────────────────────────────────── */
+
+function hexToRgba(hex: string, alpha: number): string {
+  if (!hex || hex.length < 7) return `rgba(20,184,166,${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -340,7 +362,7 @@ function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
 function renderWindowContent(w: AmenityWindow): ReactNode {
   if (w.type === 'text') {
     return w.body
-      ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">{w.body}</p>
+      ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75" style={{ color: 'var(--body-color)' }}>{w.body}</p>
       : <p className="text-sm text-white/35">No content added yet.</p>;
   }
   if (w.type === 'pdf') {
@@ -402,6 +424,32 @@ export default function PropertyExperience({
     [property.HeroImage]
   );
 
+  const accentHex = property.AccentColor && property.AccentColor.startsWith('#') ? property.AccentColor : '#2dd4bf';
+  const ar = parseInt(accentHex.slice(1, 3), 16);
+  const ag = parseInt(accentHex.slice(3, 5), 16);
+  const ab = parseInt(accentHex.slice(5, 7), 16);
+  // Dark neutral base (6,9,18) + small accent addition — avoids gross muddy colors
+  const tint = (f: number, a: number) =>
+    `rgba(${Math.min(255,Math.round(6+ar*f))},${Math.min(255,Math.round(9+ag*f))},${Math.min(255,Math.round(18+ab*f))},${a})`;
+  const themeVars = {
+    '--accent': accentHex,
+    '--accent-10': hexToRgba(accentHex, 0.18),
+    '--accent-18': hexToRgba(accentHex, 0.18),
+    '--accent-22': hexToRgba(accentHex, 0.22),
+    '--accent-25': hexToRgba(accentHex, 0.25),
+    '--accent-40': hexToRgba(accentHex, 0.4),
+    '--accent-45': hexToRgba(accentHex, 0.45),
+    '--accent-50': hexToRgba(accentHex, 0.5),
+    '--btn-bg-from': hexToRgba(accentHex, 0.22),
+    '--btn-bg-to': hexToRgba(accentHex, 0.14),
+    '--heading-color': property.HeadingColor || 'rgba(255,255,255,0.9)',
+    '--body-color': property.TextColor || 'rgba(255,255,255,0.75)',
+    '--panel-deep': tint(0.07, 0.97),
+    '--panel-mid': tint(0.09, 0.55),
+    '--panel-card': tint(0.08, 0.88),
+    '--panel-input': tint(0.06, 0.72),
+  } as React.CSSProperties;
+
   useEffect(() => {
     if (!expanded) return;
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
@@ -411,7 +459,7 @@ export default function PropertyExperience({
   const showExpandedContent = expanded && !isTransitioning && !isFullViewTransitioning && fullView === 'content';
 
   return (
-    <div className={`min-h-screen font-sans ${rootOverflow}`}>
+    <div className={`min-h-screen font-sans ${rootOverflow}`} style={themeVars}>
 
       {/* ── Layer 1: hero image — visible on preview, fades away when expanded ── */}
       <div
@@ -424,7 +472,7 @@ export default function PropertyExperience({
         className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-450 ease-in-out"
         style={{
           opacity: expanded && !isTransitioning ? 1 : 0,
-          backgroundImage: 'url(/images/background.png)',
+          backgroundImage: `url(/images/${property.BackgroundKey || 'background'}.png)`,
         }}
       />
 
@@ -527,19 +575,27 @@ export default function PropertyExperience({
             >
               <div
                 className="flex min-h-0 flex-1 flex-col space-y-4 overflow-auto pb-10"
-                style={{ paddingTop: editableCustomWindows ? '110px' : 'clamp(200px, 48vh, 320px)' }}
+                style={{
+                  paddingTop: editableCustomWindows ? '110px' : 'clamp(200px, 48vh, 320px)',
+                }}
               >
                 {/* Property name */}
                 <div className="space-y-1 pb-1">
                   {property.PropertyAddress ? (
-                  <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-sky-400">
+                    <p
+                      className="text-[11px] font-medium uppercase tracking-[0.3em]"
+                      style={{ color: 'var(--accent)' }}
+                    >
                       {property.PropertyAddress}
                     </p>
                   ) : null}
-                  <h1 className="text-[2.05rem] font-light leading-tight tracking-[-0.01em] text-white">
+                  <h1
+                    className="text-[2.05rem] font-light leading-tight tracking-[-0.01em]"
+                    style={{ color: 'var(--heading-color)' }}
+                  >
                     {property.PropertyName}
                   </h1>
-                  <div className="mt-2.5 h-px w-10 bg-linear-to-r from-teal-400/50 to-transparent" />
+                  <div className="mt-2.5 h-px w-10 bg-linear-to-r from-teal-400/50 to-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--accent-50), transparent)' }} />
                 </div>
 
                 {/* Home Amenities button */}
@@ -550,16 +606,20 @@ export default function PropertyExperience({
                     window.setTimeout(() => { setFullView('amenities'); }, FULL_VIEW_FADE_MS);
                     window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                   }}
-                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-sky-500/18 bg-linear-to-br from-[#0d2030] to-[#091928] px-6 py-5 text-left shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-sky-400/32 hover:shadow-[0_4px_24px_rgba(0,0,0,0.5),0_0_28px_rgba(56,189,248,0.12)]"
+                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-sky-500/18 px-6 py-5 text-left transition-all duration-300"
+                  style={{
+                    borderColor: 'var(--accent-18)',
+                    background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+                  }}
                 >
-                  <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-sky-400/22 to-transparent" />
+                  <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-sky-400/22 to-transparent" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/18">
+                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/18" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
                       <div className="text-sm font-semibold tracking-wide text-white">Home Amenities</div>
-                      <div className="mt-0.5 text-xs text-teal-400/52">
+                      <div className="mt-0.5 text-xs text-teal-400/52" style={{ color: 'var(--accent-50)' }}>
                         {(() => {
                           const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
                           const preview = all.slice(0, 2);
@@ -572,7 +632,7 @@ export default function PropertyExperience({
                 </button>
 
                 {/* Pillar Concierge inline button */}
-                <ChatConcierge slug={slug} placement="inline" />
+                <ChatConcierge slug={slug} placement="inline" accentColor={property.AccentColor} />
 
                 {/* Manager layout windows */}
                 {managerLayout.length ? (
@@ -640,7 +700,7 @@ export default function PropertyExperience({
                               onDrop={(e) => { if (!editableCustomWindows) return; e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isFinite(from) && onReorderWindows) onReorderWindows(from, idx); }}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/45">{key}</div>
+                                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>{key}</div>
                                 {editableCustomWindows ? (
                                   <div className="flex items-center gap-2">
                                     <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-[#0f1e2d]/50 text-white/55 transition-colors duration-200 hover:bg-[#0f1e2d]" aria-label="Move up">↑</button>
@@ -663,7 +723,13 @@ export default function PropertyExperience({
                   <button
                     type="button"
                     onClick={() => setNeedHelpOpen(true)}
-                    className="w-full rounded-2xl border border-rose-500/30 bg-transparent py-3.5 text-sm font-semibold tracking-widest text-rose-400/80 shadow-[0_0_14px_rgba(244,63,94,0.12),inset_0_0_14px_rgba(244,63,94,0.04)] transition-all duration-300 hover:border-rose-400/55 hover:text-rose-300 hover:shadow-[0_0_28px_rgba(244,63,94,0.28),inset_0_0_20px_rgba(244,63,94,0.06)]"
+                    className="w-full rounded-2xl border py-3.5 text-sm font-semibold tracking-widest transition-all duration-300"
+                    style={{
+                      borderColor: 'var(--accent-40)',
+                      color: 'rgba(255,255,255,0.92)',
+                      background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+                      boxShadow: '0 0 14px var(--accent-10)',
+                    }}
                   >
                     Need Help?
                   </button>
@@ -707,12 +773,12 @@ export default function PropertyExperience({
                         window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
                         window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                       }}
-                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 text-white/60 backdrop-blur-sm transition-all duration-200 hover:border-teal-500/25 hover:bg-[#0f1e2d] hover:text-white/90"
+                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 text-white/60 backdrop-blur-sm transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/90"
                       aria-label="Back"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-                    <div className="lux-title flex-1 text-center text-xl text-white whitespace-nowrap">Home Amenities</div>
+                    <div className="lux-title flex-1 text-center text-xl whitespace-nowrap" style={{ color: 'var(--heading-color)' }}>Home Amenities</div>
                     <div className="h-10 w-10 flex-none" />
                   </div>
 
@@ -752,31 +818,31 @@ export default function PropertyExperience({
 
                     {/* Detail panel — appears below the grid when a tile is selected */}
                     {openAmenityId ? (
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-teal-500/22 bg-[#0d1e2d]/90 backdrop-blur-sm">
+                      <div className="mt-4 overflow-hidden rounded-2xl border backdrop-blur-sm" style={{ borderColor: 'var(--accent-22)', background: 'var(--panel-card)' }}>
                         <div className="border-b border-white/5 px-5 py-3.5">
                           {openAmenityId === 'wifi' ? (
                             <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                 <AmenityIconSvg iconKey="wifi" className="h-4 w-4" />
                               </div>
-                              <p className="text-sm font-semibold text-white/90">WiFi</p>
+                              <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>WiFi</p>
                             </div>
                           ) : openAmenityId === 'garage' ? (
                             <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                 <AmenityIconSvg iconKey="key" className="h-4 w-4" />
                               </div>
-                              <p className="text-sm font-semibold text-white/90">Garage Code</p>
+                              <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>Garage Code</p>
                             </div>
                           ) : (
                             (() => {
                               const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
                               return w ? (
                                 <div className="flex items-center gap-3">
-                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400">
+                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                     <AmenityIconSvg iconKey={w.icon} className="h-4 w-4" />
                                   </div>
-                                  <p className="text-sm font-semibold text-white/90">{w.title}</p>
+                                  <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>{w.title}</p>
                                 </div>
                               ) : null;
                             })()
@@ -786,20 +852,20 @@ export default function PropertyExperience({
                           {openAmenityId === 'wifi' ? (
                             <div className="space-y-3">
                               <div className="space-y-1">
-                                <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Network</p>
-                                <p className="text-sm text-white/85">{property.WiFiName}</p>
+                                <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Network</p>
+                                <p className="text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiName}</p>
                               </div>
                               <div className="flex items-center justify-between gap-4">
                                 <div className="space-y-1">
-                                  <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Password</p>
-                                  <p className="font-mono text-sm text-white/85">{property.WiFiPassword}</p>
+                                  <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Password</p>
+                                  <p className="font-mono text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiPassword}</p>
                                 </div>
                                 <CopyPasswordButton password={property.WiFiPassword} />
                               </div>
                             </div>
                           ) : openAmenityId === 'garage' ? (
                             property.GarageCode
-                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45">Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap">{property.GarageCode}</p></div>
+                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p></div>
                               : <div className="text-sm text-white/45">Garage code not provided.</div>
                           ) : (
                             (() => {

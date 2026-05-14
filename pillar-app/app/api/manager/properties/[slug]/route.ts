@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import {
+  deleteProperty,
   getManagerLayoutBySlug,
   getPropertyBySlug,
   getPropertyFieldsBySlug,
@@ -39,6 +40,10 @@ const CORE_EDITABLE_FIELDS = [
   'WiFiPassword',
   'GarageCode',
   'ManagerPhone',
+  'BackgroundKey',
+  'AccentColor',
+  'HeadingColor',
+  'TextColor',
 ] as const;
 
 const NUMERIC_EDITABLE_FIELDS = ['LogoSize'] as const;
@@ -79,6 +84,23 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     { property: property as Property, rawFields: rawFields as PropertyFields, layoutFields },
     { status: 200 }
   );
+}
+
+export async function DELETE(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
+  try {
+    const session = await requireManagerSession();
+    if (!session?.userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { slug } = await ctx.params;
+    const ok = await requirePropertyAccess(session.userId, slug);
+    if (!ok) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+    await deleteProperty(session.userId, slug);
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return Response.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ slug: string }> }) {

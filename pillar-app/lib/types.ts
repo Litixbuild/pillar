@@ -37,6 +37,10 @@ export interface Property {
   HeroImage?: string;
   LogoUrl?: string;
   LogoSize?: number;
+  BackgroundKey?: string;
+  AccentColor?: string;
+  HeadingColor?: string;
+  TextColor?: string;
   windows?: AmenityWindow[];
 }
 

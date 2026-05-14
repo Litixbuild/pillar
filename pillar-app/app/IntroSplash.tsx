@@ -24,9 +24,9 @@ export default function IntroSplash() {
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center"
       style={{
-        backgroundImage: "url(/images/background.png)",
+        backgroundImage: "url(/images/mainbackground.png)",
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "center top",
         opacity: fading ? 0 : 1,
         transition: fading ? "opacity 1.3s ease-in-out" : "none",
         pointerEvents: fading ? "none" : "auto",
