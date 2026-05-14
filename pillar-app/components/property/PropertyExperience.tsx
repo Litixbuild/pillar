@@ -36,9 +36,9 @@ function ChevronDown({ className, style }: { className?: string; style?: React.C
   );
 }
 
-function ChevronRight({ className }: { className?: string }) {
+function ChevronRight({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} style={style} aria-hidden="true">
       <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -627,7 +627,7 @@ export default function PropertyExperience({
                 >
                   <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', ringColor: 'var(--accent-18)' }}>
+                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
