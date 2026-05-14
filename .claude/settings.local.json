@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall *)",
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('tailwind:', p.dependencies?.tailwindcss || p.devDependencies?.tailwindcss\\)\")",
+      "Bash(dir \"c:\\\\Users\\\\camjr\\\\OneDrive\\\\Desktop\\\\Pillar\\\\pillar-app\\\\.next\")",
+      "Bash(dir \"c:\\\\Users\\\\camjr\\\\OneDrive\\\\Desktop\\\\Pillar\\\\pillar-app\" /b)",
+      "Bash(Get-ChildItem -Path \"c:\\\\dev\\\\Pillar\\\\pillar-app\\\\app\\\\api\\\\manager\\\\properties\\\\[slug]\\\\upload\\\\\" -Force)",
+      "Read(//c/dev/Pillar/pillar-app/app/api/manager/properties/**)",
+      "Bash(findstr /v \"=\")",
+      "PowerShell(Get-Content \"c:\\\\dev\\\\Pillar\\\\pillar-app\\\\.env.local\" | ForEach-Object { \\($_ -split '='\\)[0] })",
+      "Bash(npx next *)",
+      "PowerShell(cd \"c:\\\\dev\\\\Pillar\\\\pillar-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"error TS\" } | Select-Object -First 30)",
+      "PowerShell(cd \"c:\\\\dev\\\\Pillar\\\\pillar-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"error TS\" } | Select-Object -First 20)",
+      "PowerShell(cd \"c:\\\\dev\\\\Pillar\\\\pillar-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"error TS\" })",
+      "Bash(Get-ChildItem -Path \"c:\\\\dev\\\\Pillar\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(git -C \"c:\\\\dev\\\\Pillar\" log --oneline --graph -20)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\camjr\\OneDrive\\Desktop\\Pillar\\pillar-app\\app\\p\\[slug]",
+      "c:\\Users\\camjr\\.claude\\projects\\c--Users-camjr-OneDrive-Desktop-Pillar\\memory",
+      "c:\\Users\\camjr\\OneDrive\\Desktop\\Pillar\\pillar-app\\app\\api\\manager\\properties\\[slug]",
+      "c:\\dev\\Pillar\\pillar-app\\.next\\cache",
+      "c:\\dev\\Pillar\\pillar-app\\app\\api\\manager\\properties\\[slug]"
+    ]
+  }
+}
