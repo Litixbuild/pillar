@@ -581,8 +581,8 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               />
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1"
-                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}
+                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
+                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}
                 >
                   <SlidingTriggerIcon />
                 </div>
@@ -678,7 +678,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 onClick={() => send(p)}
                 disabled={isTyping}
                 className="whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-45"
-                style={{ borderColor: 'var(--accent-18)', backgroundColor: 'var(--accent-10)', color: 'var(--text-primary)' }}
+                style={{ borderColor: 'var(--accent-28)', backgroundColor: 'var(--accent-22)', color: dark ? 'var(--accent)' : 'rgba(61,42,10,0.88)' }}
               >
                 {p}
               </button>

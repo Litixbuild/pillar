@@ -350,8 +350,8 @@ function AmenityTile({
         : { borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }}
     >
       <div
-        className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1 transition-colors duration-200"
-        style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
+        className="flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200"
+        style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}
       >
         <AmenityIconSvg iconKey={iconKey} className="h-5 w-5" />
       </div>
@@ -627,7 +627,7 @@ export default function PropertyExperience({
                 >
                   <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}>
+                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
