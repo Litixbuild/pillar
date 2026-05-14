@@ -6,7 +6,27 @@ import CopyPasswordButton from './CopyPasswordButton';
 import type { PropertyFields, ManagerLayoutItem, Property, AmenityWindow } from '@/lib/types';
 import { AMENITY_ICONS_MAP } from '@/lib/amenityIcons';
 
+const SANDY = '#F5EDD5';
+const SANDY_RGB = '245,237,213';
+
 /* ─── Icons ──────────────────────────────────────────────────── */
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function ChevronDown({ className }: { className?: string }) {
   return (
@@ -108,16 +128,11 @@ function GradientButton({
     <button
       type={type ?? 'button'}
       onClick={onClick}
-      className={
-        base +
-        'border border-teal-500/25 text-teal-300/85 shadow-[0_0_20px_rgba(20,184,166,0.07)] hover:border-teal-400/42 hover:shadow-[0_0_30px_rgba(20,184,166,0.2)] ' +
-        (className ?? '')
-      }
+      className={base + 'active:scale-[0.98] ' + (className ?? '')}
       style={{
-        borderColor: 'var(--accent-25)',
-        color: 'rgba(255,255,255,0.92)',
-        boxShadow: '0 0 20px var(--accent-10)',
-        background: 'linear-gradient(to right, var(--btn-bg-from), var(--btn-bg-to))',
+        background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
+        color: '#3d2a0a',
+        boxShadow: `0 0 20px rgba(${SANDY_RGB},0.25)`,
       }}
     >
       {children}
@@ -129,7 +144,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-base font-semibold tracking-wide text-white/90" style={{ color: 'var(--heading-color)' }}>{children}</h2>;
 }
 
-function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () => void; phone: string }) {
+function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose: () => void; phone: string; dark: boolean }) {
   const [category, setCategory] = useState<'Air Conditioning' | 'Electric' | 'Plumbing' | 'Other' | ''>('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [otherMessage, setOtherMessage] = useState('');
@@ -149,25 +164,40 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
   const tel = phone.replace(/[^\d+]/g, '');
   const categoryOptions = ['Air Conditioning', 'Electric', 'Plumbing', 'Other'] as const;
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center px-6 pb-6">
-      <button type="button" onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-label="Close" />
+  const panelBg = dark ? 'rgba(12,12,12,0.97)' : 'rgba(255,255,255,0.92)';
+  const inputBg = dark ? 'rgba(14,14,14,0.80)' : 'rgba(0,0,0,0.06)';
+  const dropdownBg = dark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)';
+  const borderCol = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)';
+  const labelCol = dark ? `rgba(${SANDY_RGB},0.55)` : `rgba(${SANDY_RGB[0]},100,30,0.70)`;
+  const textCol = dark ? 'rgba(255,255,255,0.90)' : 'rgba(20,15,5,0.90)';
+  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : 'rgba(20,15,5,0.40)';
+  const dividerCol = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const overlayBg = dark ? 'rgba(0,0,0,0.80)' : 'rgba(0,0,0,0.45)';
+  const sandyLabel = `rgba(${SANDY_RGB},0.55)`;
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] text-white shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl" style={{ background: 'var(--panel-deep)' }}>
-        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
+  return (
+    <div className="fixed inset-0 z-60 flex items-end justify-center px-6 pb-6">
+      <button type="button" onClick={onClose} className="absolute inset-0 backdrop-blur-sm" style={{ background: overlayBg }} aria-label="Close" />
+
+      <div
+        className="relative w-full max-w-md overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        style={{ background: panelBg, border: `1px solid ${borderCol}` }}
+      >
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` }} />
 
         <div className="max-h-[84vh] overflow-y-auto px-6 pb-7 pt-6">
           {/* Header */}
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-light text-white">Need Help?</h2>
-              <p className="mt-1 text-sm text-white/40">Tell us what needs attention.</p>
+              <h2 className="text-xl font-light" style={{ color: textCol }}>Need Help?</h2>
+              <p className="mt-1 text-sm" style={{ color: mutedCol }}>Tell us what needs attention.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/[0.08] text-white/50 transition-all duration-200 hover:text-white/75"
-              style={{ background: 'var(--panel-card)' }}
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl transition-all duration-200"
+              style={{ background: closeBtnBg, border: `1px solid ${borderCol}`, color: mutedCol }}
               aria-label="Close"
             >
               ×
@@ -177,32 +207,34 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
           {/* Work order form */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Type</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Type</div>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setCategoryOpen((v) => !v)}
-                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/13"
-                  style={{ background: 'var(--panel-input)' }}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
+                  style={{ background: inputBg, border: `1px solid ${borderCol}`, color: category ? textCol : mutedCol }}
                   aria-haspopup="listbox"
                   aria-expanded={categoryOpen}
                 >
-                  <span className={category ? 'text-white' : 'text-white/35'}>{category || 'Select…'}</span>
-                  <ChevronDown className={`h-4 w-4 text-white/40 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`} />
+                  <span>{category || 'Select…'}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`} style={{ color: mutedCol }} />
                 </button>
 
                 {categoryOpen ? (
-                  <div role="listbox" className="absolute z-[5] mt-1.5 w-full overflow-hidden rounded-xl border border-white/[0.08] shadow-2xl backdrop-blur-xl" style={{ background: 'var(--panel-deep)' }}>
+                  <div role="listbox" className="absolute z-5 mt-1.5 w-full overflow-hidden rounded-xl shadow-2xl backdrop-blur-xl" style={{ background: dropdownBg, border: `1px solid ${borderCol}` }}>
                     {categoryOptions.map((opt) => (
                       <button
                         key={opt}
                         type="button"
                         onClick={() => { setCategory(opt); setSent(false); setCategoryOpen(false); if (opt !== 'Other') setOtherMessage(''); }}
-                        className={'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150 ' + (category === opt ? 'text-white' : 'text-white/75 hover:bg-white/4')}
-                        style={category === opt ? { backgroundColor: 'var(--accent-10)' } : undefined}
+                        className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150"
+                        style={category === opt
+                          ? { backgroundColor: `rgba(${SANDY_RGB},0.12)`, color: textCol }
+                          : { color: mutedCol }}
                       >
                         <span>{opt}</span>
-                        {category === opt ? <span style={{ color: 'var(--accent)' }}>✓</span> : null}
+                        {category === opt ? <span style={{ color: SANDY }}>✓</span> : null}
                       </button>
                     ))}
                   </div>
@@ -212,29 +244,29 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
 
             {category === 'Other' ? (
               <div className="space-y-2">
-                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Message</div>
+                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Message</div>
                 <input
                   value={otherMessage}
                   onChange={(e) => { setOtherMessage(e.target.value); setSent(false); }}
                   placeholder="What is this about?"
-                  className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200"
-                  style={{ background: 'var(--panel-input)' }}
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
+                  style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 />
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/50" style={{ color: 'var(--accent-50)' }}>Describe the problem</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Describe the problem</div>
               <textarea
                 value={description}
                 onChange={(e) => { setDescription(e.target.value); setSent(false); }}
                 placeholder="Add details (location, urgency, anything helpful)"
-                className="min-h-[100px] w-full resize-none rounded-xl border border-white/[0.08] px-4 py-3 text-sm text-white placeholder:text-white/22 outline-none transition-all duration-200"
-                style={{ background: 'var(--panel-input)' }}
+                className="min-h-25 w-full resize-none rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
+                style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
               />
             </div>
 
-            {sent ? <div className="text-sm text-emerald-400/80">Sent. Thank you.</div> : null}
+            {sent ? <div className="text-sm text-emerald-500">Sent. Thank you.</div> : null}
 
             <GradientButton
               type="button"
@@ -251,20 +283,17 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
 
           {/* Late Checkout */}
           <div className="mt-5">
-            <div className="h-px bg-white/[0.06]" />
+            <div className="h-px" style={{ backgroundColor: dividerCol }} />
             <div className="mt-5">
               {lateCheckoutSent ? (
-                <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-4 py-3.5 text-sm leading-relaxed text-amber-200/85">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-4 py-3.5 text-sm leading-relaxed text-amber-600">
                   Your request has been submitted! We will contact you shortly with an update.
                 </div>
               ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setLateCheckoutSent(true);
-                    console.log('[late-checkout-request]');
-                  }}
-                  className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 py-3.5 text-sm font-semibold tracking-wide text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.08)] transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-400/16 hover:shadow-[0_0_24px_rgba(251,191,36,0.18)]"
+                  onClick={() => { setLateCheckoutSent(true); }}
+                  className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 py-3.5 text-sm font-semibold tracking-wide text-amber-500 transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-400/16"
                 >
                   Request Late Checkout
                 </button>
@@ -275,13 +304,10 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
           {/* Manager contact */}
           {phone ? (
             <>
-              <div className="mt-5 h-px bg-white/[0.06]" />
+              <div className="mt-5 h-px" style={{ backgroundColor: dividerCol }} />
               <div className="text-center">
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">Property Manager</p>
-                <a
-                  href={tel ? `tel:${tel}` : undefined}
-                  className="text-sm text-white/50 transition-colors duration-200 hover:text-white/80"
-                >
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.28em]" style={{ color: mutedCol }}>Property Manager</p>
+                <a href={tel ? `tel:${tel}` : undefined} className="text-sm transition-colors duration-200" style={{ color: mutedCol }}>
                   {phone}
                 </a>
               </div>
@@ -295,7 +321,7 @@ function NeedHelpModal({ open, onClose, phone }: { open: boolean; onClose: () =>
 
 function GlassCard({ children }: { children: ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm" style={{ background: 'var(--panel-card)' }}>
+    <section className="relative overflow-hidden rounded-2xl border p-6 backdrop-blur-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
       {children}
     </section>
   );
@@ -320,19 +346,17 @@ function AmenityTile({
       onClick={onToggle}
       className="group flex items-center gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all duration-200"
       style={selected
-        ? { borderColor: 'var(--accent-40)', boxShadow: '0 0 20px var(--accent-10)', background: 'var(--panel-card)' }
-        : { borderColor: 'rgba(255,255,255,0.06)', background: 'var(--panel-input)' }}
+        ? { borderColor: 'var(--accent-40)', boxShadow: '0 0 20px var(--accent-10)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }
+        : { borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }}
     >
       <div
-        className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200 ${
-          selected ? 'bg-teal-500/18 text-teal-300' : 'bg-white/5 text-white/45 group-hover:bg-teal-500/10 group-hover:text-teal-300/70'
-        }`}
-        style={selected ? { backgroundColor: 'var(--accent-18)', color: 'var(--accent)' } : undefined}
+        className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1 transition-colors duration-200"
+        style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
       >
         <AmenityIconSvg iconKey={iconKey} className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`line-clamp-2 text-sm font-semibold leading-tight transition-colors duration-200 ${selected ? 'text-white' : 'text-white/75 group-hover:text-white/90'}`}>
+        <p className="line-clamp-2 text-sm font-semibold leading-tight text-white transition-colors duration-200">
           {title}
         </p>
       </div>
@@ -343,16 +367,6 @@ function AmenityTile({
 
 
 
-/* ─── Theme helpers ───────────────────────────────────────────── */
-
-function hexToRgba(hex: string, alpha: number): string {
-  if (!hex || hex.length < 7) return `rgba(20,184,166,${alpha})`;
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
 function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
@@ -362,12 +376,12 @@ function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
 function renderWindowContent(w: AmenityWindow): ReactNode {
   if (w.type === 'text') {
     return w.body
-      ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75" style={{ color: 'var(--body-color)' }}>{w.body}</p>
+      ? <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--body-color)' }}>{w.body}</p>
       : <p className="text-sm text-white/35">No content added yet.</p>;
   }
   if (w.type === 'pdf') {
     return w.url
-      ? <a href={w.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-teal-300/80 underline decoration-teal-400/30 underline-offset-4 transition-all duration-200 hover:decoration-teal-400/60">Open PDF</a>
+      ? <a href={w.url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>Open PDF</a>
       : <p className="text-sm text-white/35">No PDF uploaded yet.</p>;
   }
   if (w.type === 'image') {
@@ -418,36 +432,31 @@ export default function PropertyExperience({
   const [isFullViewTransitioning, setIsFullViewTransitioning] = useState(false);
   const [openAmenityId, setOpenAmenityId] = useState<string | null>(null);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
+  const [dark, setDark] = useState(false);
 
   const backgroundUrl = useMemo(
     () => property.HeroImage || '/images/heroimage.jpg',
     [property.HeroImage]
   );
 
-  const accentHex = property.AccentColor && property.AccentColor.startsWith('#') ? property.AccentColor : '#2dd4bf';
-  const ar = parseInt(accentHex.slice(1, 3), 16);
-  const ag = parseInt(accentHex.slice(3, 5), 16);
-  const ab = parseInt(accentHex.slice(5, 7), 16);
-  // Dark neutral base (6,9,18) + small accent addition — avoids gross muddy colors
-  const tint = (f: number, a: number) =>
-    `rgba(${Math.min(255,Math.round(6+ar*f))},${Math.min(255,Math.round(9+ag*f))},${Math.min(255,Math.round(18+ab*f))},${a})`;
   const themeVars = {
-    '--accent': accentHex,
-    '--accent-10': hexToRgba(accentHex, 0.18),
-    '--accent-18': hexToRgba(accentHex, 0.18),
-    '--accent-22': hexToRgba(accentHex, 0.22),
-    '--accent-25': hexToRgba(accentHex, 0.25),
-    '--accent-40': hexToRgba(accentHex, 0.4),
-    '--accent-45': hexToRgba(accentHex, 0.45),
-    '--accent-50': hexToRgba(accentHex, 0.5),
-    '--btn-bg-from': hexToRgba(accentHex, 0.22),
-    '--btn-bg-to': hexToRgba(accentHex, 0.14),
+    '--accent': SANDY,
+    '--accent-10': `rgba(${SANDY_RGB},0.10)`,
+    '--accent-18': `rgba(${SANDY_RGB},0.18)`,
+    '--accent-22': `rgba(${SANDY_RGB},0.22)`,
+    '--accent-25': `rgba(${SANDY_RGB},0.25)`,
+    '--accent-40': `rgba(${SANDY_RGB},0.40)`,
+    '--accent-45': `rgba(${SANDY_RGB},0.45)`,
+    '--accent-50': `rgba(${SANDY_RGB},0.50)`,
+    '--btn-bg-from': `rgba(${SANDY_RGB},0.22)`,
+    '--btn-bg-to': `rgba(${SANDY_RGB},0.14)`,
     '--heading-color': property.HeadingColor || 'rgba(255,255,255,0.9)',
     '--body-color': property.TextColor || 'rgba(255,255,255,0.75)',
-    '--panel-deep': tint(0.07, 0.97),
-    '--panel-mid': tint(0.09, 0.55),
-    '--panel-card': tint(0.08, 0.88),
-    '--panel-input': tint(0.06, 0.72),
+    '--panel-deep': 'rgba(12,12,12,0.92)',
+    '--panel-mid': 'rgba(18,18,18,0.55)',
+    '--panel-card': 'rgba(18,18,18,0.88)',
+    '--panel-input': 'rgba(14,14,14,0.72)',
+    '--border-col': 'rgba(255,255,255,0.06)',
   } as React.CSSProperties;
 
   useEffect(() => {
@@ -467,12 +476,14 @@ export default function PropertyExperience({
         style={{ backgroundImage: `url(${backgroundUrl})`, opacity: expanded ? 0 : 1 }}
       />
 
-      {/* ── Layer 2: background.png — visible when expanded ── */}
+      {/* ── Layer 2: expanded background — bright blue by default, dark on toggle ── */}
       <div
         className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-450 ease-in-out"
         style={{
           opacity: expanded && !isTransitioning ? 1 : 0,
-          backgroundImage: `url(/images/${property.BackgroundKey || 'background'}.png)`,
+          backgroundImage: dark
+            ? 'url(/images/bg3.png)'
+            : `url(/images/${property.BackgroundKey && property.BackgroundKey !== 'background' ? property.BackgroundKey : 'mainbackground'}.png)`,
         }}
       />
 
@@ -492,17 +503,19 @@ export default function PropertyExperience({
         </div>
       ) : null}
 
+      {/* ── Dark mode toggle — top right, visible when expanded ── */}
+
       {/* ── Edit mode bar ── */}
       {editableCustomWindows ? (
         <div className="pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md px-6 pt-4">
-          <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/[0.07] bg-[#0f1e2d]/80 px-4 py-2.5 text-white backdrop-blur-md">
+          <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/[0.07] bg-black/55/80 px-4 py-2.5 text-white backdrop-blur-md">
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">Edit mode</div>
             <div className="flex items-center gap-3">
               <div className="text-[11px] text-white/40">Reorder: drag or ↑↓</div>
               <button
                 type="button"
                 onClick={onAddWindow}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-teal-500/22 bg-teal-500/8 px-3 text-xs font-semibold text-teal-300/80 transition-all duration-200 hover:bg-teal-500/14"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-semibold text-white/70 transition-all duration-200 hover:bg-white/10"
               >
                 <span className="text-base leading-none">+</span>
                 Add window
@@ -558,7 +571,7 @@ export default function PropertyExperience({
       ) : null}
 
       {/* ════════════════════════════════════════════════════════
-          EXPANDED — dark teal content
+          EXPANDED — content
           ════════════════════════════════════════════════════════ */}
       {expanded ? (
         <>
@@ -595,7 +608,7 @@ export default function PropertyExperience({
                   >
                     {property.PropertyName}
                   </h1>
-                  <div className="mt-2.5 h-px w-10 bg-linear-to-r from-teal-400/50 to-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--accent-50), transparent)' }} />
+                  <div className="mt-2.5 h-px w-10" style={{ backgroundImage: 'linear-gradient(to right, var(--accent-50), transparent)' }} />
                 </div>
 
                 {/* Home Amenities button */}
@@ -606,20 +619,20 @@ export default function PropertyExperience({
                     window.setTimeout(() => { setFullView('amenities'); }, FULL_VIEW_FADE_MS);
                     window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                   }}
-                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-sky-500/18 px-6 py-5 text-left transition-all duration-300"
+                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border px-6 py-5 text-left transition-all duration-300"
                   style={{
                     borderColor: 'var(--accent-18)',
                     background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
                   }}
                 >
-                  <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-sky-400/22 to-transparent" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
+                  <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/18" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
+                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', ringColor: 'var(--accent-18)' }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
                       <div className="text-sm font-semibold tracking-wide text-white">Home Amenities</div>
-                      <div className="mt-0.5 text-xs text-teal-400/52" style={{ color: 'var(--accent-50)' }}>
+                      <div className="mt-0.5 text-xs" style={{ color: 'var(--accent-50)' }}>
                         {(() => {
                           const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
                           const preview = all.slice(0, 2);
@@ -628,11 +641,11 @@ export default function PropertyExperience({
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 flex-none text-sky-400/35 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-sky-400/65" />
+                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: `rgba(${SANDY_RGB},0.45)` }} />
                 </button>
 
                 {/* Pillar Concierge inline button */}
-                <ChatConcierge slug={slug} placement="inline" accentColor={property.AccentColor} />
+                <ChatConcierge slug={slug} placement="inline" dark={dark} />
 
                 {/* Manager layout windows */}
                 {managerLayout.length ? (
@@ -644,7 +657,7 @@ export default function PropertyExperience({
                           <button
                             type="button"
                             onClick={onAddWindow}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-teal-500/22 bg-teal-500/8 text-lg font-semibold text-teal-300/80 transition-all duration-200 hover:bg-teal-500/14"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-semibold text-white/70 transition-all duration-200 hover:bg-white/10"
                             aria-label="Add window"
                           >
                             +
@@ -682,7 +695,7 @@ export default function PropertyExperience({
                                 <img src={url} alt={key} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
                               );
                               return (
-                                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium text-teal-300/80 underline decoration-teal-400/30 underline-offset-4 transition-all duration-200 hover:decoration-teal-400/60">
+                                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>
                                   Open attachment
                                 </a>
                               );
@@ -700,11 +713,11 @@ export default function PropertyExperience({
                               onDrop={(e) => { if (!editableCustomWindows) return; e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isFinite(from) && onReorderWindows) onReorderWindows(from, idx); }}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="text-xs font-medium uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>{key}</div>
+                                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>{key}</div>
                                 {editableCustomWindows ? (
                                   <div className="flex items-center gap-2">
-                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-[#0f1e2d]/50 text-white/55 transition-colors duration-200 hover:bg-[#0f1e2d]" aria-label="Move up">↑</button>
-                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-[#0f1e2d]/50 text-white/55 transition-colors duration-200 hover:bg-[#0f1e2d]" aria-label="Move down">↓</button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-black/55/50 text-white/55 transition-colors duration-200 hover:bg-black/55" aria-label="Move up">↑</button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-black/55/50 text-white/55 transition-colors duration-200 hover:bg-black/55" aria-label="Move down">↓</button>
                                     <button type="button" onClick={() => onRemoveWindow?.(idx)} className="text-xs font-semibold text-rose-300/50 underline decoration-rose-300/20 underline-offset-4 transition-all duration-200 hover:text-rose-300/75 hover:decoration-rose-300/45">Remove</button>
                                   </div>
                                 ) : null}
@@ -725,15 +738,27 @@ export default function PropertyExperience({
                     onClick={() => setNeedHelpOpen(true)}
                     className="w-full rounded-2xl border py-3.5 text-sm font-semibold tracking-widest transition-all duration-300"
                     style={{
-                      borderColor: 'var(--accent-40)',
-                      color: 'rgba(255,255,255,0.92)',
-                      background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
-                      boxShadow: '0 0 14px var(--accent-10)',
+                      background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
+                      color: '#3d2a0a',
+                      boxShadow: `0 0 20px rgba(${SANDY_RGB},0.25)`,
                     }}
                   >
                     Need Help?
                   </button>
                 ) : null}
+
+                {/* Dark / light mode toggle */}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setDark((d) => !d)}
+                    className="transition-opacity duration-200 hover:opacity-70"
+                    style={{ color: 'rgba(255,255,255,0.55)' }}
+                    title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                  >
+                    {dark ? <SunIcon /> : <MoonIcon />}
+                  </button>
+                </div>
 
                 <div className="h-6" />
               </div>
@@ -742,7 +767,7 @@ export default function PropertyExperience({
             {/* House Rules — fixed footer */}
             {property.HouseRules && showExpandedContent ? (
               <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md px-6 pb-5 pt-8"
-                style={{ background: 'linear-gradient(to top, rgba(6,13,20,0.92) 0%, transparent 100%)' }}
+                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)' }}
               >
                 <div className="text-center">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">House Rules</p>
@@ -773,7 +798,8 @@ export default function PropertyExperience({
                         window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
                         window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                       }}
-                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/[0.07] bg-[#0f1e2d]/70 text-white/60 backdrop-blur-sm transition-all duration-200 hover:bg-[#0f1e2d] hover:text-white/90"
+                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border transition-all duration-200"
+                      style={{ borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))', color: 'var(--accent)' }}
                       aria-label="Back"
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -818,18 +844,18 @@ export default function PropertyExperience({
 
                     {/* Detail panel — appears below the grid when a tile is selected */}
                     {openAmenityId ? (
-                      <div className="mt-4 overflow-hidden rounded-2xl border backdrop-blur-sm" style={{ borderColor: 'var(--accent-22)', background: 'var(--panel-card)' }}>
-                        <div className="border-b border-white/5 px-5 py-3.5">
+                      <div className="mt-4 overflow-hidden rounded-2xl border backdrop-blur-sm" style={{ borderColor: 'var(--accent-22)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }}>
+                        <div className="border-b px-5 py-3.5" style={{ borderColor: 'var(--accent-18)' }}>
                           {openAmenityId === 'wifi' ? (
                             <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                 <AmenityIconSvg iconKey="wifi" className="h-4 w-4" />
                               </div>
                               <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>WiFi</p>
                             </div>
                           ) : openAmenityId === 'garage' ? (
                             <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
+                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                 <AmenityIconSvg iconKey="key" className="h-4 w-4" />
                               </div>
                               <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>Garage Code</p>
@@ -839,7 +865,7 @@ export default function PropertyExperience({
                               const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
                               return w ? (
                                 <div className="flex items-center gap-3">
-                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-teal-500/10 text-teal-400" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
+                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
                                     <AmenityIconSvg iconKey={w.icon} className="h-4 w-4" />
                                   </div>
                                   <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>{w.title}</p>
@@ -852,12 +878,12 @@ export default function PropertyExperience({
                           {openAmenityId === 'wifi' ? (
                             <div className="space-y-3">
                               <div className="space-y-1">
-                                <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Network</p>
+                                <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Network</p>
                                 <p className="text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiName}</p>
                               </div>
                               <div className="flex items-center justify-between gap-4">
                                 <div className="space-y-1">
-                                  <p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Password</p>
+                                  <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Password</p>
                                   <p className="font-mono text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiPassword}</p>
                                 </div>
                                 <CopyPasswordButton password={property.WiFiPassword} />
@@ -865,7 +891,7 @@ export default function PropertyExperience({
                             </div>
                           ) : openAmenityId === 'garage' ? (
                             property.GarageCode
-                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em] text-teal-400/45" style={{ color: 'var(--accent-45)' }}>Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p></div>
+                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p></div>
                               : <div className="text-sm text-white/45">Garage code not provided.</div>
                           ) : (
                             (() => {
@@ -886,6 +912,7 @@ export default function PropertyExperience({
             open={needHelpOpen}
             onClose={() => setNeedHelpOpen(false)}
             phone={property.ManagerPhone ?? ''}
+            dark={dark}
           />
         </>
       ) : null}

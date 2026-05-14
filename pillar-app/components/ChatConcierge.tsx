@@ -1,6 +1,30 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
+
+const SANDY = '#F5EDD5';
+const SANDY_RGB = '245,237,213';
+
+function makeChatVars(dark: boolean): React.CSSProperties {
+  return {
+    '--accent':      SANDY,
+    '--accent-10':   `rgba(${SANDY_RGB},0.10)`,
+    '--accent-18':   `rgba(${SANDY_RGB},0.18)`,
+    '--accent-22':   `rgba(${SANDY_RGB},0.22)`,
+    '--accent-28':   `rgba(${SANDY_RGB},0.28)`,
+    '--accent-45':   `rgba(${SANDY_RGB},0.45)`,
+    '--accent-50':   `rgba(${SANDY_RGB},0.50)`,
+    '--btn-bg-from': `rgba(${SANDY_RGB},0.22)`,
+    '--btn-bg-to':   `rgba(${SANDY_RGB},0.14)`,
+    '--panel-deep':  dark ? 'rgba(12,12,12,0.97)'  : 'rgba(255,255,255,0.93)',
+    '--panel-mid':   dark ? 'rgba(18,18,18,0.60)'  : 'rgba(0,0,0,0.04)',
+    '--panel-card':  dark ? 'rgba(22,22,22,0.92)'  : 'rgba(0,0,0,0.04)',
+    '--panel-input': dark ? 'rgba(14,14,14,0.80)'  : 'rgba(0,0,0,0.06)',
+    '--text-primary':   dark ? 'rgba(255,255,255,0.90)' : 'rgba(61,42,10,0.90)',
+    '--text-muted':     dark ? 'rgba(255,255,255,0.40)' : 'rgba(61,42,10,0.50)',
+    '--border-col':     dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)',
+  } as React.CSSProperties;
+}
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 
@@ -113,8 +137,8 @@ function MapsButton({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-white/[0.07] shadow-sm transition-all duration-200"
-      style={{ background: 'var(--panel-card)' }}
+      className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border shadow-sm transition-all duration-200"
+      style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}
       aria-label="Open in Google Maps"
       title="Open in Google Maps"
     >
@@ -147,7 +171,7 @@ function linkifyLine(line: string) {
   const urlRe = /(https?:\/\/[^\s]+)/g;
   return line.split(urlRe).map((part, idx) =>
     urlRe.test(part) ? (
-      <a key={idx} href={part} target="_blank" rel="noreferrer" className="max-w-full wrap-anywhere underline decoration-teal-400/35 underline-offset-2 transition-all duration-200 hover:decoration-teal-400/65">
+      <a key={idx} href={part} target="_blank" rel="noreferrer" className="max-w-full wrap-anywhere underline underline-offset-2 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>
         {prettyUrlLabel(part)}
       </a>
     ) : (
@@ -174,7 +198,7 @@ function MessageText({ text }: { text: string }) {
           const mapsHref = (maps || '').split(/\s+/).slice(1).join(' ').trim();
           const href = websiteHref || mapsHref;
           const titleNode = href
-            ? <a href={href} target="_blank" rel="noreferrer" className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{title}</a>
+            ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-2">{title}</a>
             : title;
           const cleanedDetails = details.filter((d) => {
             const low = d.toLowerCase();
@@ -183,13 +207,13 @@ function MessageText({ text }: { text: string }) {
             return true;
           });
           return (
-            <div key={i} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
+            <div key={i} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
               <div className="flex items-start justify-between gap-3">
-                <div className="text-sm font-semibold text-white/90">{titleNode}</div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{titleNode}</div>
                 {mapsHref ? <MapsButton href={mapsHref} /> : null}
               </div>
               {cleanedDetails.length ? (
-                <div className="mt-1 space-y-1 text-xs text-white/55">
+                <div className="mt-1 space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                   {cleanedDetails.map((d, di) => <div key={di}>{linkifyLine(d)}</div>)}
                 </div>
               ) : null}
@@ -206,7 +230,7 @@ function MessageText({ text }: { text: string }) {
           return (
             <div key={i}>
               {linkifyLine(before)}
-              <a href={tel ? `tel:${tel}` : undefined} className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{raw}</a>
+              <a href={tel ? `tel:${tel}` : undefined} className="underline underline-offset-2">{raw}</a>
               {after ? linkifyLine(after) : null}
             </div>
           );
@@ -225,7 +249,7 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   if (data.kind === 'error') {
     return (
       <div className="space-y-3">
-        <div className="text-xs leading-relaxed text-white/65">{data.message}</div>
+        <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.message}</div>
         {data.canRetry ? (
           <button
             type="button"
@@ -243,20 +267,20 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   if (data.kind === 'wifi') {
     return (
       <div className="space-y-2">
-        <div className="lux-title text-sm text-white/90">WiFi</div>
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>WiFi</div>
         {data.wifiName.trim() ? (
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Network:</span> {data.wifiName}</div>
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Network:</span> {data.wifiName}</div>
             <CopyButton value={data.wifiName} />
           </div>
         ) : null}
         {data.wifiPassword.trim() ? (
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Password:</span> {data.wifiPassword}</div>
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Password:</span> {data.wifiPassword}</div>
             <CopyButton value={data.wifiPassword} />
           </div>
         ) : (
-          <div className="text-xs text-white/45">No WiFi password on file.</div>
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>No WiFi password on file.</div>
         )}
       </div>
     );
@@ -266,9 +290,9 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
     const tel = data.phoneNumber.replace(/[^\d+]/g, '');
     return (
       <div className="space-y-2">
-        <div className="lux-title text-sm text-white/90">Manager Contact</div>
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Manager Contact</div>
         <div className="flex items-center justify-between gap-2">
-          <a href={tel ? `tel:${tel}` : undefined} className="text-xs text-white/65 underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">
+          <a href={tel ? `tel:${tel}` : undefined} className="text-xs underline underline-offset-2" style={{ color: 'var(--text-muted)' }}>
             {data.phoneNumber || '—'}
           </a>
           <CopyButton value={data.phoneNumber || ''} />
@@ -280,8 +304,8 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   if (data.kind === 'weather') {
     return (
       <div className="space-y-2">
-        <div className="lux-title text-sm text-white/90">Current Weather</div>
-        <div className="text-xs text-white/65">{data.summary || '—'}</div>
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Current Weather</div>
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.summary || '—'}</div>
       </div>
     );
   }
@@ -289,39 +313,39 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   if (data.kind === 'property') {
     return (
       <div className="space-y-2">
-        <div className="lux-title text-sm text-white/90">Property</div>
-        {data.address ? <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Address:</span> {data.address}</div> : null}
-        {data.zip ? <div className="text-xs text-white/65"><span className="font-semibold text-white/80">ZIP:</span> {data.zip}</div> : null}
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Property</div>
+        {data.address ? <div className="text-xs" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Address:</span> {data.address}</div> : null}
+        {data.zip ? <div className="text-xs" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>ZIP:</span> {data.zip}</div> : null}
         {data.managerPhone ? (
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-white/65"><span className="font-semibold text-white/80">Manager Phone:</span> {data.managerPhone}</div>
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Manager Phone:</span> {data.managerPhone}</div>
             <CopyButton value={data.managerPhone} />
           </div>
         ) : null}
-        {data.houseRules ? <div className="text-xs text-white/65 whitespace-pre-wrap"><span className="font-semibold text-white/80">House Rules:</span> {data.houseRules}</div> : null}
+        {data.houseRules ? <div className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>House Rules:</span> {data.houseRules}</div> : null}
       </div>
     );
   }
 
   if (data.kind === 'places') {
-    if (!data.places.length) return <div className="text-xs text-white/45">No results.</div>;
+    if (!data.places.length) return <div className="text-xs" style={{ color: 'var(--text-muted)' }}>No results.</div>;
     return (
       <div className="space-y-2">
-        <div className="lux-title text-sm text-white/90">Nearby options</div>
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Nearby options</div>
         <div className="space-y-2">
           {data.places.map((p, idx) => (
-            <div key={idx} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
+            <div key={idx} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
               <div className="flex items-start justify-between gap-3">
-                <div className="lux-title text-sm text-white/90 min-w-0">
+                <div className="lux-title text-sm min-w-0" style={{ color: 'var(--text-primary)' }}>
                   {(() => {
                     const href = p.websiteUri || p.googleMapsUri;
-                    const title = <>{p.name}{p.cuisine ? <span className="ml-1 text-xs font-normal italic text-white/45">({p.cuisine})</span> : null}</>;
-                    return href ? <a href={href} target="_blank" rel="noreferrer" className="underline decoration-teal-400/35 underline-offset-2 hover:decoration-teal-400/65">{title}</a> : title;
+                    const title = <>{p.name}{p.cuisine ? <span className="ml-1 text-xs font-normal italic" style={{ color: 'var(--text-muted)' }}>({p.cuisine})</span> : null}</>;
+                    return href ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-2">{title}</a> : title;
                   })()}
                 </div>
                 {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
               </div>
-              <div className="mt-1 space-y-1 text-xs text-white/55">
+              <div className="mt-1 space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                 {typeof p.rating === 'number' ? <div>Rating: {p.rating}</div> : null}
                 {p.phone ? <div className="flex items-center justify-between gap-2"><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
               </div>
@@ -336,18 +360,18 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
     const sections = Array.isArray(data.sections) ? data.sections : [];
     return (
       <div className="space-y-3">
-        {data.intro ? <div className="text-xs leading-relaxed text-white/65">{data.intro}</div> : null}
+        {data.intro ? <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.intro}</div> : null}
         {sections.map((s, si) => (
           <div key={si} className="space-y-2">
-            <div className="lux-title text-sm text-white/90">{s.title}</div>
+            <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>{s.title}</div>
             <div className="space-y-2">
               {(s.places || []).map((p, pi) => (
-                <div key={pi} className="rounded-xl border border-white/[0.07] p-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
+                <div key={pi} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-white/90">{p.name || '—'}</div>
-                      {p.blurb ? <div className="mt-0.5 text-xs text-white/50">{p.blurb}</div> : null}
-                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-xs text-white/60"><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
+                      <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name || '—'}</div>
+                      {p.blurb ? <div className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
+                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--text-muted)' }}><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
                     </div>
                     {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
                   </div>
@@ -379,7 +403,7 @@ type ButlerCardData =
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
 
-type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; accentColor?: string };
+type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; dark?: boolean };
 
 type OverloadedErrorPayload = { code: 'OVERLOADED'; message: string; retryAfterMs: number };
 
@@ -396,39 +420,8 @@ const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Che
 
 /* ─── Main export ────────────────────────────────────────────── */
 
-function hexToRgba(hex: string, alpha: number): string {
-  if (!hex || hex.length < 7) return `rgba(20,184,166,${alpha})`;
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, accentColor }: Props) {
-  const panelThemeVars = useMemo(() => {
-    const hex = accentColor && accentColor.startsWith('#') ? accentColor : '#2dd4bf';
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    // Dark neutral base (6,9,18) + small accent addition — avoids gross muddy colors
-    const tint = (f: number, a: number) =>
-      `rgba(${Math.min(255,Math.round(6+r*f))},${Math.min(255,Math.round(9+g*f))},${Math.min(255,Math.round(18+b*f))},${a})`;
-    return {
-      '--accent': hex,
-      '--accent-10': hexToRgba(hex, 0.18),
-      '--accent-18': hexToRgba(hex, 0.18),
-      '--accent-22': hexToRgba(hex, 0.22),
-      '--accent-28': hexToRgba(hex, 0.28),
-      '--accent-45': hexToRgba(hex, 0.45),
-      '--accent-50': hexToRgba(hex, 0.5),
-      '--btn-bg-from': hexToRgba(hex, 0.22),
-      '--btn-bg-to': hexToRgba(hex, 0.14),
-      '--panel-deep': tint(0.07, 0.97),
-      '--panel-mid': tint(0.09, 0.55),
-      '--panel-card': tint(0.08, 0.88),
-      '--panel-input': tint(0.06, 0.72),
-    } as React.CSSProperties;
-  }, [accentColor]);
+export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, dark = true }: Props) {
+  const chatVars = useMemo(() => makeChatVars(dark), [dark]);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -568,12 +561,12 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           onClick={() => setOpen(true)}
           className={
             placement === 'floating'
-              ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border border-teal-500/28 text-teal-400 shadow-[0_0_24px_rgba(20,184,166,0.15)] transition-all duration-300 hover:border-teal-400/48 hover:shadow-[0_0_36px_rgba(20,184,166,0.28)] focus:outline-none'
-              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border border-teal-500/20 px-6 py-5 text-left transition-all duration-300 focus:outline-none ' + (triggerClassName ?? '')
+              ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 focus:outline-none'
+              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border px-6 py-5 text-left transition-all duration-300 focus:outline-none ' + (triggerClassName ?? '')
           }
           aria-label="Open concierge"
           style={{
-            borderColor: 'var(--accent-22)',
+            borderColor: 'var(--accent-18)',
             background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
           }}
         >
@@ -588,22 +581,19 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               />
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
-                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
+                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl ring-1"
+                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}
                 >
                   <SlidingTriggerIcon />
                 </div>
                 <div>
                   <div className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</div>
-                  <div
-                    className="mt-0.5 text-xs"
-                    style={{ color: 'rgba(255,255,255,0.55)' }}
-                  >
+                  <div className="mt-0.5 text-xs" style={{ color: 'var(--accent-50)' }}>
                     Ask about the home or local area
                   </div>
                 </div>
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.45)' }}>
+              <span style={{ color: `rgba(${SANDY_RGB},0.45)` }}>
                 <ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
               </span>
             </>
@@ -618,12 +608,12 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           (open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0')
         }
       >
-        <div className="overflow-hidden rounded-3xl border border-white/[0.07] shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl" style={{ ...panelThemeVars, background: 'var(--panel-deep)' }}>
+        <div className="overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl" style={{ ...chatVars, background: 'var(--panel-deep)', border: `1px solid var(--border-col)` }}>
           {/* Top glow line */}
           <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
 
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/5 px-5 py-4" style={{ background: 'var(--panel-mid)' }}>
+          <div className="flex items-center justify-between border-b px-5 py-4" style={{ background: 'var(--panel-mid)', borderColor: 'var(--border-col)' }}>
             <div className="flex items-center gap-3">
               <div
                 className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
@@ -632,7 +622,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 <ButlerIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</p>
+                <p className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>Pillar Concierge</p>
                 <p className="text-xs" style={{ color: 'var(--accent-50)' }}>Elegant. Concise. Professional.</p>
                 {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--accent-45)' }}>{statusText}</p> : null}
               </div>
@@ -640,8 +630,8 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.07] text-white/45 transition-all duration-200 hover:text-white/70"
-              style={{ background: 'var(--panel-card)' }}
+              className="flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
+              style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)', color: 'var(--text-muted)' }}
               aria-label="Close"
             >
               ✕
@@ -653,17 +643,15 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             {messages.map((m) => (
               <div key={m.id} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div
-                  className={
-                    'max-w-[85%] wrap-anywhere rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' +
-                    (m.role === 'user'
-                      ? 'border border-teal-500/22 text-white'
-                      : 'border border-white/6 text-white/88')
-                  }
+                  className="max-w-[85%] wrap-anywhere rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm border"
                   style={m.role === 'user' ? {
                     borderColor: 'var(--accent-28)',
                     background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+                    color: 'var(--text-primary)',
                   } : {
+                    borderColor: 'var(--border-col)',
                     background: 'var(--panel-card)',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {m.role === 'butler'
@@ -674,7 +662,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             ))}
             {isTyping ? (
               <div className="flex justify-start">
-                <div className="rounded-2xl border border-white/6 px-4 py-3 shadow-sm" style={{ background: 'var(--panel-card)' }}>
+                <div className="rounded-2xl border px-4 py-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
                   <TypingDots />
                 </div>
               </div>
@@ -690,7 +678,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 onClick={() => send(p)}
                 disabled={isTyping}
                 className="whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-45"
-                style={{ borderColor: 'var(--accent-18)', backgroundColor: 'var(--accent-10)', color: 'rgba(255,255,255,0.80)' }}
+                style={{ borderColor: 'var(--accent-18)', backgroundColor: 'var(--accent-10)', color: 'var(--text-primary)' }}
               >
                 {p}
               </button>
@@ -699,8 +687,8 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
 
           {/* Input row */}
           <form
-            className="flex items-center gap-2 border-t border-white/5 px-4 py-3"
-            style={{ background: 'var(--panel-mid)' }}
+            className="flex items-center gap-2 border-t px-4 py-3"
+            style={{ background: 'var(--panel-mid)', borderColor: 'var(--border-col)' }}
             onSubmit={(e) => { e.preventDefault(); void send(input); }}
           >
             <input
@@ -708,16 +696,17 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about the home or the local area…"
-              className="h-11 flex-1 rounded-2xl border border-white/[0.07] px-4 text-sm text-white placeholder:text-white/22 shadow-inner outline-none transition-all duration-200"
-              style={{ background: 'var(--panel-input)' }}
+              className={`h-11 flex-1 rounded-2xl border px-4 text-sm shadow-inner outline-none transition-all duration-200 ${dark ? 'placeholder:text-white/22' : 'placeholder:text-black/25'}`}
+              style={{ background: 'var(--panel-input)', borderColor: 'var(--border-col)', color: 'var(--text-primary)' }}
             />
             <button
               type="submit"
               disabled={!canSend}
-              className="inline-flex h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold tracking-wide text-white transition-all duration-300 disabled:opacity-40"
+              className="inline-flex h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold tracking-wide transition-all duration-300 active:scale-[0.97] disabled:opacity-40"
               style={{
-                background: `linear-gradient(to right, var(--accent), var(--accent))`,
-                boxShadow: '0 0 20px var(--accent-28)',
+                background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
+                color: '#3d2a0a',
+                boxShadow: `0 0 20px rgba(${SANDY_RGB},0.25)`,
               }}
             >
               Send

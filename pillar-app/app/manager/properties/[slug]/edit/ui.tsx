@@ -337,7 +337,7 @@ const TILES: Tile[] = [
     label: 'Property Info',
     sub: 'Name, rules & bio',
     border: '',
-    borderStyle: { borderColor: 'rgba(147,197,253,0.50)', background: 'rgba(96,165,250,0.05)' },
+    borderStyle: { borderColor: 'rgba(147,197,253,0.50)', background: 'rgba(96,165,250,0.11)' },
     shadow: '0 0 0 1px rgba(96,165,250,0.20), 0 0 40px rgba(96,165,250,0.16), inset 0 1px 0 rgba(255,255,255,0.07)',
     shadowHover: '0 0 0 1px rgba(96,165,250,0.38), 0 0 65px rgba(96,165,250,0.28), inset 0 1px 0 rgba(255,255,255,0.10)',
     bg: '',
@@ -399,19 +399,19 @@ function GridView({ onNavigate, propertyName, dark }: { onNavigate: (v: View) =>
           const lightBlueOverride = isPropertyInfo && !dark;
 
           const shadow = lightBlueOverride
-            ? '0 0 0 1px rgba(30,58,138,0.40), 0 0 40px rgba(30,58,138,0.28), inset 0 1px 0 rgba(255,255,255,0.07)'
+            ? '0 0 0 1px rgba(96,165,250,0.38), 0 0 40px rgba(59,130,246,0.22), inset 0 1px 0 rgba(255,255,255,0.07)'
             : tile.shadow;
           const shadowHover = lightBlueOverride
-            ? '0 0 0 1px rgba(30,58,138,0.58), 0 0 65px rgba(30,58,138,0.40), inset 0 1px 0 rgba(255,255,255,0.10)'
+            ? '0 0 0 1px rgba(96,165,250,0.55), 0 0 60px rgba(59,130,246,0.38), inset 0 1px 0 rgba(255,255,255,0.10)'
             : tile.shadowHover;
           const borderStyle = lightBlueOverride
-            ? { borderColor: 'rgba(30,58,138,0.55)', background: 'rgba(30,58,138,0.06)' }
+            ? { borderColor: 'rgba(96,165,250,0.35)', background: 'rgba(59,130,246,0.04)' }
             : tile.borderStyle;
           const iconStyle = lightBlueOverride
-            ? { background: 'rgba(30,58,138,0.14)', border: '1px solid rgba(30,58,138,0.35)', color: 'rgb(30,58,138)' }
+            ? { background: 'rgba(59,130,246,0.10)', border: '1px solid rgba(59,130,246,0.25)', color: 'rgb(59,130,246)' }
             : tile.iconStyle;
           const textStyle = lightBlueOverride
-            ? { color: 'rgb(30,58,138)' }
+            ? { color: 'rgb(59,130,246)' }
             : tile.textStyle;
 
           return (
@@ -878,7 +878,7 @@ function AmenitiesView({
 
 /* ─── QR view ─────────────────────────────────────────── */
 
-function QRView({ slug: initialSlug }: { slug: string }) {
+function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
   const [slug, setSlug] = useState(initialSlug);
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -915,94 +915,94 @@ function QRView({ slug: initialSlug }: { slug: string }) {
   return (
     <div className="flex flex-col items-center px-6 pt-8 pb-32">
       <div className="rounded-2xl border border-amber-500/30 bg-white p-5 shadow-[0_0_40px_rgba(245,158,11,0.12)]">
-        {mounted ? (
-          <QRCodeSVG value={publicUrl} size={220} bgColor="#ffffff" fgColor="#1a1a1a" level="H" />
+          {mounted ? (
+            <QRCodeSVG value={publicUrl} size={220} bgColor="#ffffff" fgColor="#1a1a1a" level="H" />
+          ) : (
+            <div className="h-55 w-55 animate-pulse rounded-xl bg-black/5" />
+          )}
+        </div>
+        {regenSuccess ? (
+          <p className="mt-3 text-center text-sm font-semibold text-amber-400">New QR code generated ✓</p>
         ) : (
-          <div className="h-55 w-55 animate-pulse rounded-xl bg-black/5" />
+          <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/45">
+            Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
+          </p>
         )}
-      </div>
-      {regenSuccess ? (
-        <p className="mt-3 text-center text-sm font-semibold text-amber-400">New QR code generated ✓</p>
-      ) : (
-        <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/45">
-          Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
-        </p>
-      )}
 
-      <div className="mt-8 flex w-full max-w-xs gap-2">
-        <button
-          type="button"
-          onClick={() => { setShowModal(true); setConfirmText(''); setRegenError(null); }}
-          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/8 text-sm font-semibold text-amber-300/85 transition-all duration-200 hover:bg-amber-500/14 hover:text-amber-300"
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
-            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Regenerate
-        </button>
+        <div className="mt-8 flex w-full max-w-xs gap-2">
+          <button
+            type="button"
+            onClick={() => { setShowModal(true); setConfirmText(''); setRegenError(null); }}
+            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/8 text-sm font-semibold text-amber-300/85 transition-all duration-200 hover:bg-amber-500/14 hover:text-amber-300"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Regenerate
+          </button>
 
-        <a
-          href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85"
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
-            <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 14h12v8H6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Print view
-        </a>
-      </div>
+          <a
+            href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 14h12v8H6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Print view
+          </a>
+        </div>
 
-      {showModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-5"
-          style={{ background: 'rgba(0,0,0,0.72)' }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
-        >
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
-            <div className="h-1 w-full bg-amber-400" />
-            <div className="p-6">
-              <h2 className="text-base font-bold tracking-tight text-white">Regenerate QR Code?</h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/50">
-                This creates a new unique link for this property.{' '}
-                <span className="font-semibold text-white/75">Any previously printed QR codes will stop working</span>{' '}
-                and will need to be reprinted.
-              </p>
-              <div className="mt-5 space-y-1.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
-                  Type <span className="text-amber-400">Generate</span> to confirm
+        {showModal ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-5"
+            style={{ background: 'rgba(0,0,0,0.72)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
+          >
+            <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+              <div className="h-1 w-full bg-amber-400" />
+              <div className="p-6">
+                <h2 className="text-base font-bold tracking-tight text-white">Regenerate QR Code?</h2>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">
+                  This creates a new unique link for this property.{' '}
+                  <span className="font-semibold text-white/75">Any previously printed QR codes will stop working</span>{' '}
+                  and will need to be reprinted.
                 </p>
-                <input
-                  type="text" autoFocus value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') void handleRegenerate(); }}
-                  placeholder="Generate"
-                  className="h-11 w-full rounded-xl border border-white/10 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all placeholder:text-white/20 focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/25"
-                />
-              </div>
-              {regenError ? <p className="mt-3 text-xs text-red-400">{regenError}</p> : null}
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button" onClick={() => void handleRegenerate()}
-                  disabled={!confirmed || isGenerating}
-                  className="h-10 flex-1 rounded-xl bg-amber-400 text-sm font-bold text-[#0a1015] transition hover:bg-amber-500 disabled:opacity-40"
-                >
-                  {isGenerating ? 'Generating…' : 'Generate New QR Code'}
-                </button>
-                <button
-                  type="button" onClick={() => setShowModal(false)}
-                  className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/75"
-                >
-                  Cancel
-                </button>
+                <div className="mt-5 space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                    Type <span className="text-amber-400">Generate</span> to confirm
+                  </p>
+                  <input
+                    type="text" autoFocus value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') void handleRegenerate(); }}
+                    placeholder="Generate"
+                    className="h-11 w-full rounded-xl border border-white/10 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all placeholder:text-white/20 focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/25"
+                  />
+                </div>
+                {regenError ? <p className="mt-3 text-xs text-red-400">{regenError}</p> : null}
+                <div className="mt-5 flex gap-2">
+                  <button
+                    type="button" onClick={() => void handleRegenerate()}
+                    disabled={!confirmed || isGenerating}
+                    className="h-10 flex-1 rounded-xl bg-amber-400 text-sm font-bold text-[#0a1015] transition hover:bg-amber-500 disabled:opacity-40"
+                  >
+                    {isGenerating ? 'Generating…' : 'Generate New QR Code'}
+                  </button>
+                  <button
+                    type="button" onClick={() => setShowModal(false)}
+                    className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/75"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
     </div>
   );
 }
@@ -1294,8 +1294,16 @@ export default function ManagerPropertyEditorClient({
     settings: 'Settings',
   };
 
+  const glowGradient = dark ? (
+    view === 'property-info' ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(96,165,250,0.50) 0%, transparent 65%),'
+    : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(248,113,113,0.40) 0%, transparent 65%),'
+    : view === 'settings'     ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(74,222,128,0.35) 0%, transparent 65%),'
+    : view === 'qr'           ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,191,36,0.40) 0%, transparent 65%),'
+    : ''
+  ) : '';
+
   const bgStyle: React.CSSProperties = dark
-    ? { backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }
+    ? { backgroundImage: `${glowGradient}url(/images/bg3.png)`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }
     : { backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' };
 
   const toggleStyle: React.CSSProperties = {
@@ -1369,7 +1377,7 @@ export default function ManagerPropertyEditorClient({
             dark={dark}
           />
         )}
-        {view === 'qr' && <QRView slug={slug} />}
+        {view === 'qr' && <QRView slug={slug} dark={dark} />}
         {view === 'settings' && <SettingsView slug={slug} initialBgKey={property.BackgroundKey} dark={dark} />}
       </div>
     </div>

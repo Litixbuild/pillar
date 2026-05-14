@@ -37,7 +37,7 @@ export default function HomeDarkWrapper() {
   const bgImage = dark ? 'url(/images/bg3.png)' : 'url(/images/mainbackground.png)';
 
   return (
-    <main className="min-h-screen" style={{ color: '#fff' }}>
+    <>
       <IntroSplash />
 
       {/* Fixed background */}
@@ -51,36 +51,27 @@ export default function HomeDarkWrapper() {
         }}
       />
 
-      {/* Dark mode toggle — top left, only after splash */}
-      <button
-        type="button"
-        onClick={() => setDark((d) => !d)}
-        title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        style={{
-          position: 'fixed',
-          top: '20px',
-          left: '20px',
-          zIndex: 9999,
-          opacity: showToggle ? 1 : 0,
-          pointerEvents: showToggle ? 'auto' : 'none',
-          transition: 'opacity 0.5s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: '12px',
-          border: '1px solid rgba(245,237,213,0.28)',
-          background: 'rgba(245,237,213,0.08)',
-          color: SANDY,
-          cursor: 'pointer',
-        }}
-      >
-        {dark ? <SunIcon /> : <MoonIcon />}
-      </button>
-
+      <main className="min-h-screen" style={{ color: '#fff' }}>
       {/* ── Navigation ── */}
-      <nav className="absolute top-0 right-0 z-50 px-6 lg:px-12 pt-6">
+      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 pt-6">
+        {/* Dark mode toggle */}
+        <button
+          type="button"
+          onClick={() => setDark((d) => !d)}
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="flex h-8 w-8 items-center justify-center rounded-xl border transition-opacity duration-500"
+          style={{
+            opacity: showToggle ? 1 : 0,
+            pointerEvents: showToggle ? 'auto' : 'none',
+            borderColor: 'rgba(245,237,213,0.28)',
+            background: 'rgba(245,237,213,0.08)',
+            color: SANDY,
+          }}
+        >
+          {dark ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        {/* Login link */}
         <Link
           href="/manager/login"
           className="group flex items-center gap-2 text-[11px] lg:text-xs uppercase tracking-[0.22em] transition-opacity duration-300 hover:opacity-70"
@@ -308,5 +299,6 @@ export default function HomeDarkWrapper() {
         </p>
       </footer>
     </main>
+    </>
   );
 }
