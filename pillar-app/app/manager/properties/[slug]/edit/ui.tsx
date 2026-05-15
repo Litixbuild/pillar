@@ -29,7 +29,7 @@ interface CoreFields {
   LogoSize: number;
 }
 
-type View = 'grid' | 'property-info' | 'amenities' | 'qr' | 'settings';
+type View = 'grid' | 'property-info' | 'amenities' | 'qr' | 'settings' | 'work-orders';
 
 interface Tile {
   id: View;
@@ -45,6 +45,7 @@ interface Tile {
   text: string;
   textStyle?: React.CSSProperties;
   icon: React.ReactNode;
+  wide?: boolean;
 }
 
 /* ─── API helpers ─────────────────────────────────────── */
@@ -373,7 +374,7 @@ const TILES: Tile[] = [
   },
   {
     id: 'settings',
-    label: 'Settings',
+    label: 'Design',
     sub: 'Backgrounds & more',
     border: 'border-green-400/50',
     shadow: '0 0 0 1px rgba(74,222,128,0.20), 0 0 40px rgba(74,222,128,0.16), inset 0 1px 0 rgba(255,255,255,0.07)',
@@ -388,12 +389,29 @@ const TILES: Tile[] = [
       </svg>
     ),
   },
+  {
+    id: 'work-orders',
+    label: 'Work Orders',
+    sub: 'Routing & categories',
+    border: 'border-white/35',
+    shadow: '0 0 0 1px rgba(255,255,255,0.22), 0 0 40px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.10)',
+    shadowHover: '0 0 0 1px rgba(255,255,255,0.45), 0 0 65px rgba(255,255,255,0.32), inset 0 1px 0 rgba(255,255,255,0.16)',
+    bg: 'bg-white/6',
+    iconBg: 'bg-white/12 border-white/30 text-white/90',
+    text: 'text-white/85',
+    wide: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
 ];
 
 function GridView({ onNavigate, propertyName, dark }: { onNavigate: (v: View) => void; propertyName: string; dark: boolean }) {
   return (
     <div className="flex flex-col px-4 pb-4 pt-3" style={{ height: 'calc(100dvh - 64px)' }}>
-      <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-3">
+      <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr 0.65fr' }}>
         {TILES.map((tile) => {
           const isPropertyInfo = tile.id === 'property-info';
           const lightBlueOverride = isPropertyInfo && !dark;
@@ -419,13 +437,13 @@ function GridView({ onNavigate, propertyName, dark }: { onNavigate: (v: View) =>
               key={tile.id}
               type="button"
               onClick={() => onNavigate(tile.id)}
-              className={`group flex flex-col items-center justify-center gap-3 rounded-2xl border backdrop-blur-sm transition-all duration-300 active:scale-[0.97] ${tile.border} ${tile.bg}`}
+              className={`group rounded-2xl border backdrop-blur-sm transition-all duration-300 active:scale-[0.97] ${tile.wide ? 'col-span-2 flex items-center justify-center gap-5' : 'flex flex-col items-center justify-center gap-3'} ${tile.border} ${tile.bg}`}
               style={{ boxShadow: shadow, ...borderStyle }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = shadowHover; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = shadow; }}
             >
               <div
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-105 ${tile.iconBg}`}
+                className={`flex shrink-0 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-105 ${tile.wide ? 'h-14 w-14' : 'h-14 w-14'} ${tile.iconBg}`}
                 style={iconStyle}
               >
                 {tile.icon}
@@ -1215,6 +1233,250 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   );
 }
 
+/* ─── Work Orders view ───────────────────────────────── */
+
+interface WOCategory {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  is_builtin: boolean;
+}
+
+function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: { slug: string; dark: boolean; initialCategories?: WOCategory[]; onCategoriesChange?: (cats: WOCategory[]) => void }) {
+  const [categories, setCategories] = useState<WOCategory[]>(initialCategories ?? []);
+  const [loading, setLoading] = useState(!initialCategories);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+
+  const [addName, setAddName] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const cardStyle: React.CSSProperties = dark
+    ? { background: 'rgba(18,18,18,0.80)', border: `1px solid rgba(${SANDY_RGB},0.12)`, backdropFilter: 'blur(20px)' }
+    : { background: 'rgba(255,255,255,0.14)', border: `1px solid rgba(${SANDY_RGB},0.20)`, backdropFilter: 'blur(16px)' };
+
+  function updateCategories(next: WOCategory[] | ((prev: WOCategory[]) => WOCategory[])) {
+    setCategories((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      onCategoriesChange?.(resolved);
+      return resolved;
+    });
+  }
+
+  async function load() {
+    setLoading(true); setLoadError(null);
+    try {
+      const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories`);
+      const data = (await res.json().catch(() => null)) as { categories?: WOCategory[]; error?: string } | null;
+      if (!res.ok) throw new Error(data?.error ?? `Load failed (${res.status})`);
+      updateCategories(data?.categories ?? []);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { if (!initialCategories) void load(); }, [slug]);
+
+  function startEdit(cat: WOCategory) {
+    setEditingId(cat.id);
+    setEditPhone(cat.phone ?? '');
+    setEditEmail(cat.email ?? '');
+    setSavedId(null);
+  }
+
+  function cancelEdit() { setEditingId(null); }
+
+  async function saveEdit(id: string) {
+    setSaving(true);
+    try {
+      const res = await fetch(
+        `/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories/${encodeURIComponent(id)}`,
+        { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone: editPhone, email: editEmail }) }
+      );
+      if (!res.ok) {
+        const d = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(d?.error ?? 'Save failed');
+      }
+      updateCategories((prev) => prev.map((c) => c.id === id ? { ...c, phone: editPhone || null, email: editEmail || null } : c));
+      setEditingId(null);
+      setSavedId(id);
+      setTimeout(() => setSavedId(null), 2000);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteCategory(id: string) {
+    if (!confirm('Delete this category?')) return;
+    const res = await fetch(
+      `/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories/${encodeURIComponent(id)}`,
+      { method: 'DELETE' }
+    );
+    if (res.ok) updateCategories((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  async function handleAdd() {
+    if (!addName.trim()) { setAddError('Category name is required'); return; }
+    setAdding(true); setAddError(null);
+    try {
+      const res = await fetch(
+        `/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories`,
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: addName, phone: addPhone, email: addEmail }) }
+      );
+      const data = (await res.json().catch(() => null)) as { category?: WOCategory; error?: string } | null;
+      if (!res.ok) throw new Error(data?.error ?? 'Create failed');
+      if (data?.category) updateCategories((prev) => [...prev, data.category!]);
+      setAddName(''); setAddPhone(''); setAddEmail('');
+    } catch (e) {
+      setAddError(e instanceof Error ? e.message : 'Create failed');
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center pt-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 pt-6 pb-32 space-y-4">
+      {loadError ? (
+        <p className="text-sm text-red-400">{loadError}</p>
+      ) : null}
+
+      <p className="text-xs leading-relaxed" style={{ color: `rgba(${SANDY_RGB},0.50)` }}>
+        Set a phone number or email for each work order type. Tenants only see the category name — contacts stay private.
+      </p>
+
+      <div className="space-y-3">
+        {categories.map((cat) => {
+          const isEditing = editingId === cat.id;
+          const wasSaved = savedId === cat.id;
+          return (
+            <div key={cat.id} className="rounded-2xl p-4 space-y-3" style={cardStyle}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-semibold text-white/85 truncate">{cat.name}</span>
+                  {cat.is_builtin ? (
+                    <span className="shrink-0 inline-flex h-4 items-center rounded-full border border-white/10 bg-white/6 px-1.5 text-[9px] font-semibold uppercase tracking-widest text-white/30">
+                      built-in
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {wasSaved ? <span className="text-xs text-emerald-400">Saved ✓</span> : null}
+                  {isEditing ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void saveEdit(cat.id)}
+                        disabled={saving}
+                        className="h-7 rounded-lg px-3 text-xs font-semibold transition-all disabled:opacity-50"
+                        style={{ background: `rgba(${SANDY_RGB},0.14)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, color: SANDY }}
+                      >
+                        {saving ? 'Saving…' : 'Save'}
+                      </button>
+                      <button type="button" onClick={cancelEdit} className="h-7 rounded-lg px-2 text-xs text-white/35 transition hover:text-white/60">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(cat)}
+                        className="h-7 rounded-lg px-3 text-xs font-medium text-white/45 transition hover:text-white/75 border border-white/8 hover:border-white/15"
+                      >
+                        Edit
+                      </button>
+                      {!cat.is_builtin ? (
+                        <button
+                          type="button"
+                          onClick={() => void deleteCategory(cat.id)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/8 text-white/30 transition hover:border-red-500/30 hover:text-red-400"
+                          aria-label="Delete category"
+                        >
+                          <TrashIcon />
+                        </button>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {isEditing ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldGroup label="Phone">
+                    <TextInput value={editPhone} onChange={setEditPhone} placeholder="+1 (555) 000-0000" type="tel" />
+                  </FieldGroup>
+                  <FieldGroup label="Email">
+                    <TextInput value={editEmail} onChange={setEditEmail} placeholder="repairs@co.com" type="email" />
+                  </FieldGroup>
+                </div>
+              ) : (
+                <div className="flex gap-4 text-xs" style={{ color: `rgba(${SANDY_RGB},0.50)` }}>
+                  {cat.phone
+                    ? <span>📞 {cat.phone}</span>
+                    : <span className="italic text-white/20">No phone</span>}
+                  {cat.email
+                    ? <span>✉ {cat.email}</span>
+                    : <span className="italic text-white/20">No email</span>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add custom category */}
+      <div className="rounded-2xl p-4 space-y-3" style={{ ...cardStyle, border: `1px dashed rgba(${SANDY_RGB},0.18)` }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: `rgba(${SANDY_RGB},0.55)` }}>
+          Add Custom Category
+        </p>
+        <FieldGroup label="Category Name">
+          <TextInput value={addName} onChange={(v) => { setAddName(v); setAddError(null); }} placeholder="e.g. Pest Control" />
+        </FieldGroup>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldGroup label="Phone">
+            <TextInput value={addPhone} onChange={setAddPhone} placeholder="+1 (555) 000-0000" type="tel" />
+          </FieldGroup>
+          <FieldGroup label="Email">
+            <TextInput value={addEmail} onChange={setAddEmail} placeholder="repairs@co.com" type="email" />
+          </FieldGroup>
+        </div>
+        {addError ? <p className="text-xs text-red-400">{addError}</p> : null}
+        <button
+          type="button"
+          onClick={() => void handleAdd()}
+          disabled={adding}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+          style={{ borderColor: `rgba(${SANDY_RGB},0.25)`, background: `rgba(${SANDY_RGB},0.07)`, color: SANDY }}
+        >
+          <PlusIcon />
+          {adding ? 'Adding…' : 'Add Category'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main component ──────────────────────────────────── */
 
 export default function ManagerPropertyEditorClient({
@@ -1248,11 +1510,19 @@ export default function ManagerPropertyEditorClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [prefetchedWOCategories, setPrefetchedWOCategories] = useState<WOCategory[] | undefined>(undefined);
 
   useEffect(() => {
     const stored = localStorage.getItem('pillar-dashboard-theme');
     if (stored) setDark(stored === 'dark');
   }, []);
+
+  useEffect(() => {
+    fetch(`/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories`)
+      .then((r) => r.json())
+      .then((d: { categories?: WOCategory[] }) => { if (d.categories) setPrefetchedWOCategories(d.categories); })
+      .catch(() => { /* silently ignore — WorkOrdersView will retry on open */ });
+  }, [slug]);
 
   function toggleMode() {
     const next = !dark;
@@ -1291,7 +1561,8 @@ export default function ManagerPropertyEditorClient({
     'property-info': 'Property Info',
     amenities: 'Amenities',
     qr: 'QR Code',
-    settings: 'Settings',
+    settings: 'Design',
+    'work-orders': 'Work Orders',
   };
 
   const glowGradient = dark ? (
@@ -1299,6 +1570,7 @@ export default function ManagerPropertyEditorClient({
     : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(248,113,113,0.40) 0%, transparent 65%),'
     : view === 'settings'     ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(74,222,128,0.35) 0%, transparent 65%),'
     : view === 'qr'           ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,191,36,0.40) 0%, transparent 65%),'
+    : view === 'work-orders'  ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(255,255,255,0.12) 0%, transparent 65%),'
     : ''
   ) : '';
 
@@ -1379,6 +1651,7 @@ export default function ManagerPropertyEditorClient({
         )}
         {view === 'qr' && <QRView slug={slug} dark={dark} />}
         {view === 'settings' && <SettingsView slug={slug} initialBgKey={property.BackgroundKey} dark={dark} />}
+        {view === 'work-orders' && <WorkOrdersView slug={slug} dark={dark} initialCategories={prefetchedWOCategories} onCategoriesChange={setPrefetchedWOCategories} />}
       </div>
     </div>
   );

@@ -98,12 +98,14 @@ function GradientButton({
   onClick,
   type,
   className,
+  disabled,
 }: {
   children: ReactNode;
   variant?: 'primary' | 'danger';
   onClick?: () => void;
   type?: 'button' | 'submit';
   className?: string;
+  disabled?: boolean;
 }) {
   const base =
     'inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-semibold tracking-wide transition-all duration-300 focus:outline-none ';
@@ -128,7 +130,8 @@ function GradientButton({
     <button
       type={type ?? 'button'}
       onClick={onClick}
-      className={base + 'active:scale-[0.98] ' + (className ?? '')}
+      disabled={disabled}
+      className={base + 'active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ' + (className ?? '')}
       style={{
         background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
         color: '#3d2a0a',
@@ -144,13 +147,16 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-base font-semibold tracking-wide text-white/90" style={{ color: 'var(--heading-color)' }}>{children}</h2>;
 }
 
-function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose: () => void; phone: string; dark: boolean }) {
-  const [category, setCategory] = useState<'Air Conditioning' | 'Electric' | 'Plumbing' | 'Other' | ''>('');
+function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string }) {
+  const [category, setCategory] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [otherMessage, setOtherMessage] = useState('');
   const [description, setDescription] = useState('');
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [lateCheckoutSent, setLateCheckoutSent] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -159,10 +165,26 @@ function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose:
     return () => window.removeEventListener('keydown', fn);
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open || !slug) return;
+    fetch(`/api/guest/work-order-categories?slug=${encodeURIComponent(slug)}`)
+      .then((r) => r.json())
+      .then((d: { categories?: { id: string; name: string }[] }) => {
+        if (d.categories) setCategoryOptions(d.categories);
+      })
+      .catch(() => {
+        setCategoryOptions([
+          { id: 'electric', name: 'Electric' },
+          { id: 'ac', name: 'Air Conditioning' },
+          { id: 'plumbing', name: 'Plumbing' },
+          { id: 'other', name: 'Other' },
+        ]);
+      });
+  }, [open, slug]);
+
   if (!open) return null;
 
   const tel = phone.replace(/[^\d+]/g, '');
-  const categoryOptions = ['Air Conditioning', 'Electric', 'Plumbing', 'Other'] as const;
 
   const panelBg = dark ? 'rgba(12,12,12,0.97)' : 'rgba(255,255,255,0.92)';
   const inputBg = dark ? 'rgba(14,14,14,0.80)' : 'rgba(0,0,0,0.06)';
@@ -225,16 +247,16 @@ function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose:
                   <div role="listbox" className="absolute z-5 mt-1.5 w-full overflow-hidden rounded-xl shadow-2xl backdrop-blur-xl" style={{ background: dropdownBg, border: `1px solid ${borderCol}` }}>
                     {categoryOptions.map((opt) => (
                       <button
-                        key={opt}
+                        key={opt.id}
                         type="button"
-                        onClick={() => { setCategory(opt); setSent(false); setCategoryOpen(false); if (opt !== 'Other') setOtherMessage(''); }}
+                        onClick={() => { setCategory(opt.name); setSent(false); setSubmitError(null); setCategoryOpen(false); if (opt.name !== 'Other') setOtherMessage(''); }}
                         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150"
-                        style={category === opt
+                        style={category === opt.name
                           ? { backgroundColor: `rgba(${SANDY_RGB},0.12)`, color: textCol }
                           : { color: mutedCol }}
                       >
-                        <span>{opt}</span>
-                        {category === opt ? <span style={{ color: SANDY }}>✓</span> : null}
+                        <span>{opt.name}</span>
+                        {category === opt.name ? <span style={{ color: SANDY }}>✓</span> : null}
                       </button>
                     ))}
                   </div>
@@ -247,7 +269,7 @@ function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose:
                 <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Message</div>
                 <input
                   value={otherMessage}
-                  onChange={(e) => { setOtherMessage(e.target.value); setSent(false); }}
+                  onChange={(e) => { setOtherMessage(e.target.value); setSent(false); setSubmitError(null); }}
                   placeholder="What is this about?"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
                   style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
@@ -267,17 +289,34 @@ function NeedHelpModal({ open, onClose, phone, dark }: { open: boolean; onClose:
             </div>
 
             {sent ? <div className="text-sm text-emerald-500">Sent. Thank you.</div> : null}
+            {submitError ? <div className="text-sm text-red-400">{submitError}</div> : null}
 
             <GradientButton
               type="button"
               onClick={() => {
-                setSent(true);
-                console.log('[work-order]', { category, otherMessage, description });
-                window.setTimeout(() => { setCategory(''); setOtherMessage(''); setDescription(''); setSent(false); onClose(); }, 850);
+                if (!category) { setSubmitError('Please select a category.'); return; }
+                setSubmitting(true); setSubmitError(null);
+                fetch('/api/guest/work-order', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ slug, category_name: category, description: description || null, other_message: otherMessage || null }),
+                })
+                  .then((r) => r.json())
+                  .then((d: { ok?: boolean; error?: string }) => {
+                    if (d.ok) {
+                      setSent(true);
+                      window.setTimeout(() => { setCategory(''); setOtherMessage(''); setDescription(''); setSent(false); onClose(); }, 850);
+                    } else {
+                      setSubmitError(d.error ?? 'Something went wrong. Please try again.');
+                    }
+                  })
+                  .catch(() => setSubmitError('Network error. Please try again.'))
+                  .finally(() => setSubmitting(false));
               }}
+              disabled={submitting}
             >
               <PaperPlaneIcon className="h-4 w-4" />
-              Send
+              {submitting ? 'Sending…' : 'Send'}
             </GradientButton>
           </div>
 
@@ -920,6 +959,7 @@ export default function PropertyExperience({
             onClose={() => setNeedHelpOpen(false)}
             phone={property.ManagerPhone ?? ''}
             dark={dark}
+            slug={slug}
           />
         </>
       ) : null}

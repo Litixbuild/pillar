@@ -27,6 +27,7 @@ function makeChatVars(dark: boolean): React.CSSProperties {
     '--copy-col':       dark ? SANDY : 'rgba(61,42,10,0.78)',
     '--copy-border':    dark ? `rgba(${SANDY_RGB},0.22)` : 'rgba(61,42,10,0.22)',
     '--copy-bg':        dark ? `rgba(${SANDY_RGB},0.10)` : 'rgba(61,42,10,0.07)',
+    '--phone-col':      dark ? SANDY : '#4A6FA5',
   } as React.CSSProperties;
 }
 
@@ -150,6 +151,25 @@ function CopyButton({ value }: { value: string }) {
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
+  );
+}
+
+/* ─── Phone mini button ──────────────────────────────────────── */
+
+function PhoneButton({ phone }: { phone: string }) {
+  const tel = phone.replace(/[^\d+]/g, '');
+  return (
+    <a
+      href={tel ? `tel:${tel}` : undefined}
+      className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border shadow-sm transition-all duration-200"
+      style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)', color: 'var(--phone-col)' }}
+      aria-label={`Call ${phone}`}
+      title={phone}
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+        <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.6 21 3 13.4 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.46.57 3.58.11.35.03.74-.23 1.01L6.6 10.8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </a>
   );
 }
 
@@ -387,17 +407,12 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                   {p.cuisine ? (
                     <div className="mt-0.5 text-xs font-medium" style={{ color: 'var(--accent-50)' }}>{p.cuisine}</div>
                   ) : null}
+                  {typeof p.rating === 'number' ? <div className="mt-1"><StarRating rating={p.rating} /></div> : null}
                 </div>
-                {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
-              </div>
-              <div className="mt-2 space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                {typeof p.rating === 'number' ? <div><StarRating rating={p.rating} /></div> : null}
-                {p.phone ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <div>{linkifyLine(`Phone: ${p.phone}`)}</div>
-                    <CopyButton value={p.phone} />
-                  </div>
-                ) : null}
+                <div className="flex flex-col items-end justify-between self-stretch shrink-0">
+                  {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
+                  {p.phone ? <PhoneButton phone={p.phone} /> : null}
+                </div>
               </div>
             </div>
           ))}
@@ -418,12 +433,14 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
               {(s.places || []).map((p, pi) => (
                 <div key={pi} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name || '—'}</div>
                       {p.blurb ? <div className="mt-0.5 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
-                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-sm" style={{ color: 'var(--text-muted)' }}><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
                     </div>
-                    {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
+                    <div className="flex flex-col items-end justify-between self-stretch shrink-0">
+                      {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
+                      {p.phone ? <PhoneButton phone={p.phone} /> : null}
+                    </div>
                   </div>
                 </div>
               ))}
