@@ -28,6 +28,7 @@ function makeChatVars(dark: boolean): React.CSSProperties {
     '--copy-border':    dark ? `rgba(${SANDY_RGB},0.22)` : 'rgba(61,42,10,0.22)',
     '--copy-bg':        dark ? `rgba(${SANDY_RGB},0.10)` : 'rgba(61,42,10,0.07)',
     '--phone-col':      dark ? SANDY : '#4A6FA5',
+    '--header-sub':     dark ? `rgba(${SANDY_RGB},0.55)` : 'rgba(61,42,10,0.60)',
   } as React.CSSProperties;
 }
 
@@ -405,9 +406,11 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                     })()}
                   </div>
                   {p.cuisine ? (
-                    <div className="mt-0.5 text-xs font-medium" style={{ color: 'var(--accent-50)' }}>{p.cuisine}</div>
+                    <div className="mt-0.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{p.cuisine}</div>
                   ) : null}
-                  {typeof p.rating === 'number' ? <div className="mt-1"><StarRating rating={p.rating} /></div> : null}
+                  {p.blurb ? (
+                    <div className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div>
+                  ) : null}
                 </div>
                 <div className="flex flex-col items-end justify-between self-stretch shrink-0">
                   {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
@@ -464,8 +467,8 @@ type ButlerCardData =
   | { kind: 'wifi'; wifiName: string; wifiPassword: string; model?: string }
   | { kind: 'phone'; phoneNumber: string; model?: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model?: string }
-  | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model?: string }
-  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
+  | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string; rating?: number }> }>; model?: string }
+  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
   | { kind: 'weather'; summary: string; model?: string };
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
@@ -480,7 +483,7 @@ type ChatOkResponse =
   | { kind: 'phone'; phoneNumber: string; model: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model: string }
   | { kind: 'itinerary'; intro: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model: string }
-  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
+  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
   | { kind: 'weather'; summary: string; model: string };
 
 const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Check-out instructions'] as const;
@@ -684,14 +687,14 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             <div className="flex items-center gap-3">
               <div
                 className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
-                style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: '0 0 0 1px var(--accent-18)' }}
+                style={{ backgroundColor: 'var(--accent-10)', color: 'var(--copy-col)', boxShadow: '0 0 0 1px var(--accent-18)' }}
               >
                 <ButlerIcon className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>Pillar Concierge</p>
-                <p className="text-xs" style={{ color: 'var(--accent-50)' }}>Elegant. Concise. Professional.</p>
-                {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--accent-45)' }}>{statusText}</p> : null}
+                <p className="text-xs" style={{ color: 'var(--header-sub)' }}>Elegant. Concise. Professional.</p>
+                {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--header-sub)' }}>{statusText}</p> : null}
               </div>
             </div>
             <button

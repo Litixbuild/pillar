@@ -122,6 +122,7 @@ type ChatOkResponse =
           blurb?: string;
           phone?: string;
           googleMapsUri?: string;
+          rating?: number;
         }>;
       }>;
       model: string;
@@ -132,6 +133,7 @@ type ChatOkResponse =
       places: Array<{
         name: string;
         cuisine?: string;
+        blurb?: string;
         formattedAddress?: string;
         phone?: string;
         websiteUri?: string;
@@ -848,12 +850,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── Places fast path: return structured card without AI text overhead ─────
+    // ── Places fast path: structured card + one-shot blurb generation ────────
     // Uses an offset when the guest asks for "more options" so results rotate.
     if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
       const offset = wantsMoreOptions ? 5 : 0;
       const selected = livePlaces.slice(offset, offset + 5);
       if (selected.length > 0) {
+        // Generate a one-sentence blurb per place in a single compact Gemini call.
+        let blurbs: Record<string, string> = {};
+        try {
+          const blurbModel = genAI.getGenerativeModel({ model: modelId });
+          const blurbPrompt = `You are a luxury estate concierge. For each place below write ONE short sentence (max 12 words) that tells a guest why they will love it. Be specific to each place — mention what makes it distinctive (cuisine style, vibe, specialty). Return ONLY valid JSON, no markdown: {"blurbs":[{"name":"exact name","blurb":"sentence"}]}\n\nPlaces:\n${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_/g, " ")})` : ""}`).join("\n")}`;
+          const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
+          const blurbRaw = blurbResult.response.text().trim()
+            .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+          const blurbParsed = JSON.parse(blurbRaw) as { blurbs?: Array<{ name: string; blurb: string }> };
+          for (const b of blurbParsed.blurbs ?? []) {
+            if (b.name && b.blurb) blurbs[b.name.toLowerCase().trim()] = b.blurb;
+          }
+        } catch {
+          // Blurbs are optional — fall through without them if Gemini fails
+        }
+
         return Response.json(
           {
             kind: "places",
@@ -861,6 +879,7 @@ export async function POST(req: Request) {
             places: selected.map((p) => ({
               name: p.name,
               cuisine: inferCuisine(p),
+              blurb: blurbs[p.name.toLowerCase().trim()],
               formattedAddress: p.formattedAddress,
               phone: p.phone,
               websiteUri: p.websiteUri,
@@ -993,6 +1012,7 @@ Pick 1-2 places per section from the available data. Use exact place names. Hono
               blurb: p.blurb,
               phone: fetched?.phone,
               googleMapsUri: fetched?.googleMapsUri,
+              rating: fetched?.rating,
             };
           }),
         }));
