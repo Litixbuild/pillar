@@ -23,7 +23,18 @@ function makeChatVars(dark: boolean): React.CSSProperties {
     '--text-primary':   dark ? 'rgba(255,255,255,0.90)' : 'rgba(61,42,10,0.90)',
     '--text-muted':     dark ? 'rgba(255,255,255,0.40)' : 'rgba(61,42,10,0.50)',
     '--border-col':     dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)',
+    '--star-col':       dark ? SANDY : '#B8820A',
+    '--copy-col':       dark ? SANDY : 'rgba(61,42,10,0.78)',
+    '--copy-border':    dark ? `rgba(${SANDY_RGB},0.22)` : 'rgba(61,42,10,0.22)',
+    '--copy-bg':        dark ? `rgba(${SANDY_RGB},0.10)` : 'rgba(61,42,10,0.07)',
   } as React.CSSProperties;
+}
+
+function getTimeGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 /* ─── Icons ──────────────────────────────────────────────────── */
@@ -110,6 +121,19 @@ function TypingDots() {
   );
 }
 
+/* ─── Star rating ────────────────────────────────────────────── */
+
+function StarRating({ rating }: { rating: number }) {
+  const n = Math.min(5, Math.max(0, Math.round(rating)));
+  return (
+    <span className="text-xs">
+      <span style={{ color: 'var(--star-col)' }}>{'★'.repeat(n)}</span>
+      <span style={{ color: 'var(--text-muted)', opacity: 0.4 }}>{'★'.repeat(5 - n)}</span>
+      <span className="ml-1 font-medium" style={{ color: 'var(--text-muted)' }}>{rating.toFixed(1)}</span>
+    </span>
+  );
+}
+
 /* ─── Copy button ────────────────────────────────────────────── */
 
 function CopyButton({ value }: { value: string }) {
@@ -121,8 +145,8 @@ function CopyButton({ value }: { value: string }) {
         try { await navigator.clipboard.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1200); }
         catch { /* ignore */ }
       }}
-      className="rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all duration-200"
-      style={{ borderColor: 'var(--accent-22)', backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}
+      className="whitespace-nowrap shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-all duration-200"
+      style={{ borderColor: 'var(--copy-border)', backgroundColor: 'var(--copy-bg)', color: 'var(--copy-col)' }}
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
@@ -243,17 +267,17 @@ function MessageText({ text }: { text: string }) {
 
 /* ─── Butler card ────────────────────────────────────────────── */
 
-function ButlerCard({ data }: { data: ButlerCardData }) {
+function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => void }) {
   if (data.kind === 'text') return <MessageText text={data.text} />;
 
   if (data.kind === 'error') {
     return (
       <div className="space-y-3">
         <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.message}</div>
-        {data.canRetry ? (
+        {data.canRetry && onRetry ? (
           <button
             type="button"
-            data-retry-chat="1"
+            onClick={onRetry}
             className="inline-flex h-9 items-center justify-center rounded-full border px-4 text-xs font-semibold tracking-wide transition-all duration-200"
             style={{ borderColor: 'var(--accent-22)', background: 'var(--accent-10)', color: 'var(--accent)' }}
           >
@@ -302,10 +326,25 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   }
 
   if (data.kind === 'weather') {
+    const chips = (data.summary || '').split('·').map(p => p.trim()).filter(Boolean);
     return (
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Current Weather</div>
-        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.summary || '—'}</div>
+        {chips.length > 1 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {chips.map((chip, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium"
+                style={{ background: 'var(--accent-10)', color: 'var(--text-primary)', border: '1px solid var(--accent-18)' }}
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.summary || '—'}</div>
+        )}
       </div>
     );
   }
@@ -328,26 +367,37 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
   }
 
   if (data.kind === 'places') {
-    if (!data.places.length) return <div className="text-xs" style={{ color: 'var(--text-muted)' }}>No results.</div>;
+    if (!data.places.length) return <div className="text-xs" style={{ color: 'var(--text-muted)' }}>No results found nearby.</div>;
     return (
-      <div className="space-y-2">
-        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>Nearby options</div>
+      <div className="space-y-2.5">
+        <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>{data.label || 'Nearby options'}</div>
         <div className="space-y-2">
           {data.places.map((p, idx) => (
             <div key={idx} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
               <div className="flex items-start justify-between gap-3">
-                <div className="lux-title text-sm min-w-0" style={{ color: 'var(--text-primary)' }}>
-                  {(() => {
-                    const href = p.websiteUri || p.googleMapsUri;
-                    const title = <>{p.name}{p.cuisine ? <span className="ml-1 text-xs font-normal italic" style={{ color: 'var(--text-muted)' }}>({p.cuisine})</span> : null}</>;
-                    return href ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-2">{title}</a> : title;
-                  })()}
+                <div className="min-w-0 flex-1">
+                  <div className="lux-title text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+                    {(() => {
+                      const href = p.websiteUri || p.googleMapsUri;
+                      return href
+                        ? <a href={href} target="_blank" rel="noreferrer" className="underline underline-offset-2">{p.name}</a>
+                        : p.name;
+                    })()}
+                  </div>
+                  {p.cuisine ? (
+                    <div className="mt-0.5 text-xs font-medium" style={{ color: 'var(--accent-50)' }}>{p.cuisine}</div>
+                  ) : null}
                 </div>
                 {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
               </div>
-              <div className="mt-1 space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                {typeof p.rating === 'number' ? <div>Rating: {p.rating}</div> : null}
-                {p.phone ? <div className="flex items-center justify-between gap-2"><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
+              <div className="mt-2 space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {typeof p.rating === 'number' ? <div><StarRating rating={p.rating} /></div> : null}
+                {p.phone ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <div>{linkifyLine(`Phone: ${p.phone}`)}</div>
+                    <CopyButton value={p.phone} />
+                  </div>
+                ) : null}
               </div>
             </div>
           ))}
@@ -360,7 +410,7 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
     const sections = Array.isArray(data.sections) ? data.sections : [];
     return (
       <div className="space-y-3">
-        {data.intro ? <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.intro}</div> : null}
+        {data.intro ? <div className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.intro}</div> : null}
         {sections.map((s, si) => (
           <div key={si} className="space-y-2">
             <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>{s.title}</div>
@@ -370,8 +420,8 @@ function ButlerCard({ data }: { data: ButlerCardData }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name || '—'}</div>
-                      {p.blurb ? <div className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
-                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--text-muted)' }}><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
+                      {p.blurb ? <div className="mt-0.5 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
+                      {p.phone ? <div className="mt-1 flex items-center justify-between gap-2 text-sm" style={{ color: 'var(--text-muted)' }}><div>{linkifyLine(`Phone: ${p.phone}`)}</div><CopyButton value={p.phone} /></div> : null}
                     </div>
                     {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
                   </div>
@@ -398,7 +448,7 @@ type ButlerCardData =
   | { kind: 'phone'; phoneNumber: string; model?: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model?: string }
   | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model?: string }
-  | { kind: 'places'; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
+  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
   | { kind: 'weather'; summary: string; model?: string };
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
@@ -413,7 +463,7 @@ type ChatOkResponse =
   | { kind: 'phone'; phoneNumber: string; model: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model: string }
   | { kind: 'itinerary'; intro: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model: string }
-  | { kind: 'places'; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
+  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
   | { kind: 'weather'; summary: string; model: string };
 
 const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Check-out instructions'] as const;
@@ -425,7 +475,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    { id: '0', role: 'butler', text: "Good evening. I'm Pillar — your private estate concierge. How may I assist?" },
+    { id: '0', role: 'butler', text: `${getTimeGreeting()}. I'm Pillar — your private estate concierge. How may I assist?` },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -527,7 +577,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               : data.kind === 'itinerary' ? { kind: 'itinerary', intro: typeof (data as { intro?: unknown }).intro === 'string' ? (data as { intro: string }).intro : undefined, sections: Array.isArray(data.sections) ? data.sections : [], model: data.model }
               : data.kind === 'weather' ? { kind: 'weather', summary: data.summary || '—', model: data.model }
               : data.kind === 'property' ? { kind: 'property', address: data.address || '', zip: data.zip || '', houseRules: data.houseRules || '', managerPhone: data.managerPhone || '', wifiName: data.wifiName || '', model: data.model }
-              : { kind: 'places', places: Array.isArray(data.places) ? data.places : [], model: data.model };
+              : { kind: 'places', label: (data as { label?: string }).label, places: Array.isArray(data.places) ? data.places : [], model: data.model };
 
             setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: card.kind === 'text' ? (card.text || '').trim() || '—' : '—', data: card }]);
             return;
@@ -544,7 +594,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
     } catch {
       consecutiveFailureCountRef.current += 1;
       const canRetry = consecutiveFailureCountRef.current < 2;
-      const msg = 'Oh no — we apologize for the inconvenience. We are actively working to fix this issue.';
+      const msg = "We're experiencing a brief interruption. Please try again in a moment.";
       setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: msg, data: { kind: 'error', message: msg, canRetry } }]);
     } finally {
       setStatusText(null);
@@ -608,12 +658,12 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           (open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-8 opacity-0')
         }
       >
-        <div className="overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl" style={{ ...chatVars, background: 'var(--panel-deep)', border: `1px solid var(--border-col)` }}>
+        <div className="overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-[background-color,border-color] duration-500 ease-in-out" style={{ ...chatVars, background: 'var(--panel-deep)', border: `1px solid var(--border-col)` }}>
           {/* Top glow line */}
           <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
 
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-5 py-4" style={{ background: 'var(--panel-mid)', borderColor: 'var(--border-col)' }}>
+          <div className="flex items-center justify-between border-b px-5 py-4 transition-[background-color,border-color] duration-500 ease-in-out" style={{ background: 'var(--panel-mid)', borderColor: 'var(--border-col)' }}>
             <div className="flex items-center gap-3">
               <div
                 className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
@@ -655,7 +705,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                   }}
                 >
                   {m.role === 'butler'
-                    ? (m.data ? <ButlerCard data={m.data} /> : <MessageText text={m.text} />)
+                    ? (m.data ? <ButlerCard data={m.data} onRetry={() => send(lastUserMessageRef.current)} /> : <MessageText text={m.text} />)
                     : m.text}
                 </div>
               </div>
@@ -687,7 +737,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
 
           {/* Input row */}
           <form
-            className="flex items-center gap-2 border-t px-4 py-3"
+            className="flex items-center gap-2 border-t px-4 py-3 transition-[background-color,border-color] duration-500 ease-in-out"
             style={{ background: 'var(--panel-mid)', borderColor: 'var(--border-col)' }}
             onSubmit={(e) => { e.preventDefault(); void send(input); }}
           >
@@ -696,7 +746,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about the home or the local area…"
-              className={`h-11 flex-1 rounded-2xl border px-4 text-sm shadow-inner outline-none transition-all duration-200 ${dark ? 'placeholder:text-white/22' : 'placeholder:text-black/25'}`}
+              className={`h-11 flex-1 rounded-2xl border px-4 text-sm shadow-inner outline-none transition-[background-color,border-color,color] duration-500 ease-in-out ${dark ? 'placeholder:text-white/22' : 'placeholder:text-black/25'}`}
               style={{ background: 'var(--panel-input)', borderColor: 'var(--border-col)', color: 'var(--text-primary)' }}
             />
             <button
@@ -718,10 +768,3 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
   );
 }
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement | null;
-    const btn = t?.closest?.('[data-retry-chat="1"]') as HTMLButtonElement | null;
-    if (!btn) return;
-  });
-}

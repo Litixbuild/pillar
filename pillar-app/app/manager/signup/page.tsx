@@ -44,14 +44,10 @@ export default function ManagerSignupPage() {
   return (
     <div
       className="relative flex flex-col items-center justify-center overflow-hidden px-5"
-      style={{
-        height: "100dvh",
-        backgroundImage: dark ? "url(/images/bg3.png)" : "url(/images/mainbackground.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
-        transition: "background-image 0.5s ease",
-      }}
+      style={{ height: "100dvh" }}
     >
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 1 : 0 }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 0 : 1 }} />
       {/* Back arrow — top left */}
       <Link
         href="/"

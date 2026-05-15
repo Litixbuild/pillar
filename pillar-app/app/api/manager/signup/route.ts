@@ -33,6 +33,7 @@ export async function POST(req: Request) {
   const service = createServiceClient();
   const { error: profileError } = await service.from("profiles").insert({
     id: data.user.id,
+    email,
     full_name: name,
     role: "manager",
     is_subscribed: false,

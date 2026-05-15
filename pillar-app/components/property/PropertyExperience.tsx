@@ -476,14 +476,21 @@ export default function PropertyExperience({
         style={{ backgroundImage: `url(${backgroundUrl})`, opacity: expanded ? 0 : 1 }}
       />
 
-      {/* ── Layer 2: expanded background — bright blue by default, dark on toggle ── */}
+      {/* ── Layer 2a: light expanded background ── */}
       <div
-        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-450 ease-in-out"
+        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out"
         style={{
-          opacity: expanded && !isTransitioning ? 1 : 0,
-          backgroundImage: dark
-            ? 'url(/images/bg3.png)'
-            : `url(/images/${property.BackgroundKey && property.BackgroundKey !== 'background' ? property.BackgroundKey : 'mainbackground'}.png)`,
+          opacity: expanded && !isTransitioning && !dark ? 1 : 0,
+          backgroundImage: `url(/images/${property.BackgroundKey && property.BackgroundKey !== 'background' ? property.BackgroundKey : 'mainbackground'}.png)`,
+        }}
+      />
+
+      {/* ── Layer 2b: dark expanded background ── */}
+      <div
+        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: expanded && !isTransitioning && dark ? 1 : 0,
+          backgroundImage: 'url(/images/bg3.png)',
         }}
       />
 

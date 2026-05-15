@@ -1,6 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
+function getPlacesLabel(userMessage: string): string {
+  const m = userMessage.toLowerCase();
+  if (m.includes("dinner") || m.includes("supper")) return "Dinner spots";
+  if (m.includes("brunch")) return "Brunch spots";
+  if (m.includes("breakfast")) return "Breakfast spots";
+  if (m.includes("lunch")) return "Lunch spots";
+  if (m.includes("coffee") || m.includes("café") || m.includes("cafe")) return "Coffee spots";
+  if (m.includes("bar") || m.includes("cocktail")) return "Bars nearby";
+  if (m.includes("spa") || m.includes("wellness")) return "Wellness nearby";
+  if (m.includes("gym") || m.includes("fitness")) return "Fitness nearby";
+  if (m.includes("grocery") || m.includes("supermarket")) return "Grocery stores";
+  if (m.includes("pharmacy")) return "Pharmacies nearby";
+  if (m.includes("museum") || m.includes("art")) return "Arts & culture";
+  if (m.includes("shopping") || m.includes("shop")) return "Shopping nearby";
+  if (m.includes("restaurant") || m.includes("food") || m.includes("eat")) return "Restaurants nearby";
+  if (m.includes("activities") || m.includes("things to do")) return "Things to do";
+  return "Nearby options";
+}
+
 function looksLikeMoreOptionsRequest(userMessage: string): boolean {
   const m = userMessage.toLowerCase();
   return (
@@ -109,6 +128,7 @@ type ChatOkResponse =
     }
   | {
       kind: "places";
+      label?: string;
       places: Array<{
         name: string;
         cuisine?: string;
@@ -462,6 +482,22 @@ function inferCuisine(place: PlaceResult): string | undefined {
   return undefined;
 }
 
+function wmoToCondition(code: number): string {
+  if (code === 0) return "Clear sky";
+  if (code <= 2) return "Partly cloudy";
+  if (code === 3) return "Overcast";
+  if (code <= 48) return "Foggy";
+  if (code <= 55) return "Drizzle";
+  if (code <= 65) return "Rain";
+  if (code <= 67) return "Freezing rain";
+  if (code <= 75) return "Snow";
+  if (code <= 77) return "Snow grains";
+  if (code <= 82) return "Rain showers";
+  if (code <= 86) return "Snow showers";
+  if (code <= 99) return "Thunderstorm";
+  return "";
+}
+
 function summarizeWeather(weatherJson: unknown): string {
   if (!weatherJson || typeof weatherJson !== "object") return "(unavailable)";
   const cur = (weatherJson as { current?: Record<string, unknown> }).current;
@@ -471,15 +507,16 @@ function summarizeWeather(weatherJson: unknown): string {
   const feels = cur.apparent_temperature;
   const precip = cur.precipitation;
   const wind = cur.wind_speed_10m;
+  const code = cur.weathercode;
 
-  const parts = [
-    typeof t === "number" ? `Temp: ${t}°` : null,
-    typeof feels === "number" ? `Feels like: ${feels}°` : null,
-    typeof precip === "number" ? `Precip: ${precip}mm` : null,
-    typeof wind === "number" ? `Wind: ${wind}` : null,
-  ].filter(Boolean);
+  const parts: string[] = [];
+  if (typeof t === "number") parts.push(`${Math.round(t)}°F`);
+  if (typeof code === "number") { const c = wmoToCondition(code); if (c) parts.push(c); }
+  if (typeof feels === "number") parts.push(`Feels like ${Math.round(feels)}°F`);
+  if (typeof precip === "number" && precip > 0) parts.push(`${precip}mm precip`);
+  if (typeof wind === "number") parts.push(`Wind ${Math.round(wind)} mph`);
 
-  return parts.join(" | ") || "(unavailable)";
+  return parts.join(" · ") || "(unavailable)";
 }
 
 async function openMeteoGeocodeZip(zip: string): Promise<LatLng> {
@@ -512,7 +549,8 @@ async function fetchOpenMeteoCurrent(latLng: LatLng): Promise<unknown> {
     encodeURIComponent(String(latLng.lat)) +
     "&longitude=" +
     encodeURIComponent(String(latLng.lng)) +
-    "&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m";
+    "&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode" +
+    "&temperature_unit=fahrenheit&wind_speed_unit=mph";
 
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Weather lookup failed (HTTP ${res.status}).`);
@@ -566,9 +604,9 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
     })
     .filter((p) => p.name);
 
-  // We only return the top 5 results in the fast-path payload; enrich that same set.
-  const top = base.slice(0, 5);
-  const rest = base.slice(5);
+  // Enrich the top 8 so that after any intent-based filtering, at least 5 enriched places remain.
+  const top = base.slice(0, 8);
+  const rest = base.slice(8);
 
   const enrichedTopSettled = await Promise.allSettled(
     top.map(async (p) => {
@@ -810,6 +848,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // ── Places fast path: return structured card without AI text overhead ─────
+    // Uses an offset when the guest asks for "more options" so results rotate.
+    if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
+      const offset = wantsMoreOptions ? 5 : 0;
+      const selected = livePlaces.slice(offset, offset + 5);
+      if (selected.length > 0) {
+        return Response.json(
+          {
+            kind: "places",
+            label: getPlacesLabel(message),
+            places: selected.map((p) => ({
+              name: p.name,
+              cuisine: inferCuisine(p),
+              formattedAddress: p.formattedAddress,
+              phone: p.phone,
+              websiteUri: p.websiteUri,
+              googleMapsUri: p.googleMapsUri,
+              rating: p.rating,
+            })),
+            model: modelId,
+          } satisfies ChatOkResponse,
+          { status: 200 }
+        );
+      }
+    }
+
     // ── Gemini text response with full conversation history ───────────────────
     const fmtPlace = (p: PlaceResult) => {
       const parts = [
@@ -844,10 +908,10 @@ export async function POST(req: Request) {
     const weatherSummary = weatherJson ? summarizeWeather(weatherJson) : null;
 
     const systemInstruction = [
-      "You are Pillar — an intelligent, warm, and genuinely attentive concierge for a luxury private estate.",
+      "You are Pillar — an exceptionally attentive, warm, and knowledgeable concierge for a luxury private estate.",
       "",
       "## MOST IMPORTANT RULE",
-      "Read the ENTIRE conversation history before every response. If the guest has expressed ANY preference, refinement, or correction — even a casual one like \"I’d rather stay indoors\", \"not a fan of seafood\", \"something quieter\", \"show me different ones\" — you MUST honor it immediately and completely. NEVER suggest something the guest has already rejected or said they don’t want. Adapt as if you were a real, attentive human concierge who actually listened.",
+      "Read the ENTIRE conversation history before every response. If the guest has expressed ANY preference, refinement, or correction — even a casual one like \"I’d rather stay indoors\", \"not a fan of seafood\", \"something quieter\", \"show me different ones\" — you MUST honor it immediately and completely. NEVER suggest something the guest has already rejected or said they don’t want. Adapt as if you were a real, attentive human concierge who truly listens.",
       "",
       "## Property data",
       `WiFi: ${property.WiFiName || "(not set)"}  |  Password: ${property.WiFiPassword || "(not set)"}`,
@@ -860,14 +924,15 @@ export async function POST(req: Request) {
       "",
       weatherSummary ? `## Live weather\n${weatherSummary}` : null,
       "",
-      "## How to respond",
-      "- ALWAYS read and respect prior conversation turns. If a preference was stated earlier, apply it now.",
-      "- When you pivot based on feedback, acknowledge it naturally: \"Of course — here are some great indoor options instead:\"",
-      "- Format each place recommendation on its own line as: `N) Place Name | detail | Maps: URL` — this renders as a clickable card.",
-      "- For day plans, use clear time-of-day headers (Morning, Afternoon, Evening) then list places below each.",
-      "- If the live data above doesn’t match the guest’s preference (e.g. they want indoor but results show parks), say so honestly and suggest they ask you to refine it.",
-      "- For questions not covered by property data, use your broad knowledge helpfully.",
-      "- Be concise, warm, and specific. Never give a generic or templated answer.",
+      "## Response guidelines",
+      "- Read and apply all prior conversation turns before responding. If a preference was stated, honor it now.",
+      "- When you pivot based on guest feedback, acknowledge it warmly: \"Of course — here are some quieter options instead.\"",
+      "- Keep responses concise, elegant, and specific. Avoid filler phrases like \"Certainly!\" or \"Of course!\" at the start.",
+      "- Use short paragraphs or brief bullet points — never dense walls of text.",
+      "- For property questions (check-in, parking, appliances, etc.), answer directly and confidently from the data provided.",
+      "- For questions not covered by property data, draw on your broad knowledge as a luxury hospitality expert.",
+      "- Never fabricate property-specific details you don’t have. If unknown, say so gracefully and offer what you do know.",
+      "- Tone: warm, unhurried, and professional — like a world-class hotel concierge who genuinely cares.",
     ]
       .filter((l): l is string => l !== null)
       .join("\n");
@@ -876,6 +941,75 @@ export async function POST(req: Request) {
     const geminiHistory = history
       .filter((h) => h.text.trim())
       .map((h) => ({ role: h.role, parts: [{ text: h.text }] }));
+
+    // ── Day plan: ask AI to return structured itinerary JSON ─────────────────
+    // Falls through to text generation if JSON parsing fails.
+    if (wantsDayPlan && dayPlanPlaces) {
+      try {
+        const allFetchedPlaces = [
+          ...dayPlanPlaces.breakfast,
+          ...dayPlanPlaces.lunch,
+          ...dayPlanPlaces.dinner,
+          ...dayPlanPlaces.activities,
+        ];
+        const placeByName = new Map<string, PlaceResult>(
+          allFetchedPlaces.map((p) => [p.name.toLowerCase().trim(), p])
+        );
+
+        const itModel = genAI.getGenerativeModel({ model: modelId, systemInstruction });
+        const itPrompt = `Using the places listed in your context, create a personalized day itinerary for the guest.
+Return ONLY valid JSON (no markdown fences):
+{"intro":"warm one-sentence welcome tailored to the guest","sections":[{"title":"Morning","places":[{"name":"Exact Name From Data","blurb":"one sentence why they will love it"}]},{"title":"Afternoon","places":[{"name":"Exact Name From Data","blurb":"one sentence why they will love it"}]},{"title":"Evening","places":[{"name":"Exact Name From Data","blurb":"one sentence why they will love it"}]}]}
+Pick 1-2 places per section from the available data. Use exact place names. Honor any preferences from conversation history.`;
+
+        let rawText: string;
+        if (geminiHistory.length > 0) {
+          const chat = itModel.startChat({ history: geminiHistory });
+          const r = await withOverloadRetry(() => chat.sendMessage(itPrompt));
+          rawText = r.response.text();
+        } else {
+          const r = await withOverloadRetry(() => itModel.generateContent(itPrompt));
+          rawText = r.response.text();
+        }
+
+        const cleaned = rawText
+          .trim()
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+
+        const parsed = JSON.parse(cleaned) as {
+          intro?: string;
+          sections?: Array<{ title?: string; places?: Array<{ name?: string; blurb?: string }> }>;
+        };
+
+        const sections = (Array.isArray(parsed.sections) ? parsed.sections : []).map((s) => ({
+          title: s.title || "—",
+          places: (Array.isArray(s.places) ? s.places : []).map((p) => {
+            const fetched = placeByName.get((p.name || "").toLowerCase().trim());
+            return {
+              name: p.name || "—",
+              blurb: p.blurb,
+              phone: fetched?.phone,
+              googleMapsUri: fetched?.googleMapsUri,
+            };
+          }),
+        }));
+
+        return Response.json(
+          {
+            kind: "itinerary",
+            intro: typeof parsed.intro === "string" ? parsed.intro : "",
+            sections,
+            model: modelId,
+          } satisfies ChatOkResponse,
+          { status: 200 }
+        );
+      } catch {
+        // Fall through to text generation
+      }
+    }
 
     const model = genAI.getGenerativeModel({ model: modelId, systemInstruction });
 
@@ -915,7 +1049,7 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error("[chat] request failed", e);
     return Response.json(
-      { error: "Oh No! We apologize for this inconvience, and are actively working on fixing this issue" },
+      { error: "We're temporarily unable to process your request. Please try again in a moment." },
       { status: 500 }
     );
   }

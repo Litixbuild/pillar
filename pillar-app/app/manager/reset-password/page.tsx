@@ -5,14 +5,44 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
+const SANDY = "#F5EDD5";
+
 type PageStatus = "verifying" | "ready" | "saving" | "success" | "error";
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function ResetPasswordPage() {
   const [status, setStatus] = useState<PageStatus>("verifying");
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldError, setFieldError] = useState("");
+  const [dark, setDark] = useState(true);
 
-  // On mount, exchange whatever Supabase put in the URL for a live session.
+  useEffect(() => {
+    const stored = localStorage.getItem("pillar-dashboard-theme");
+    if (stored) setDark(stored === "dark");
+  }, []);
+
+  function toggleMode() {
+    const next = !dark;
+    setDark(next);
+    localStorage.setItem("pillar-dashboard-theme", next ? "dark" : "light");
+  }
+
   useEffect(() => {
     async function establish() {
       const supabase = createClient();
@@ -20,17 +50,13 @@ export default function ResetPasswordPage() {
       const hash = new URLSearchParams(window.location.hash.slice(1));
 
       try {
-        // PKCE flow — Supabase redirects back with ?code=
         if (params.get("code")) {
-          const { error } = await supabase.auth.exchangeCodeForSession(
-            params.get("code")!
-          );
+          const { error } = await supabase.auth.exchangeCodeForSession(params.get("code")!);
           if (error) throw error;
           setStatus("ready");
           return;
         }
 
-        // token_hash flow — older Supabase recovery links
         if (params.get("token_hash") && params.get("type") === "recovery") {
           const { error } = await supabase.auth.verifyOtp({
             token_hash: params.get("token_hash")!,
@@ -41,7 +67,6 @@ export default function ResetPasswordPage() {
           return;
         }
 
-        // Implicit flow — access_token arrives in the URL hash fragment
         if (hash.get("access_token") && hash.get("type") === "recovery") {
           const { error } = await supabase.auth.setSession({
             access_token: hash.get("access_token")!,
@@ -55,9 +80,11 @@ export default function ResetPasswordPage() {
         throw new Error("No valid reset token found in URL.");
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        setErrorMsg(msg.includes("expired") || msg.includes("invalid")
-          ? "This reset link has expired or already been used. Please request a new one."
-          : "Invalid reset link. Please request a new one.");
+        setErrorMsg(
+          msg.includes("expired") || msg.includes("invalid")
+            ? "This reset link has expired or already been used. Please request a new one."
+            : "Invalid reset link. Please request a new one."
+        );
         setStatus("error");
       }
     }
@@ -92,177 +119,179 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Sign out of the Supabase session — manager will log in fresh via the app's login
     await supabase.auth.signOut();
     setStatus("success");
   }
 
-  const inputStyle = {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    color: "#fff",
-  };
+  const inputClass =
+    "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15";
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative"
-      style={{
-        backgroundImage: "url(/images/background.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="relative flex flex-col items-center justify-center overflow-hidden px-5"
+      style={{ height: "100dvh" }}
     >
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.62)" }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 1 : 0 }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 0 : 1 }} />
+      {/* Back arrow — top left */}
+      <Link
+        href="/manager/login"
+        className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70"
+        style={{ color: "rgba(245,237,213,0.5)" }}
+        aria-label="Back to login"
+      >
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
+          <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
 
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+      {/* Dark mode toggle — top right */}
+      <button
+        type="button"
+        onClick={toggleMode}
+        className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
+        style={{
+          borderColor: "rgba(245,237,213,0.28)",
+          background: "rgba(245,237,213,0.08)",
+          color: SANDY,
+        }}
+        title={dark ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {dark ? <SunIcon /> : <MoonIcon />}
+      </button>
+
+      {/* Content */}
+      <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
+
+        {/* Logo */}
         <Image
           src="/images/pillarlogowhite.png"
           alt="Pillar"
-          width={150}
-          height={100}
-          className="mb-8 opacity-90"
+          width={300}
+          height={200}
+          className="mb-6 h-auto w-52 opacity-90 sm:mb-8 sm:w-72"
           priority
         />
 
-        <div
-          className="w-full rounded-2xl p-8"
-          style={{
-            backgroundColor: "rgba(6, 9, 14, 0.72)",
-            border: "1px solid rgba(212,175,106,0.2)",
-            backdropFilter: "blur(20px)",
-          }}
-        >
-          {/* Verifying token */}
-          {status === "verifying" && (
-            <div className="text-center py-4">
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Verifying reset link…
-              </p>
-            </div>
-          )}
+        {/* Verifying */}
+        {status === "verifying" && (
+          <p className="text-sm" style={{ color: "rgba(245,237,213,0.55)" }}>
+            Verifying reset link…
+          </p>
+        )}
 
-          {/* Invalid / expired link */}
-          {status === "error" && (
-            <div className="text-center">
-              <div className="text-3xl mb-4">⚠️</div>
-              <h1 className="font-serif text-2xl text-white mb-3">Link Expired</h1>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {errorMsg}
-              </p>
-              <Link
-                href="/manager/forgot-password"
-                className="text-xs uppercase tracking-[0.2em] transition-opacity duration-300 hover:opacity-70"
-                style={{ color: "#D4AF6A" }}
-              >
-                Request a New Link →
-              </Link>
+        {/* Expired / invalid */}
+        {status === "error" && (
+          <>
+            <div className="mb-7 text-center">
+              <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+                Link Expired
+              </h1>
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
             </div>
-          )}
+            <p className="mb-8 text-center text-sm leading-relaxed" style={{ color: "rgba(245,237,213,0.65)" }}>
+              {errorMsg}
+            </p>
+            <Link
+              href="/manager/forgot-password"
+              className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
+              style={{ color: "rgba(245,237,213,0.55)" }}
+            >
+              Request a New Link →
+            </Link>
+          </>
+        )}
 
-          {/* Success */}
-          {status === "success" && (
-            <div className="text-center">
-              <div className="text-3xl mb-4">✓</div>
-              <h1 className="font-serif text-2xl text-white mb-3">Password Updated</h1>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Your password has been changed successfully. You can now sign
-                in with your new password.
-              </p>
-              <Link
-                href="/manager/login"
-                className="text-xs uppercase tracking-[0.2em] transition-opacity duration-300 hover:opacity-70"
-                style={{ color: "#D4AF6A" }}
-              >
-                Go to Login →
-              </Link>
+        {/* Success */}
+        {status === "success" && (
+          <>
+            <div className="mb-7 text-center">
+              <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+                Password Updated
+              </h1>
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
             </div>
-          )}
+            <p className="mb-8 text-center text-sm leading-relaxed" style={{ color: "rgba(245,237,213,0.65)" }}>
+              Your password has been changed. You can now sign in with your new password.
+            </p>
+            <Link
+              href="/manager/login"
+              className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
+              style={{ color: "rgba(245,237,213,0.55)" }}
+            >
+              Go to Login →
+            </Link>
+          </>
+        )}
 
-          {/* New password form */}
-          {(status === "ready" || status === "saving") && (
-            <>
-              <div className="text-center mb-8">
-                <h1 className="font-serif text-2xl text-white mb-2">New Password</h1>
-                <p className="text-xs uppercase tracking-[0.3em]" style={{ color: "rgba(212,175,106,0.7)" }}>
-                  Choose a strong password
+        {/* New password form */}
+        {(status === "ready" || status === "saving") && (
+          <>
+            <div className="mb-7 text-center">
+              <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+                New Password
+              </h1>
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
+            </div>
+
+            <form className="w-full space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
+                  New Password
                 </p>
+                <input
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  placeholder="Min. 8 characters"
+                  className={inputClass}
+                />
               </div>
 
-              <form className="space-y-5" onSubmit={handleSubmit}>
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-[11px] uppercase tracking-[0.2em]"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
-                  >
-                    New Password
-                  </label>
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                    placeholder="Min. 8 characters"
-                    className="w-full h-11 rounded-xl px-4 text-sm outline-none transition-all duration-200 placeholder:text-white/25"
-                    style={inputStyle}
-                    onFocus={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(212,175,106,0.6)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
-                    }}
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
+                  Confirm Password
+                </p>
+                <input
+                  name="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  placeholder="••••••••"
+                  className={inputClass}
+                />
+              </div>
 
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-[11px] uppercase tracking-[0.2em]"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
-                  >
-                    Confirm Password
-                  </label>
-                  <input
-                    name="confirm"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    placeholder="Re-enter your password"
-                    className="w-full h-11 rounded-xl px-4 text-sm outline-none transition-all duration-200 placeholder:text-white/25"
-                    style={inputStyle}
-                    onFocus={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(212,175,106,0.6)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
-                    }}
-                  />
-                </div>
+              {fieldError && (
+                <p className="text-xs text-rose-300/80">{fieldError}</p>
+              )}
 
-                {fieldError && (
-                  <p className="text-xs" style={{ color: "#f87171" }}>{fieldError}</p>
-                )}
+              <button
+                type="submit"
+                disabled={status === "saving"}
+                className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
+                style={{
+                  background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
+                  color: "#3d2a0a",
+                  boxShadow: "0 0 20px rgba(245,237,213,0.25)",
+                }}
+              >
+                {status === "saving" ? "Updating…" : "Update Password"}
+              </button>
 
-                <button
-                  type="submit"
-                  disabled={status === "saving"}
-                  className="w-full h-11 rounded-xl text-sm uppercase tracking-[0.22em] font-semibold transition-all duration-300 hover:opacity-85 disabled:opacity-50 mt-2"
-                  style={{ background: "#D4AF6A", color: "#06090e" }}
+              <div className="pt-0.5 text-center">
+                <Link
+                  href="/manager/login"
+                  className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
+                  style={{ color: "rgba(245,237,213,0.55)" }}
                 >
-                  {status === "saving" ? "Updating…" : "Update Password"}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
-
-        {status !== "success" && (
-          <Link
-            href="/manager/login"
-            className="mt-8 text-[11px] uppercase tracking-[0.2em] transition-opacity duration-300 hover:opacity-60"
-            style={{ color: "rgba(212,175,106,0.55)" }}
-          >
-            ← Back to Login
-          </Link>
+                  ← Back to Login
+                </Link>
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>

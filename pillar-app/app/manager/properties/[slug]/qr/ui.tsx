@@ -85,39 +85,45 @@ export default function QRPrintClient({
       <div className="flex min-h-[calc(100vh-57px)] flex-col items-center justify-center px-8 py-16 print:min-h-screen print:py-12">
 
         {/* Brand mark */}
-        <p
-          className="mb-10 text-xs font-bold uppercase tracking-[0.4em] text-[#D4AF6A]"
-          style={{ letterSpacing: '0.4em' }}
-        >
+        <p className="mb-10 text-[10px] font-semibold uppercase tracking-[0.5em] text-[#D4AF6A]">
           Pillar
         </p>
 
+        {/* Hook — sets intent before the QR */}
+        <p className="mb-2 text-center font-serif text-[1.6rem] leading-snug tracking-[-0.01em] text-[#1a1a1a]">
+          Everything you need<br />to enjoy your stay.
+        </p>
+        <p className="mb-8 text-[11px] uppercase tracking-[0.3em] text-black/35">
+          WiFi · house guide · local tips
+        </p>
+
         {/* QR code */}
-        <div className="rounded-3xl border-2 border-[#D4AF6A]/60 p-6 shadow-sm">
+        <div className="rounded-3xl border border-[#D4AF6A]/55 p-7 shadow-[0_2px_24px_rgba(0,0,0,0.07)]">
           <QRCodeSVG
             value={publicUrl}
-            size={260}
+            size={240}
             bgColor="#ffffff"
             fgColor="#1a1a1a"
             level="H"
           />
         </div>
 
-        {/* Property info */}
-        <h1 className="mt-8 text-center text-2xl font-bold tracking-tight text-[#1a1a1a]">
+        {/* Scan CTA */}
+        <div className="mt-6 flex items-center gap-2.5">
+          <div className="h-px w-10 bg-[#D4AF6A]/40" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#B8945A]">
+            Scan with your camera
+          </p>
+          <div className="h-px w-10 bg-[#D4AF6A]/40" />
+        </div>
+
+        {/* Property name + address */}
+        <h1 className="mt-8 text-center font-serif text-xl tracking-tight text-[#1a1a1a]/80">
           {propertyName}
         </h1>
         {propertyAddress ? (
-          <p className="mt-1.5 text-center text-sm text-black/45">{propertyAddress}</p>
+          <p className="mt-1 text-center text-xs tracking-wide text-black/35">{propertyAddress}</p>
         ) : null}
-
-        {/* Divider */}
-        <div className="my-7 h-px w-24 bg-[#D4AF6A]/40" />
-
-        {/* Instructions */}
-        <p className="max-w-65 text-center text-sm leading-relaxed text-black/55">
-          Scan to access WiFi, house rules, and property information.
-        </p>
 
       </div>
 

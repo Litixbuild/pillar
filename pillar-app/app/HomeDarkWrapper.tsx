@@ -34,22 +34,15 @@ export default function HomeDarkWrapper() {
     return () => clearTimeout(t);
   }, []);
 
-  const bgImage = dark ? 'url(/images/bg3.png)' : 'url(/images/mainbackground.png)';
-
   return (
     <>
       <IntroSplash />
 
-      {/* Fixed background */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          backgroundImage: bgImage,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          transition: 'background-image 0.6s ease',
-        }}
-      />
+      {/* Fixed background — two layers crossfade on toggle */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top', opacity: dark ? 1 : 0 }} />
+        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top', opacity: dark ? 0 : 1 }} />
+      </div>
 
       <main className="min-h-screen" style={{ color: '#fff' }}>
       {/* ── Navigation ── */}
