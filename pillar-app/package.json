@@ -13,14 +13,15 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "next": "^15.5.15",
+    "nodemailer": "^8.0.7",
     "qrcode.react": "^4.2.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "resend": "^6.12.3"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

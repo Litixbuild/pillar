@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { getManagerCookieName, verifyManagerSession } from '@/lib/managerAuth';
 
 export const runtime = 'nodejs';
@@ -28,30 +28,37 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Topic and description are required.' }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const smtpUser = process.env.ZOHO_SMTP_USER;
+  const smtpPass = process.env.ZOHO_SMTP_PASS;
+
+  if (!smtpUser || !smtpPass) {
     return Response.json({ error: 'Email service not configured.' }, { status: 503 });
   }
 
-  const resend = new Resend(apiKey);
-
-  const { error } = await resend.emails.send({
-    from: 'Pillar Support <noreply@pmpillar.com>',
-    to: 'support@pmpillar.com',
-    replyTo: session.email,
-    subject: `[Support] ${topic} — ${propertyName ?? slug ?? 'Unknown'} (${slug ?? 'no-id'})`,
-    html: `
-      <p><strong>From:</strong> ${session.name ?? session.email} &lt;${session.email}&gt;</p>
-      <p><strong>Property:</strong> ${propertyName ?? '—'}</p>
-      <p><strong>Property ID:</strong> ${slug ?? '—'}</p>
-      <p><strong>Topic:</strong> ${topic}</p>
-      <hr />
-      <p>${description.replace(/\n/g, '<br />')}</p>
-    `,
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.zoho.com',
+    port: 465,
+    secure: true,
+    auth: { user: smtpUser, pass: smtpPass },
   });
 
-  if (error) {
-    console.error('[contact-support] Resend error:', error);
+  try {
+    await transporter.sendMail({
+      from: `"Pillar Support" <${smtpUser}>`,
+      to: 'support@pmpillar.com',
+      replyTo: session.email,
+      subject: `[Support] ${topic} — ${propertyName ?? slug ?? 'Unknown'} (${slug ?? 'no-id'})`,
+      html: `
+        <p><strong>From:</strong> ${session.name ?? session.email} &lt;${session.email}&gt;</p>
+        <p><strong>Property:</strong> ${propertyName ?? '—'}</p>
+        <p><strong>Property ID:</strong> ${slug ?? '—'}</p>
+        <p><strong>Topic:</strong> ${topic}</p>
+        <hr />
+        <p>${description.replace(/\n/g, '<br />')}</p>
+      `,
+    });
+  } catch (err) {
+    console.error('[contact-support] SMTP error:', err);
     return Response.json({ error: 'Failed to send. Please try again.' }, { status: 500 });
   }
 
