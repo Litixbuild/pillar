@@ -11,15 +11,14 @@ function applyTheme(theme: Theme) {
 }
 
 function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
-  const stored = window.localStorage.getItem("pillar_manager_theme");
+  if (typeof window === "undefined") return "light";
+  const stored = window.localStorage.getItem("pillar-theme");
   if (stored === "light" || stored === "dark") return stored;
-  // Default to dark for the manager portal.
-  return "dark";
+  return "light";
 }
 
 export default function ManagerThemeToggle({ className = "" }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     const t = getInitialTheme();
@@ -33,7 +32,7 @@ export default function ManagerThemeToggle({ className = "" }: { className?: str
       onClick={() => {
         const next: Theme = theme === "dark" ? "light" : "dark";
         setTheme(next);
-        window.localStorage.setItem("pillar_manager_theme", next);
+        window.localStorage.setItem("pillar-theme", next);
         applyTheme(next);
       }}
       className={

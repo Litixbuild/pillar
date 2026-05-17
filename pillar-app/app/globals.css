@@ -54,6 +54,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prevent iOS Safari auto-zoom on input focus (triggered when font-size < 16px) */
+input, textarea, select {
+  font-size: 16px;
+}
+
 /* Luxury titles */
 h1, h2, h3 {
   font-family: var(--font-lux-title), ui-serif, Georgia, serif;

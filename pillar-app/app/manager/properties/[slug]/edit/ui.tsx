@@ -29,7 +29,7 @@ interface CoreFields {
   LogoSize: number;
 }
 
-type View = 'grid' | 'property-info' | 'amenities' | 'qr' | 'settings' | 'work-orders';
+type View = 'grid' | 'property-info' | 'amenities' | 'qr' | 'settings' | 'work-orders' | 'help';
 
 interface Tile {
   id: View;
@@ -338,14 +338,14 @@ const TILES: Tile[] = [
     label: 'Property Info',
     sub: 'Name, rules & bio',
     border: '',
-    borderStyle: { borderColor: 'rgba(147,197,253,0.50)', background: 'rgba(96,165,250,0.11)' },
-    shadow: '0 0 0 1px rgba(96,165,250,0.20), 0 0 40px rgba(96,165,250,0.16), inset 0 1px 0 rgba(255,255,255,0.07)',
-    shadowHover: '0 0 0 1px rgba(96,165,250,0.38), 0 0 65px rgba(96,165,250,0.28), inset 0 1px 0 rgba(255,255,255,0.10)',
+    borderStyle: { borderColor: 'rgba(254,215,170,0.45)', background: 'rgba(251,146,60,0.08)' },
+    shadow: '0 0 0 1px rgba(251,146,60,0.20), 0 0 40px rgba(251,146,60,0.16), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(251,146,60,0.38), 0 0 65px rgba(251,146,60,0.28), inset 0 1px 0 rgba(255,255,255,0.10)',
     bg: '',
     iconBg: '',
-    iconStyle: { background: 'rgba(96,165,250,0.14)', border: '1px solid rgba(147,197,253,0.32)', color: 'rgb(147,197,253)' },
+    iconStyle: { background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(254,215,170,0.30)', color: 'rgb(253,186,116)' },
     text: '',
-    textStyle: { color: 'rgb(147,197,253)' },
+    textStyle: { color: 'rgb(254,215,170)' },
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
@@ -357,12 +357,12 @@ const TILES: Tile[] = [
     id: 'amenities',
     label: 'Amenities',
     sub: 'Windows & content',
-    border: 'border-red-400/55',
-    shadow: '0 0 0 1px rgba(248,113,113,0.20), 0 0 40px rgba(239,68,68,0.18), inset 0 1px 0 rgba(255,255,255,0.07)',
-    shadowHover: '0 0 0 1px rgba(248,113,113,0.38), 0 0 65px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.10)',
-    bg: 'bg-red-500/6',
-    iconBg: 'bg-red-500/14 border-red-400/35 text-red-300',
-    text: 'text-red-200',
+    border: 'border-purple-400/55',
+    shadow: '0 0 0 1px rgba(192,132,252,0.20), 0 0 40px rgba(168,85,247,0.18), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(192,132,252,0.38), 0 0 65px rgba(168,85,247,0.30), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-purple-500/6',
+    iconBg: 'bg-purple-500/14 border-purple-400/35 text-purple-300',
+    text: 'text-purple-200',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
@@ -399,10 +399,27 @@ const TILES: Tile[] = [
     bg: 'bg-white/6',
     iconBg: 'bg-white/12 border-white/30 text-white/90',
     text: 'text-white/85',
-    wide: true,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
         <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: 'help',
+    label: 'Help',
+    sub: 'Support & guides',
+    border: 'border-red-400/55',
+    shadow: '0 0 0 1px rgba(248,113,113,0.20), 0 0 40px rgba(239,68,68,0.18), inset 0 1px 0 rgba(255,255,255,0.07)',
+    shadowHover: '0 0 0 1px rgba(248,113,113,0.38), 0 0 65px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.10)',
+    bg: 'bg-red-500/6',
+    iconBg: 'bg-red-500/14 border-red-400/35 text-red-300',
+    text: 'text-red-200',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -411,25 +428,25 @@ const TILES: Tile[] = [
 function GridView({ onNavigate, propertyName, dark }: { onNavigate: (v: View) => void; propertyName: string; dark: boolean }) {
   return (
     <div className="flex flex-col px-4 pb-4 pt-3" style={{ height: 'calc(100dvh - 64px)' }}>
-      <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr 0.65fr' }}>
+      <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
         {TILES.map((tile) => {
           const isPropertyInfo = tile.id === 'property-info';
           const lightBlueOverride = isPropertyInfo && !dark;
 
           const shadow = lightBlueOverride
-            ? '0 0 0 1px rgba(96,165,250,0.38), 0 0 40px rgba(59,130,246,0.22), inset 0 1px 0 rgba(255,255,255,0.07)'
+            ? '0 0 0 1px rgba(251,146,60,0.38), 0 0 40px rgba(234,88,12,0.22), inset 0 1px 0 rgba(255,255,255,0.07)'
             : tile.shadow;
           const shadowHover = lightBlueOverride
-            ? '0 0 0 1px rgba(96,165,250,0.55), 0 0 60px rgba(59,130,246,0.38), inset 0 1px 0 rgba(255,255,255,0.10)'
+            ? '0 0 0 1px rgba(251,146,60,0.55), 0 0 60px rgba(234,88,12,0.38), inset 0 1px 0 rgba(255,255,255,0.10)'
             : tile.shadowHover;
           const borderStyle = lightBlueOverride
-            ? { borderColor: 'rgba(96,165,250,0.35)', background: 'rgba(59,130,246,0.04)' }
+            ? { borderColor: 'rgba(251,146,60,0.35)', background: 'rgba(234,88,12,0.04)' }
             : tile.borderStyle;
           const iconStyle = lightBlueOverride
-            ? { background: 'rgba(59,130,246,0.10)', border: '1px solid rgba(59,130,246,0.25)', color: 'rgb(59,130,246)' }
+            ? { background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(254,215,170,0.30)', color: 'rgb(253,186,116)' }
             : tile.iconStyle;
           const textStyle = lightBlueOverride
-            ? { color: 'rgb(59,130,246)' }
+            ? { color: 'rgb(254,215,170)' }
             : tile.textStyle;
 
           return (
@@ -653,12 +670,37 @@ function AmenitiesView({
   const [newBody, setNewBody] = useState('');
   const [addSaving, setAddSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [iconPickerFor, setIconPickerFor] = useState<string | null>(null);
+  const [previewWindow, setPreviewWindow] = useState<WindowDraft | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const windowCard: React.CSSProperties = dark
     ? { background: 'rgba(14,14,14,0.75)', border: `1px solid rgba(${SANDY_RGB},0.10)` }
     : { background: 'rgba(255,255,255,0.12)', border: `1px solid rgba(${SANDY_RGB},0.16)` };
+
+  const modalCardStyle: React.CSSProperties = dark
+    ? { background: 'rgba(12,12,12,0.97)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 80px rgba(0,0,0,0.85)' }
+    : { background: 'rgba(250,246,238,0.97)', border: `1px solid rgba(${SANDY_RGB},0.30)`, boxShadow: '0 24px 80px rgba(0,0,0,0.22)' };
+  const modalHeading = dark ? 'text-white' : 'text-[#2C2C2C]';
+  const modalSub = dark ? 'text-white/40' : 'text-[#2C2C2C]/55';
+  const modalInputCls = dark
+    ? 'border-white/10 bg-black/20 text-white placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-[#F5EDD5]/15'
+    : `border-[#F5EDD5]/35 bg-white/65 text-[#2C2C2C] placeholder:text-[#2C2C2C]/35 focus:border-[#F5EDD5]/60 focus:ring-[#F5EDD5]/20`;
+  const modalIconRow = dark ? 'border-white/8 bg-black/20' : `bg-white/55`;
+  const modalIconName = dark ? 'text-white/75' : 'text-[#2C2C2C]/80';
+  const modalIconSub = dark ? 'text-white/30' : 'text-[#2C2C2C]/45';
+  const modalTypeUnsel: React.CSSProperties = dark
+    ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.40)' }
+    : { borderColor: 'rgba(44,44,44,0.18)', background: 'rgba(44,44,44,0.05)', color: 'rgba(44,44,44,0.60)' };
+  const modalTypeSel: React.CSSProperties = dark
+    ? { borderColor: `rgba(${SANDY_RGB},0.45)`, background: `rgba(${SANDY_RGB},0.14)`, color: SANDY }
+    : { borderColor: 'rgba(44,44,44,0.35)', background: 'rgba(44,44,44,0.10)', color: '#2C2C2C' };
+  const modalIconColor = dark ? SANDY : '#5C4020';
+  const modalHint = dark ? 'text-white/30' : 'text-[#2C2C2C]/45';
+  const modalCancelCls = dark
+    ? 'border-white/[0.07] bg-white/4 text-white/55 hover:bg-white/8 hover:text-white/75'
+    : `border-[#F5EDD5]/35 bg-white/50 text-[#2C2C2C]/65 hover:bg-white/75 hover:text-[#2C2C2C]/85`;
 
   function setWindowBody(id: string, body: string) {
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, body } : w)));
@@ -737,53 +779,65 @@ function AmenitiesView({
           windows.map((w, idx) => (
             <div key={w.id} className="overflow-hidden rounded-xl" style={windowCard}>
               <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <button type="button" onClick={() => setIconPickerFor(w.id)} title="Change icon"
-                    className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
-                    style={{ borderColor: `rgba(${SANDY_RGB},0.22)`, background: `rgba(${SANDY_RGB},0.08)`, color: SANDY }}
-                  >
-                    <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-4 w-4" />
-                  </button>
-                  <TypeBadge type={w.type} />
-                  <span className="truncate text-sm font-medium text-white/85">{w.title}</span>
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <button type="button" onClick={() => setIconPickerFor(w.id)} title="Change icon"
+                      className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
+                      style={{ borderColor: `rgba(${SANDY_RGB},0.22)`, background: `rgba(${SANDY_RGB},0.08)`, color: SANDY }}
+                    >
+                      <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-4 w-4" />
+                    </button>
+                    <span className="truncate text-sm font-medium text-white/85">{w.title}</span>
+                  </div>
+                  <div className="flex flex-none items-center gap-1.5">
+                    {deleteConfirmId === w.id ? (
+                      <>
+                        <span className="text-xs text-white/50">Delete?</span>
+                        <button type="button"
+                          onClick={() => { setDeleteConfirmId(null); handleRemoveWindow(w.id); }}
+                          className="inline-flex h-7 items-center rounded-lg border border-rose-500/35 bg-rose-500/15 px-2.5 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/25"
+                        >Yes</button>
+                        <button type="button" onClick={() => setDeleteConfirmId(null)}
+                          className="inline-flex h-7 items-center rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs font-semibold text-white/55 transition-all hover:bg-white/10 hover:text-white/80"
+                        >No</button>
+                      </>
+                    ) : (
+                      <button type="button" disabled={deletingId === w.id} onClick={() => setDeleteConfirmId(w.id)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/18 bg-rose-500/6 text-rose-400/55 transition-all hover:bg-rose-500/14 hover:text-rose-300/85 disabled:opacity-40"
+                      >
+                        {deletingId === w.id
+                          ? <span className="h-3 w-3 animate-spin rounded-full border border-rose-400/40 border-t-rose-400" />
+                          : <TrashIcon />}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-none items-center gap-1">
-                  <button type="button" disabled={idx === 0} onClick={() => moveWindow(w.id, -1)}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/6 bg-white/3 text-white/35 transition-all hover:bg-white/[0.07] hover:text-white/65 disabled:opacity-25"
-                  ><ChevronUpIcon /></button>
-                  <button type="button" disabled={idx === windows.length - 1} onClick={() => moveWindow(w.id, 1)}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/6 bg-white/3 text-white/35 transition-all hover:bg-white/[0.07] hover:text-white/65 disabled:opacity-25"
-                  ><ChevronDownIcon /></button>
-                  <button type="button" disabled={deletingId === w.id} onClick={() => handleRemoveWindow(w.id)}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/18 bg-rose-500/6 text-rose-400/55 transition-all hover:bg-rose-500/14 hover:text-rose-300/85 disabled:opacity-40"
-                  >
-                    {deletingId === w.id
-                      ? <span className="h-3 w-3 animate-spin rounded-full border border-rose-400/40 border-t-rose-400" />
-                      : <TrashIcon />}
-                  </button>
-                </div>
-              </div>
-              <div className="border-t border-white/5 px-4 py-3">
+                <div className="border-t border-white/5 px-4 py-3">
                 {w.type === 'text' ? (
                   <TextArea value={w.body ?? ''} onChange={(v) => setWindowBody(w.id, v)} placeholder="Enter content for guests…" rows={3} />
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="flex flex-col items-center gap-2.5">
                     {w.url ? (
-                      <div className="flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: `rgba(${SANDY_RGB},0.15)`, background: `rgba(${SANDY_RGB},0.06)` }}>
-                        <span className="flex-none text-[10px] font-semibold uppercase tracking-wide" style={{ color: `rgba(${SANDY_RGB},0.65)` }}>Uploaded</span>
-                        <span className="min-w-0 truncate text-xs text-white/40">{w.url}</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewWindow(w)}
+                        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all hover:brightness-110 active:scale-[0.98] ${TYPE_STYLES[w.type]}`}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {w.type === 'image' ? 'Image' : w.type === 'video' ? 'Video' : 'PDF'} attached — tap to preview
+                      </button>
                     ) : (
                       <p className="text-xs text-white/30">No file uploaded yet.</p>
                     )}
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-2">
                       <input type="file" ref={(el) => { fileRefs.current[w.id] = el; }}
                         accept={w.type === 'image' ? 'image/*' : w.type === 'video' ? 'video/*' : w.type === 'pdf' ? 'application/pdf' : undefined}
                         className="hidden"
                         onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleUpload(w.id, f); }}
                       />
                       <button type="button" disabled={w._uploading} onClick={() => fileRefs.current[w.id]?.click()}
-                        className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 text-xs font-semibold text-white/55 transition-all hover:bg-white/8 hover:text-white/80 disabled:opacity-45"
+                        className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/20 bg-white/8 px-3 text-xs font-semibold text-white transition-all hover:bg-white/14 disabled:opacity-45"
                       >
                         <UploadIcon />
                         {w._uploading ? 'Uploading…' : w.url ? 'Replace file' : 'Upload file'}
@@ -792,6 +846,15 @@ function AmenitiesView({
                     </div>
                   </div>
                 )}
+              </div>
+              {/* Bottom bar: arrows bottom-right */}
+              <div className="flex items-center justify-end gap-1 border-t border-white/5 px-3 py-2">
+                <button type="button" disabled={idx === 0} onClick={() => moveWindow(w.id, -1)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-white/6 text-white transition-all hover:bg-white/12 disabled:opacity-25"
+                ><ChevronUpIcon /></button>
+                <button type="button" disabled={idx === windows.length - 1} onClick={() => moveWindow(w.id, 1)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-white/6 text-white transition-all hover:bg-white/12 disabled:opacity-25"
+                ><ChevronDownIcon /></button>
               </div>
             </div>
           ))
@@ -815,6 +878,45 @@ function AmenitiesView({
         </button>
       </div>
 
+      {/* Attachment preview modal */}
+      {previewWindow?.url ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setPreviewWindow(null)}>
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.85)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
+              <span className="text-sm font-medium text-white/80">{previewWindow.title}</span>
+              <button
+                type="button"
+                onClick={() => setPreviewWindow(null)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white/80"
+                aria-label="Close preview"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              {previewWindow.type === 'image' && (
+                <img src={previewWindow.url} alt={previewWindow.title} className="w-full rounded-lg object-contain max-h-[60vh]" />
+              )}
+              {previewWindow.type === 'video' && (
+                <video controls src={previewWindow.url} className="w-full rounded-lg max-h-[60vh]">
+                  Your browser does not support the video tag.
+                </video>
+              )}
+              {previewWindow.type === 'pdf' && (
+                <iframe src={previewWindow.url} title={previewWindow.title} className="w-full rounded-lg" style={{ height: '60vh', border: 'none' }} />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Icon picker */}
       {iconPickerFor ? (
         <IconPickerModal
@@ -830,57 +932,64 @@ function AmenitiesView({
           <button type="button" onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-label="Close"
           />
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/8 bg-[#141414] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.85)]">
-            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
-            <h3 className="text-base font-semibold text-white">Add a Window</h3>
-            <p className="mt-1 text-sm text-white/40">Creates a new amenity section guests can open.</p>
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl p-6" style={modalCardStyle}>
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` }} />
+            <h3 className={`text-base font-semibold ${modalHeading}`}>Add a Window</h3>
+            <p className={`mt-1 text-sm ${modalSub}`}>Creates a new amenity section guests can open.</p>
             <div className="mt-5 space-y-4">
               <div className="space-y-1.5">
                 <Label>Icon</Label>
                 <button type="button" onClick={() => setIconPickerFor('new')}
-                  className="flex items-center gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2.5 text-left transition-all w-full"
-                  style={undefined}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all w-full ${modalIconRow}`}
+                  style={{ borderColor: `rgba(${SANDY_RGB},0.22)` }}
                 >
                   <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
-                    style={{ borderColor: `rgba(${SANDY_RGB},0.25)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }}
+                    style={{ borderColor: dark ? `rgba(${SANDY_RGB},0.25)` : 'rgba(44,44,44,0.30)', background: `rgba(${SANDY_RGB},0.10)`, color: modalIconColor }}
                   >
                     <AmenityIconSvg iconKey={newIcon} className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-white/75">{AMENITY_ICONS_MAP[newIcon]?.name ?? 'Home'}</p>
-                    <p className="text-xs text-white/30">Tap to change icon</p>
+                    <p className={`text-sm ${modalIconName}`}>{AMENITY_ICONS_MAP[newIcon]?.name ?? 'Home'}</p>
+                    <p className={`text-xs ${modalIconSub}`}>Tap to change icon</p>
                   </div>
                 </button>
               </div>
-              <FieldGroup label="Title">
-                <TextInput value={newTitle} onChange={setNewTitle} placeholder="e.g. Pool Access, Parking, Check-out Info…" />
-              </FieldGroup>
+              <div className="space-y-1.5">
+                <Label>Title</Label>
+                <input
+                  type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Pool Access, Parking, Check-out Info…"
+                  className={`h-11 w-full rounded-xl border px-4 text-sm outline-none transition-all duration-200 focus:ring-1 ${modalInputCls}`}
+                />
+              </div>
               <div className="space-y-1.5">
                 <Label>Content Type</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['text', 'image', 'video', 'pdf'] as const).map((t) => (
                     <button key={t} type="button" onClick={() => setNewType(t)}
                       className="rounded-xl border py-2.5 text-xs font-semibold uppercase tracking-wide transition-all duration-200"
-                      style={newType === t
-                        ? { borderColor: `rgba(${SANDY_RGB},0.40)`, background: `rgba(${SANDY_RGB},0.12)`, color: SANDY }
-                        : { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.40)' }
-                      }
+                      style={newType === t ? modalTypeSel : modalTypeUnsel}
                     >{t}</button>
                   ))}
                 </div>
               </div>
               {newType === 'text' ? (
-                <FieldGroup label="Content (optional)">
-                  <TextArea value={newBody} onChange={setNewBody} placeholder="Enter text content for guests…" rows={3} />
-                </FieldGroup>
+                <div className="space-y-1.5">
+                  <Label>Content (optional)</Label>
+                  <textarea
+                    value={newBody} rows={3} onChange={(e) => setNewBody(e.target.value)}
+                    placeholder="Enter text content for guests…"
+                    className={`w-full resize-y rounded-xl border px-4 py-3 text-sm outline-none transition-all duration-200 focus:ring-1 ${modalInputCls}`}
+                  />
+                </div>
               ) : (
-                <p className="text-xs text-white/30">You can upload the {newType} file after adding the window.</p>
+                <p className={`text-xs ${modalHint}`}>You can upload the {newType} file after adding the window.</p>
               )}
             </div>
             <div className="mt-5 flex items-center justify-end gap-2">
               <button type="button"
                 onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/4 px-4 text-sm font-semibold text-white/55 transition-all hover:bg-white/8 hover:text-white/75"
+                className={`inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm font-semibold transition-all ${modalCancelCls}`}
               >Cancel</button>
               <button type="button" disabled={!newTitle.trim() || addSaving} onClick={handleAddWindow}
                 className="inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-[#3d2a0a] transition-all disabled:opacity-50"
@@ -1477,6 +1586,390 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
   );
 }
 
+/* ─── Help view ──────────────────────────────────────── */
+
+type HelpTab = 'howto' | 'faq' | 'contact';
+
+function HelpStep({ n, title, desc, dark }: { n: number; title: string; desc: string; dark: boolean }) {
+  return (
+    <div className="flex items-start gap-3 pt-3">
+      <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
+        style={{
+          background: dark ? 'rgba(245,237,213,0.12)' : 'rgba(44,44,44,0.10)',
+          color: dark ? 'rgba(245,237,213,0.70)' : 'rgba(44,44,44,0.60)',
+        }}>
+        {n}
+      </div>
+      <div>
+        <p className="text-sm font-medium" style={{ color: dark ? 'rgba(255,255,255,0.88)' : 'rgba(30,20,10,0.90)' }}>{title}</p>
+        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(30,20,10,0.55)' }}>{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function FaqItem({ q, a, dark }: { q: string; a: string; dark: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t" style={{ borderColor: dark ? 'rgba(245,237,213,0.08)' : 'rgba(44,44,44,0.10)' }}>
+      <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-start justify-between gap-3 py-3 text-left">
+        <span className="text-sm font-medium leading-snug" style={{ color: dark ? 'rgba(255,255,255,0.82)' : 'rgba(30,20,10,0.85)' }}>{q}</span>
+        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0 mt-0.5 transition-transform duration-200"
+          style={{ color: dark ? 'rgba(245,237,213,0.40)' : 'rgba(44,44,44,0.38)', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <p className="text-xs leading-relaxed pb-3" style={{ color: dark ? 'rgba(255,255,255,0.52)' : 'rgba(30,20,10,0.58)' }}>{a}</p>
+      )}
+    </div>
+  );
+}
+
+/* per-section card colors for the How-To list */
+const HOWTO_COLORS: Record<string, {
+  lBg: string; lBorder: string; lTitle: string; lSub: string; lDivider: string; lBadgeBg: string;
+  dBg: string; dBorder: string; dTitle: string; dSub: string; dDivider: string; dBadgeBg: string;
+}> = {
+  qr: {
+    lBg: 'rgba(253,230,138,0.75)', lBorder: 'rgba(251,191,36,0.42)', lTitle: 'rgb(92,44,8)', lSub: 'rgba(92,44,8,0.58)', lDivider: 'rgba(251,191,36,0.22)', lBadgeBg: 'rgba(92,44,8,0.11)',
+    dBg: 'rgba(251,191,36,0.14)', dBorder: 'rgba(251,191,36,0.32)', dTitle: 'rgb(253,230,138)', dSub: 'rgba(253,230,138,0.52)', dDivider: 'rgba(251,191,36,0.16)', dBadgeBg: 'rgba(253,230,138,0.13)',
+  },
+  'property-info': {
+    lBg: 'rgba(253,186,116,0.75)', lBorder: 'rgba(251,146,60,0.40)', lTitle: 'rgb(120,36,8)', lSub: 'rgba(120,36,8,0.58)', lDivider: 'rgba(251,146,60,0.22)', lBadgeBg: 'rgba(120,36,8,0.11)',
+    dBg: 'rgba(251,146,60,0.14)', dBorder: 'rgba(254,215,170,0.26)', dTitle: 'rgb(254,215,170)', dSub: 'rgba(254,215,170,0.52)', dDivider: 'rgba(254,215,170,0.13)', dBadgeBg: 'rgba(254,215,170,0.13)',
+  },
+  amenities: {
+    lBg: 'rgba(216,180,254,0.75)', lBorder: 'rgba(168,85,247,0.34)', lTitle: 'rgb(59,7,100)', lSub: 'rgba(59,7,100,0.58)', lDivider: 'rgba(168,85,247,0.19)', lBadgeBg: 'rgba(59,7,100,0.11)',
+    dBg: 'rgba(168,85,247,0.14)', dBorder: 'rgba(192,132,252,0.30)', dTitle: 'rgb(233,213,255)', dSub: 'rgba(233,213,255,0.52)', dDivider: 'rgba(192,132,252,0.14)', dBadgeBg: 'rgba(233,213,255,0.13)',
+  },
+  settings: {
+    lBg: 'rgba(187,247,208,0.75)', lBorder: 'rgba(74,222,128,0.40)', lTitle: 'rgb(5,46,22)', lSub: 'rgba(5,46,22,0.58)', lDivider: 'rgba(74,222,128,0.22)', lBadgeBg: 'rgba(5,46,22,0.11)',
+    dBg: 'rgba(74,222,128,0.10)', dBorder: 'rgba(134,239,172,0.26)', dTitle: 'rgb(187,247,208)', dSub: 'rgba(187,247,208,0.52)', dDivider: 'rgba(134,239,172,0.13)', dBadgeBg: 'rgba(187,247,208,0.13)',
+  },
+  'work-orders': {
+    lBg: 'rgba(226,232,240,0.75)', lBorder: 'rgba(100,116,139,0.30)', lTitle: 'rgb(15,23,42)', lSub: 'rgba(15,23,42,0.58)', lDivider: 'rgba(100,116,139,0.16)', lBadgeBg: 'rgba(15,23,42,0.09)',
+    dBg: 'rgba(255,255,255,0.08)', dBorder: 'rgba(255,255,255,0.18)', dTitle: 'rgba(255,255,255,0.90)', dSub: 'rgba(255,255,255,0.45)', dDivider: 'rgba(255,255,255,0.09)', dBadgeBg: 'rgba(255,255,255,0.11)',
+  },
+};
+
+const HOWTO_STEPS: Record<string, { title: string; desc: string }[]> = {
+  'property-info': [
+    { title: 'Open Property Info', desc: 'Tap the orange Property Info tile on your dashboard to enter the editor.' },
+    { title: 'Fill in the basics', desc: 'Enter your property name and address. These appear in your guest guide header.' },
+    { title: 'Write your welcome message', desc: 'Add a House Bio — a warm introduction guests see when they first open the guide.' },
+    { title: 'Set House Rules', desc: 'List the key rules you want guests to follow. Keep them clear and short.' },
+    { title: 'Add Wi-Fi & access codes', desc: 'Enter your Wi-Fi name, password, and any garage or door codes so guests can find them instantly.' },
+    { title: 'Save your changes', desc: 'Tap Save at the bottom of the form. Changes go live immediately in the guest guide.' },
+  ],
+  amenities: [
+    { title: 'Open Amenities', desc: 'Tap the purple Amenities tile to manage your content windows.' },
+    { title: 'Add a window', desc: 'Tap Add Window, give it a title, choose a type (Image, Video, PDF, or Text), and attach your file or paste your text.' },
+    { title: 'Reorder windows', desc: 'Use the up and down arrows on the bottom-right of each card to change display order.' },
+    { title: 'Preview attachments', desc: "Tap the attachment tag (e.g. 'Image — tap to preview') to open a full preview of the file." },
+    { title: 'Replace a file', desc: 'Open a window card and tap Replace File to upload a new version without changing the title.' },
+    { title: 'Delete a window', desc: 'Tap the trash icon on the top-right of a card. Confirm deletion with Yes when prompted.' },
+  ],
+  qr: [
+    { title: 'Open QR Code', desc: 'Tap the yellow QR Code tile on your dashboard.' },
+    { title: 'Download the QR code', desc: "Tap Download to save a high-resolution PNG of your property's unique QR code." },
+    { title: 'Print and display', desc: 'Print the code and place it in a visible spot — near the entrance or on the fridge works well.' },
+    { title: 'Test it', desc: 'Scan the code with your phone camera to confirm it opens your guest guide correctly.' },
+  ],
+  settings: [
+    { title: 'Open Design', desc: 'Tap the green Design tile to customise how your guest guide looks.' },
+    { title: 'Choose a background', desc: 'Browse the available background images and tap one to apply it.' },
+    { title: 'Upload your logo', desc: 'Add a property or brand logo that appears at the top of your guest guide.' },
+    { title: 'Adjust logo size', desc: 'Use the size slider to scale the logo to your preference.' },
+    { title: 'Save', desc: 'Tap Save to publish your design changes instantly.' },
+  ],
+  'work-orders': [
+    { title: 'Open Work Orders', desc: 'Tap the Work Orders tile on your dashboard.' },
+    { title: 'Review open requests', desc: 'All maintenance and guest requests appear here sorted by date. Tap any card to see full details.' },
+    { title: 'Update status', desc: 'Mark requests as In Progress or Resolved to keep your records clean.' },
+    { title: 'Add categories', desc: 'Create custom maintenance categories so guests can route requests to the right place.' },
+    { title: 'Contact tenant', desc: 'Tap the phone or email icon on a request card to reach the guest directly.' },
+  ],
+};
+
+function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; propertyName: string }) {
+  const SANDY = '#F5EDD5';
+  const [tab, setTab] = useState<HelpTab>('howto');
+  const [topic, setTopic] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [contactError, setContactError] = useState('');
+
+  /* Shared card style for FAQ / Contact — warm cream in light, dark glass in dark */
+  const cardStyle: React.CSSProperties = dark
+    ? { background: 'rgba(18,18,18,0.82)', border: '1px solid rgba(245,237,213,0.10)', backdropFilter: 'blur(20px)' }
+    : { background: 'rgba(245,237,213,0.32)', border: '1px solid rgba(44,44,44,0.10)', backdropFilter: 'blur(16px)' };
+
+  /* Label color always readable in both modes */
+  const labelColor = dark ? 'rgba(245,237,213,0.50)' : 'rgba(44,44,44,0.50)';
+
+  const inputBase = 'h-10 w-full rounded-xl border px-3 text-sm outline-none transition-all focus:ring-1';
+  const inputStyle: React.CSSProperties = dark
+    ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(0,0,0,0.22)', color: '#fff' }
+    : { borderColor: 'rgba(44,44,44,0.20)', background: 'rgba(44,44,44,0.06)', color: '#2C2C2C' };
+
+  const tabs: { id: HelpTab; label: string }[] = [
+    { id: 'howto', label: 'How To' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'contact', label: 'Contact' },
+  ];
+
+  async function handleContactSubmit() {
+    if (!topic || !description.trim()) return;
+    setContactStatus('sending');
+    setContactError('');
+    try {
+      const res = await fetch('/api/manager/contact-support', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug, propertyName, topic, description }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Send failed');
+      setContactStatus('sent');
+      setTopic('');
+      setDescription('');
+    } catch (e) {
+      setContactError(e instanceof Error ? e.message : 'Something went wrong.');
+      setContactStatus('error');
+    }
+  }
+
+  const guideTiles = TILES.filter(t => t.id !== 'help');
+
+  return (
+    <div className="px-4 pb-8 pt-4 space-y-4">
+      {/* Tab bar */}
+      <div className="flex gap-1 rounded-2xl p-1" style={dark
+        ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }
+        : { background: 'rgba(44,44,44,0.08)', border: '1px solid rgba(44,44,44,0.12)' }}>
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className="flex-1 rounded-xl py-2 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-200"
+            style={tab === t.id
+              ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 14px rgba(245,237,213,0.18)' }
+              : { color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(44,44,44,0.50)' }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── HOW TO — colored list accordion ── */}
+      {tab === 'howto' && (
+        <div className="space-y-3">
+          {guideTiles.map((tile) => {
+            const c = HOWTO_COLORS[tile.id];
+            const isOpen = selectedSection === tile.id;
+            const steps = HOWTO_STEPS[tile.id] ?? [];
+            const bg = dark ? c.dBg : c.lBg;
+            const border = dark ? c.dBorder : c.lBorder;
+            const titleColor = dark ? c.dTitle : c.lTitle;
+            const subColor = dark ? c.dSub : c.lSub;
+            const divider = dark ? c.dDivider : c.lDivider;
+            const badgeBg = dark ? c.dBadgeBg : c.lBadgeBg;
+
+            const iconStyle: React.CSSProperties = tile.id === 'property-info' && !dark
+              ? { background: 'rgba(251,146,60,0.22)', border: '1px solid rgba(120,36,8,0.20)', color: 'rgb(120,36,8)' }
+              : (tile.iconStyle ?? {});
+
+            return (
+              <div
+                key={tile.id}
+                className="rounded-2xl overflow-hidden backdrop-blur-sm"
+                style={{ background: bg, border: `1px solid ${border}` }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedSection(isOpen ? null : tile.id)}
+                  className="w-full px-4 pt-4 pb-3.5 text-left transition-opacity active:opacity-75"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Icon */}
+                    <div
+                      className={`flex shrink-0 items-center justify-center rounded-xl border h-10 w-10 mt-0.5 ${tile.iconBg}`}
+                      style={iconStyle}
+                    >
+                      {tile.icon}
+                    </div>
+                    {/* Title row + subtitle row */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[15px] font-bold leading-tight" style={{ color: titleColor }}>{tile.label}</p>
+                        <span
+                          className="shrink-0 text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                          style={{ background: badgeBg, color: titleColor }}
+                        >
+                          {steps.length} Steps
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <p className="text-xs" style={{ color: subColor }}>{tile.sub}</p>
+                        <svg
+                          viewBox="0 0 24 24" fill="none"
+                          className="h-4 w-4 shrink-0 ml-2 transition-transform duration-200"
+                          style={{ color: subColor, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        >
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-4 pb-5 border-t" style={{ borderColor: divider }}>
+                    {steps.map((step, i) => (
+                      <HelpStep key={i} n={i + 1} title={step.title} desc={step.desc} dark={dark} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── FAQ ── */}
+      {tab === 'faq' && (
+        <div className="space-y-3">
+          <div className="rounded-2xl px-5 py-4" style={cardStyle}>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-1" style={{ color: labelColor }}>For Managers</p>
+            <FaqItem dark={dark} q="How do guests access the guide?" a="Guests scan the QR code you display at the property. It opens directly in their mobile browser — no app download needed." />
+            <FaqItem dark={dark} q="Can I have multiple properties?" a="Yes. Each property gets its own guide, QR code, and dashboard. Use the property selector to switch between them." />
+            <FaqItem dark={dark} q="Do changes go live immediately?" a="Yes. Any edit you save is reflected in the guest guide in real time, including property info, amenities, and design." />
+            <FaqItem dark={dark} q="What file types can I upload for amenities?" a="You can upload images (JPG, PNG, WebP), videos (MP4, MOV), and PDF documents. Maximum file size is 50 MB." />
+            <FaqItem dark={dark} q="Can I customise the look for each property?" a="Yes. The Design section lets you set a unique background image and logo per property." />
+            <FaqItem dark={dark} q="How do I add a new property?" a="Go back to the main manager dashboard and use the Add Property option. You'll be guided through the setup." />
+            <FaqItem dark={dark} q="What happens if a guest submits a work order?" a="The request appears in your Work Orders section with the guest's contact info and a description of the issue." />
+            <FaqItem dark={dark} q="Can I change my login email or password?" a="Yes. Go to your account settings, or use the Forgot Password flow on the login page to reset your password." />
+            <FaqItem dark={dark} q="Is the guest guide mobile-optimised?" a="Yes. The guide is built for mobile browsers and looks great on all screen sizes without any extra setup." />
+            <FaqItem dark={dark} q="How do I delete a property?" a="Contact support@pmpillar.com with your property ID and we'll process the deletion securely." />
+          </div>
+
+          <div className="rounded-2xl px-5 py-4" style={cardStyle}>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-1" style={{ color: labelColor }}>For Tenants &amp; Guests</p>
+            <FaqItem dark={dark} q="How do I access the property guide?" a="Scan the QR code displayed at the property with your phone camera. It will open the guide automatically in your browser." />
+            <FaqItem dark={dark} q="Where do I find the Wi-Fi password?" a="Open the guide and look in the Property Info or Amenities section — your host has added it there for you." />
+            <FaqItem dark={dark} q="How do I report a maintenance issue?" a="Find the Work Orders or Maintenance section in the guide and tap Submit Request. Describe the issue and your contact info." />
+            <FaqItem dark={dark} q="Do I need to download an app?" a="No. The guide opens directly in your phone's web browser when you scan the QR code." />
+            <FaqItem dark={dark} q="The QR code isn't working — what do I do?" a="Make sure your camera app is pointing at the full QR code in good lighting. If it still doesn't work, ask your host for the direct link." />
+            <FaqItem dark={dark} q="Can I access the guide again after check-out?" a="The link stays active as long as your host keeps the property listed. Bookmark the page during your stay for easy access." />
+            <FaqItem dark={dark} q="Who do I contact for urgent issues?" a="Your host's phone number is listed in the Property Info section of the guide. For emergencies always call 911." />
+            <FaqItem dark={dark} q="The guide isn't loading — what should I try?" a="Try refreshing the page, switching between Wi-Fi and mobile data, or clearing your browser cache. If the issue persists, contact your host." />
+          </div>
+        </div>
+      )}
+
+      {/* ── CONTACT ── */}
+      {tab === 'contact' && (
+        <div className="space-y-3">
+          <div className="rounded-2xl px-5 py-4 space-y-1" style={cardStyle}>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Property ID</p>
+            <p className="text-sm font-mono font-medium" style={{ color: dark ? SANDY : '#2C2C2C' }}>{slug}</p>
+          </div>
+
+          {contactStatus === 'sent' ? (
+            <div className="rounded-2xl px-5 py-8 flex flex-col items-center gap-3 text-center" style={cardStyle}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: 'rgba(134,239,172,0.15)', border: '1px solid rgba(134,239,172,0.30)' }}>
+                <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" style={{ color: 'rgb(134,239,172)' }}>
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.88)' : 'rgba(44,44,44,0.88)' }}>Message Sent</p>
+              <p className="text-xs leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(44,44,44,0.55)' }}>
+                Your message has been sent to our support team. We&apos;ll get back to you at the email on your account.
+              </p>
+              <button
+                type="button"
+                onClick={() => setContactStatus('idle')}
+                className="mt-1 text-[11px] uppercase tracking-[0.18em] transition-opacity hover:opacity-70"
+                style={{ color: labelColor }}
+              >
+                Send Another
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl px-5 py-5 space-y-4" style={cardStyle}>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Contact Support</p>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.20em]" style={{ color: labelColor }}>Topic</p>
+                <select
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  className={inputBase}
+                  style={inputStyle}
+                  disabled={contactStatus === 'sending'}
+                >
+                  <option value="">Select a topic…</option>
+                  <option value="Account & Billing">Account &amp; Billing</option>
+                  <option value="Property Info">Property Info</option>
+                  <option value="Amenities">Amenities</option>
+                  <option value="QR Code">QR Code</option>
+                  <option value="Design">Design</option>
+                  <option value="Work Orders">Work Orders</option>
+                  <option value="Guest Guide">Guest Guide</option>
+                  <option value="Technical Issue">Technical Issue</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.20em]" style={{ color: labelColor }}>Description</p>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  rows={5}
+                  placeholder="Describe your issue or question…"
+                  className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition-all focus:ring-1 resize-none"
+                  style={{ ...inputStyle, height: 'auto' }}
+                  disabled={contactStatus === 'sending'}
+                />
+              </div>
+
+              {contactStatus === 'error' && (
+                <p className="text-xs text-rose-400/90">{contactError}</p>
+              )}
+
+              <button
+                type="button"
+                onClick={handleContactSubmit}
+                disabled={contactStatus === 'sending' || !topic || !description.trim()}
+                className="flex items-center justify-center gap-2 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
+                  color: '#3d2a0a',
+                  boxShadow: '0 0 20px rgba(245,237,213,0.22)',
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                  <path d="M22 2L11 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {contactStatus === 'sending' ? 'Sending…' : 'Send to Support'}
+              </button>
+
+              <p className="text-center text-[10px]" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(44,44,44,0.40)' }}>
+                Sends directly to our team — no mail app needed.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main component ──────────────────────────────────── */
 
 export default function ManagerPropertyEditorClient({
@@ -1490,7 +1983,7 @@ export default function ManagerPropertyEditorClient({
 }) {
   const [view, setView] = useState<View>('grid');
   const [fading, setFading] = useState(false);
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
 
   const [core, setCore] = useState<CoreFields>({
     PropertyName: property.PropertyName ?? '',
@@ -1513,7 +2006,7 @@ export default function ManagerPropertyEditorClient({
   const [prefetchedWOCategories, setPrefetchedWOCategories] = useState<WOCategory[] | undefined>(undefined);
 
   useEffect(() => {
-    const stored = localStorage.getItem('pillar-dashboard-theme');
+    const stored = localStorage.getItem('pillar-theme');
     if (stored) setDark(stored === 'dark');
   }, []);
 
@@ -1527,7 +2020,8 @@ export default function ManagerPropertyEditorClient({
   function toggleMode() {
     const next = !dark;
     setDark(next);
-    localStorage.setItem('pillar-dashboard-theme', next ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('pillar-theme', next ? 'dark' : 'light');
   }
 
   function goTo(next: View) {
@@ -1563,20 +2057,18 @@ export default function ManagerPropertyEditorClient({
     qr: 'QR Code',
     settings: 'Design',
     'work-orders': 'Work Orders',
+    help: 'Help',
   };
 
   const glowGradient = dark ? (
-    view === 'property-info' ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(96,165,250,0.50) 0%, transparent 65%),'
-    : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(248,113,113,0.40) 0%, transparent 65%),'
+    view === 'property-info' ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,146,60,0.50) 0%, transparent 65%),'
+    : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(192,132,252,0.40) 0%, transparent 65%),'
     : view === 'settings'     ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(74,222,128,0.35) 0%, transparent 65%),'
     : view === 'qr'           ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,191,36,0.40) 0%, transparent 65%),'
     : view === 'work-orders'  ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(255,255,255,0.12) 0%, transparent 65%),'
+    : view === 'help'         ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(248,113,113,0.40) 0%, transparent 65%),'
     : ''
   ) : '';
-
-  const bgStyle: React.CSSProperties = dark
-    ? { backgroundImage: `${glowGradient}url(/images/bg3.png)`, backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }
-    : { backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' };
 
   const toggleStyle: React.CSSProperties = {
     borderColor: `rgba(${SANDY_RGB},0.25)`,
@@ -1585,7 +2077,14 @@ export default function ManagerPropertyEditorClient({
   };
 
   return (
-    <div className="min-h-screen text-white transition-all duration-500" style={bgStyle}>
+    <div className="relative min-h-screen text-white">
+      {/* Fixed background layers — driven by CSS dark class to avoid flash */}
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      {/* View-specific glow overlay — React-state driven (subtle, no flash concern) */}
+      {dark && glowGradient && (
+        <div className="fixed inset-0 -z-10 pointer-events-none transition-opacity duration-500" style={{ backgroundImage: glowGradient.replace(/,$/, ''), backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      )}
 
       {/* Header */}
       <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: `rgba(${SANDY_RGB},0.10)`, background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.10)', backdropFilter: 'blur(16px)' }}>
@@ -1652,6 +2151,7 @@ export default function ManagerPropertyEditorClient({
         {view === 'qr' && <QRView slug={slug} dark={dark} />}
         {view === 'settings' && <SettingsView slug={slug} initialBgKey={property.BackgroundKey} dark={dark} />}
         {view === 'work-orders' && <WorkOrdersView slug={slug} dark={dark} initialCategories={prefetchedWOCategories} onCategoriesChange={setPrefetchedWOCategories} />}
+        {view === 'help' && <HelpView dark={dark} slug={slug} propertyName={core.PropertyName} />}
       </div>
     </div>
   );

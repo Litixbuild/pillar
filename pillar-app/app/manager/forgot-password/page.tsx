@@ -26,17 +26,18 @@ function MoonIcon() {
 export default function ForgotPasswordPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
   const [error, setError] = useState("");
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("pillar-dashboard-theme");
+    const stored = localStorage.getItem("pillar-theme");
     if (stored) setDark(stored === "dark");
   }, []);
 
   function toggleMode() {
     const next = !dark;
     setDark(next);
-    localStorage.setItem("pillar-dashboard-theme", next ? "dark" : "light");
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -67,8 +68,8 @@ export default function ForgotPasswordPage() {
       className="relative flex flex-col items-center justify-center overflow-hidden px-5"
       style={{ height: "100dvh" }}
     >
-      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 1 : 0 }} />
-      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top", opacity: dark ? 0 : 1 }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
       {/* Back arrow — top left */}
       <Link
         href="/manager/login"

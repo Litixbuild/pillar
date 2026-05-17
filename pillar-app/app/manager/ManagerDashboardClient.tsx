@@ -42,7 +42,7 @@ export default function ManagerDashboardClient({
   isSubscribed: boolean;
   managerName: string;
 }) {
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [propertyName, setPropertyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -53,15 +53,17 @@ export default function ManagerDashboardClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('pillar-dashboard-theme');
+    const stored = localStorage.getItem('pillar-theme');
     if (stored) setDark(stored === 'dark');
   }, []);
 
   function toggleMode() {
     const next = !dark;
     setDark(next);
-    localStorage.setItem('pillar-dashboard-theme', next ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('pillar-theme', next ? 'dark' : 'light');
   }
+
 
   function openDeleteModal(p: Property) {
     setDeleteTarget(p);
@@ -104,9 +106,6 @@ export default function ManagerDashboardClient({
   }
 
   /* ── Theme helpers — both modes use sandy palette, different backgrounds ── */
-  const bg = dark
-    ? { backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' }
-    : { backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top', backgroundAttachment: 'fixed' };
 
   const card = dark
     ? { background: 'rgba(18,18,18,0.78)', border: `1px solid rgba(${SANDY_RGB},0.14)`, backdropFilter: 'blur(20px)' }
@@ -156,7 +155,10 @@ export default function ManagerDashboardClient({
   };
 
   return (
-    <div className="min-h-screen text-white transition-all duration-500" style={bg}>
+    <div className="relative min-h-screen text-white">
+      {/* Fixed background layers — driven by CSS dark class to avoid flash */}
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
 
       <div className="relative mx-auto max-w-2xl px-5 pb-24 pt-8 sm:px-8">
 

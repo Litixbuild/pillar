@@ -24,12 +24,15 @@ function MoonIcon() {
 
 const SANDY = '#F5EDD5';
 
+const THEME_KEY = 'pillar-theme';
+
 export default function HomeDarkWrapper() {
   const [dark, setDark] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
 
   useEffect(() => {
-    // Match IntroSplash done timing exactly
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'dark') setDark(true);
     const t = setTimeout(() => setShowToggle(true), 3700);
     return () => clearTimeout(t);
   }, []);
@@ -38,10 +41,10 @@ export default function HomeDarkWrapper() {
     <>
       <IntroSplash />
 
-      {/* Fixed background — two layers crossfade on toggle */}
+      {/* Fixed background — two layers crossfade on toggle via CSS dark class */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top', opacity: dark ? 1 : 0 }} />
-        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top', opacity: dark ? 0 : 1 }} />
+        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+        <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
       </div>
 
       <main className="min-h-screen" style={{ color: '#fff' }}>
@@ -50,7 +53,12 @@ export default function HomeDarkWrapper() {
         {/* Dark mode toggle */}
         <button
           type="button"
-          onClick={() => setDark((d) => !d)}
+          onClick={() => setDark((d) => {
+            const next = !d;
+            document.documentElement.classList.toggle('dark', next);
+            localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
+            return next;
+          })}
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           className="flex h-8 w-8 items-center justify-center rounded-xl border transition-opacity duration-500"
           style={{
@@ -96,7 +104,7 @@ export default function HomeDarkWrapper() {
               {[
                 'Late-night calls for the WiFi password — every single stay',
                 'Guests wandering aimlessly, missing the best your area has to offer',
-                'Check-in confusion that poisons the first impression',
+                'Forgettable stays don’t create repeat guests, referrals, or 5-star reviews',
               ].map((pain) => (
                 <div key={pain} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.80)' }}>
                   <span className="mt-0.5 shrink-0" style={{ color: SANDY }}>✕</span>
@@ -153,8 +161,8 @@ export default function HomeDarkWrapper() {
               {[
                 ['No download required', 'Works on any smartphone, the moment they arrive'],
                 ['No account creation', 'Zero barriers between guests and their experience'],
-                ['Always current', 'Updates you make go live immediately'],
-                ['Any device, any time', 'iPhone, Android, or any browser — it just works'],
+                ['Always up to date', 'Guests always see the latest house info and recommendations'],
+                ['Built to impress guests', 'Create a smoother stay that leads to better reviews'],
               ].map(([title, desc]) => (
                 <div key={title} className="flex items-start gap-3 lg:gap-4">
                   <div className="shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ border: '1px solid rgba(245,237,213,0.5)' }}>
@@ -213,6 +221,7 @@ export default function HomeDarkWrapper() {
                 ["Local dining & attraction discovery", "Curated recommendations tailored to your property's location"],
                 ['24 / 7 availability', 'No more midnight texts to you — the AI has it covered'],
                 ['Contextual property knowledge', 'House rules, check-out reminders, appliance how-tos — all in one place'],
+                ['Experiences worth five stars', 'When guests feel genuinely looked after, they say so. Those reviews are what future tenants read before they book'],
               ].map(([title, desc]) => (
                 <div key={title} className="flex items-start gap-3 lg:gap-4">
                   <div className="shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ border: '1px solid rgba(245,237,213,0.5)' }}>
@@ -261,13 +270,6 @@ export default function HomeDarkWrapper() {
           <p className="text-[10px] lg:text-xs uppercase tracking-[0.45em] mb-5 lg:mb-6" style={{ color: SANDY }}>
             Contact
           </p>
-          <h2 className="font-serif text-2xl lg:text-4xl text-white mb-4 lg:mb-5">
-            Let&apos;s Talk
-          </h2>
-          <p className="text-sm lg:text-base leading-relaxed mb-8 lg:mb-10" style={{ color: 'rgba(255,255,255,0.82)' }}>
-            Interested in bringing Pillar to your property? Reach out directly
-            and we&apos;ll get back to you promptly.
-          </p>
           <a
             href="mailto:support@pmpillar.com"
             className="text-base lg:text-xl tracking-wide transition-all duration-300 hover:opacity-70 break-all"
@@ -283,8 +285,8 @@ export default function HomeDarkWrapper() {
         <Image
           src="/images/pillarlogowhite.png"
           alt="Pillar"
-          width={70}
-          height={46}
+          width={100}
+          height={66}
           className="mx-auto mb-3 lg:mb-4 opacity-30"
         />
         <p className="text-[10px] lg:text-xs uppercase tracking-[0.35em]" style={{ color: 'rgba(255,255,255,0.50)' }}>
