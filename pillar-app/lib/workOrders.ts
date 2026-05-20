@@ -159,8 +159,7 @@ export async function deleteWorkOrderCategory(id: string, slug: string): Promise
     .from('work_order_categories')
     .delete()
     .eq('id', id)
-    .eq('property_slug', slug)
-    .eq('is_builtin', false);
+    .eq('property_slug', slug);
   if (error) throw new Error(error.message);
 }
 

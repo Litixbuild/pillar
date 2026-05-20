@@ -70,6 +70,57 @@ function HomeIcon({ className }: { className?: string }) {
   );
 }
 
+/* ─── Amenity icon colors ─────────────────────────────────────── */
+
+const AMENITY_ICON_COLORS: Record<string, string> = {
+  wifi: '#4A7EC7',
+  key: '#3A8FA8',
+  tv: '#6B5FB5',
+  pool: '#2E8FAF',
+  gym: '#2A9070',
+  parking: '#5A7085',
+  coffee: '#C06080',
+  bed: '#7A5DAE',
+  bath: '#3381A8',
+  kitchen: '#B84C4C',
+  laundry: '#3A9E7A',
+  ac: '#2A9FAF',
+  heat: '#C97030',
+  fire: '#C05050',
+  game: '#B84A8A',
+  outdoor: '#3A8C55',
+  garden: '#3A8C55',
+  bike: '#6A9C2A',
+  car: '#5A6B7A',
+  music: '#7A4AAF',
+  book: '#4A7AAA',
+  pet: '#5A8A5A',
+  baby: '#B85080',
+  lock: '#5A5AAF',
+  door: '#6A5AAA',
+  note: '#2E7FAF',
+  info: '#3A70B8',
+  star: '#3A8FA8',
+  bell: '#B84040',
+  home: '#5050A0',
+  phone: '#2A8A68',
+  check: '#2A8A68',
+  calendar: '#6A50A0',
+};
+
+const ICON_COLOR_PALETTE = [
+  '#4A7EC7','#2A9070','#B8860B','#B84C4C','#6B5FB5',
+  '#B84A8A','#2E8FAF','#C97030','#6A9C2A','#5A5AAF',
+];
+
+function getIconColor(iconKey?: string): string {
+  if (!iconKey) return '#6B7280';
+  if (AMENITY_ICON_COLORS[iconKey]) return AMENITY_ICON_COLORS[iconKey];
+  let hash = 0;
+  for (let i = 0; i < iconKey.length; i++) hash = (hash * 31 + iconKey.charCodeAt(i)) | 0;
+  return ICON_COLOR_PALETTE[Math.abs(hash) % ICON_COLOR_PALETTE.length];
+}
+
 /* ─── Amenity icon renderer ───────────────────────────────────── */
 
 function AmenityIconSvg({ iconKey, className }: { iconKey?: string; className?: string }) {
@@ -372,39 +423,71 @@ function AmenityTile({
   title,
   selected,
   onToggle,
+  dark,
 }: {
   id: string;
   iconKey?: string;
   title: string;
   selected: boolean;
   onToggle: () => void;
+  dark?: boolean;
 }) {
+  void id;
+  void dark;
+  const iconColor = getIconColor(iconKey);
+  const shadow = selected
+    ? `6px 6px 18px rgba(0,0,0,0.28), 3px 3px 6px rgba(0,0,0,0.14), 0 0 0 1.5px rgba(${SANDY_RGB},0.60)`
+    : '6px 6px 18px rgba(0,0,0,0.20), 3px 3px 6px rgba(0,0,0,0.10)';
+
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="group flex items-center gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-all duration-200"
-      style={selected
-        ? { borderColor: 'var(--accent-40)', boxShadow: '0 0 20px var(--accent-10)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }
-        : { borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }}
+      className="flex flex-none items-center gap-2.5 rounded-2xl px-3 py-3 text-left transition-all duration-200 active:scale-[0.97]"
+      style={{
+        background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+        border: `1px solid var(--accent-18)`,
+        boxShadow: shadow,
+      }}
     >
       <div
-        className="flex h-10 w-10 flex-none items-center justify-center rounded-xl transition-colors duration-200"
-        style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}
+        className="flex h-7 w-7 flex-none items-center justify-center rounded-full"
+        style={{ backgroundColor: iconColor, color: '#ffffff' }}
       >
-        <AmenityIconSvg iconKey={iconKey} className="h-5 w-5" />
+        <AmenityIconSvg iconKey={iconKey} className="h-3.5 w-3.5" />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm font-semibold leading-tight text-white transition-colors duration-200">
-          {title}
-        </p>
-      </div>
+      <p className="text-sm font-semibold whitespace-nowrap text-white">
+        {title}
+      </p>
     </button>
   );
 }
 
 
 
+
+/* ─── Room ordering ───────────────────────────────────────────── */
+
+const ROOM_PRIORITY: [RegExp, number][] = [
+  [/entrance|foyer|entryway/i, 0],
+  [/kitchen/i, 10],
+  [/dining/i, 20],
+  [/living|lounge/i, 30],
+  [/family/i, 40],
+  [/den|office|study/i, 50],
+  [/master\s*(bed|suite)|primary\s*(bed|suite)/i, 55],
+  [/bedroom|guest\s*room/i, 60],
+  [/bathroom|bath|powder/i, 70],
+  [/laundry/i, 80],
+  [/basement/i, 90],
+  [/garage/i, 100],
+  [/patio|deck|balcony|backyard|outdoor|yard/i, 110],
+];
+
+function roomSortOrder(name: string): number {
+  for (const [re, n] of ROOM_PRIORITY) if (re.test(name)) return n;
+  return 120;
+}
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -470,6 +553,7 @@ export default function PropertyExperience({
   const [fullView, setFullView] = useState<'content' | 'amenities'>('content');
   const [isFullViewTransitioning, setIsFullViewTransitioning] = useState(false);
   const [openAmenityId, setOpenAmenityId] = useState<string | null>(null);
+  const [amenityAnimating, setAmenityAnimating] = useState(false);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
   const [dark, setDark] = useState(false);
 
@@ -477,6 +561,23 @@ export default function PropertyExperience({
     () => property.HeroImage || '/images/heroimage.jpg',
     [property.HeroImage]
   );
+
+  useEffect(() => {
+    if (openAmenityId) {
+      const raf = requestAnimationFrame(() => setAmenityAnimating(true));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [openAmenityId]);
+
+  function openAmenity(id: string) {
+    setAmenityAnimating(false);
+    setOpenAmenityId(id);
+  }
+
+  function closeAmenity() {
+    setAmenityAnimating(false);
+    window.setTimeout(() => setOpenAmenityId(null), 270);
+  }
 
   const themeVars = {
     '--accent': SANDY,
@@ -595,7 +696,7 @@ export default function PropertyExperience({
           {/* Bottom content */}
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-md px-7 pb-12">
             {property.PropertyAddress ? (
-              <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.38em] text-white/52 drop-shadow-sm">
+              <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.38em] text-white drop-shadow-sm">
                 {property.PropertyAddress}
               </p>
             ) : null}
@@ -604,7 +705,7 @@ export default function PropertyExperience({
             </h1>
             <div className="mb-4 h-px w-10 bg-white/22" />
             {property.DetailedHouseBio ? (
-              <p className="text-[13px] leading-relaxed text-white/55 drop-shadow-sm">
+              <p className="text-[13px] leading-relaxed text-white/75 drop-shadow-sm">
                 {property.DetailedHouseBio}
               </p>
             ) : null}
@@ -844,115 +945,169 @@ export default function PropertyExperience({
                         window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
                         window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                       }}
-                      className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl border transition-all duration-200"
-                      style={{ borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))', color: 'var(--accent)' }}
+                      className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-xl border transition-all duration-200"
+                      style={{ borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))', color: '#ffffff' }}
                       aria-label="Back"
                     >
-                      <ChevronLeft className="h-5 w-5" />
+                      <ChevronLeft className="h-4 w-4" />
                     </button>
                     <div className="lux-title flex-1 text-center text-xl whitespace-nowrap" style={{ color: 'var(--heading-color)' }}>Home Amenities</div>
                     <div className="h-10 w-10 flex-none" />
                   </div>
 
                   {/* Amenity grid */}
-                  <div className="mt-5">
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* WiFi tile */}
+                  {(() => {
+                    const allWindows = property.windows ?? [];
+                    const sortedRooms = [...(property.rooms ?? [])].sort((a, b) => roomSortOrder(a) - roomSortOrder(b));
+                    return (
+                  <div className="mt-5 pl-2 pr-6 pb-4">
+                    {/* Built-in tiles: WiFi + Garage */}
+                    <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', paddingTop: 16, marginTop: -16, paddingBottom: 28, marginBottom: -28, paddingLeft: 16, marginLeft: -16, paddingRight: 28 }}>
                       <AmenityTile
                         id="wifi"
                         iconKey="wifi"
                         title="WiFi"
                         selected={openAmenityId === 'wifi'}
-                        onToggle={() => setOpenAmenityId((v) => (v === 'wifi' ? null : 'wifi'))}
+                        onToggle={() => openAmenity('wifi')}
+                        dark={dark}
                       />
-
-                      {/* Garage tile */}
                       <AmenityTile
                         id="garage"
                         iconKey="key"
                         title="Garage Code"
                         selected={openAmenityId === 'garage'}
-                        onToggle={() => setOpenAmenityId((v) => (v === 'garage' ? null : 'garage'))}
+                        onToggle={() => openAmenity('garage')}
+                        dark={dark}
                       />
-
-                      {/* Custom window tiles */}
-                      {(property.windows ?? []).map((w) => (
-                        <AmenityTile
-                          key={w.id}
-                          id={w.id}
-                          iconKey={w.icon}
-                          title={w.title}
-                          selected={openAmenityId === w.id}
-                          onToggle={() => setOpenAmenityId((v) => (v === w.id ? null : w.id))}
-                        />
-                      ))}
                     </div>
 
-                    {/* Detail panel — appears below the grid when a tile is selected */}
-                    {openAmenityId ? (
-                      <div className="mt-4 overflow-hidden rounded-2xl border backdrop-blur-sm" style={{ borderColor: 'var(--accent-22)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))' }}>
-                        <div className="border-b px-5 py-3.5" style={{ borderColor: 'var(--accent-18)' }}>
-                          {openAmenityId === 'wifi' ? (
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
-                                <AmenityIconSvg iconKey="wifi" className="h-4 w-4" />
-                              </div>
-                              <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>WiFi</p>
-                            </div>
-                          ) : openAmenityId === 'garage' ? (
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
-                                <AmenityIconSvg iconKey="key" className="h-4 w-4" />
-                              </div>
-                              <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>Garage Code</p>
-                            </div>
-                          ) : (
-                            (() => {
-                              const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
-                              return w ? (
-                                <div className="flex items-center gap-3">
-                                  <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)' }}>
-                                    <AmenityIconSvg iconKey={w.icon} className="h-4 w-4" />
-                                  </div>
-                                  <p className="text-sm font-semibold text-white/90" style={{ color: 'var(--heading-color)' }}>{w.title}</p>
-                                </div>
-                              ) : null;
-                            })()
-                          )}
+                    {/* Room sections — one per room that has at least one assigned window */}
+                    {sortedRooms.map((room) => {
+                      const roomWindows = allWindows.filter((w) => w.room === room);
+                      if (roomWindows.length === 0) return null;
+                      return (
+                        <div key={room} className="mt-5">
+                          <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent-50)' }}>{room}</p>
+                          <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', paddingTop: 16, marginTop: -16, paddingBottom: 28, marginBottom: -28, paddingLeft: 16, marginLeft: -16, paddingRight: 28 }}>
+                            {roomWindows.map((w) => (
+                              <AmenityTile
+                                key={w.id}
+                                id={w.id}
+                                iconKey={w.icon}
+                                title={w.title}
+                                selected={openAmenityId === w.id}
+                                onToggle={() => openAmenity(w.id)}
+                                dark={dark}
+                              />
+                            ))}
+                          </div>
                         </div>
-                        <div className="px-5 py-4">
-                          {openAmenityId === 'wifi' ? (
-                            <div className="space-y-3">
-                              <div className="space-y-1">
-                                <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Network</p>
-                                <p className="text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiName}</p>
-                              </div>
-                              <div className="flex items-center justify-between gap-4">
-                                <div className="space-y-1">
-                                  <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Password</p>
-                                  <p className="font-mono text-sm text-white/85" style={{ color: 'var(--body-color)' }}>{property.WiFiPassword}</p>
-                                </div>
-                                <CopyPasswordButton password={property.WiFiPassword} />
-                              </div>
-                            </div>
-                          ) : openAmenityId === 'garage' ? (
-                            property.GarageCode
-                              ? <div className="space-y-1"><p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Code</p><p className="font-mono text-sm text-white/85 whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p></div>
-                              : <div className="text-sm text-white/45">Garage code not provided.</div>
-                          ) : (
-                            (() => {
-                              const w = (property.windows ?? []).find((x) => x.id === openAmenityId);
-                              return w ? renderWindowContent(w) : null;
-                            })()
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
+                      );
+                    })}
+
                   </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Amenity detail overlay */}
+          {openAmenityId && (() => {
+            const aw = openAmenityId !== 'wifi' && openAmenityId !== 'garage'
+              ? (property.windows ?? []).find((x) => x.id === openAmenityId)
+              : null;
+            const overlayIconKey = openAmenityId === 'wifi' ? 'wifi' : openAmenityId === 'garage' ? 'key' : aw?.icon;
+            const overlayTitle = openAmenityId === 'wifi' ? 'WiFi' : openAmenityId === 'garage' ? 'Garage Code' : (aw?.title ?? '');
+            const overlayIconColor = getIconColor(overlayIconKey);
+            return (
+              <div
+                className="fixed inset-0 z-60 flex justify-center"
+                style={{
+                  alignItems: 'center',
+                  padding: '0 16px',
+                  pointerEvents: 'auto',
+                }}
+                onClick={closeAmenity}
+              >
+                {/* Backdrop */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'rgba(0,0,0,0.78)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    opacity: amenityAnimating ? 1 : 0,
+                    transition: 'opacity 270ms ease',
+                  }}
+                />
+                {/* Card */}
+                <div
+                  className="relative flex w-full max-w-md flex-col overflow-hidden"
+                  style={{
+                    background: 'rgba(14,14,14,0.97)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '20px',
+                    boxShadow: '0 24px 80px rgba(0,0,0,0.90)',
+                    maxHeight: '72vh',
+                    opacity: amenityAnimating ? 1 : 0,
+                    transform: amenityAnimating ? 'scale(1)' : 'scale(0.94)',
+                    transition: 'opacity 270ms ease, transform 270ms cubic-bezier(0.22,1,0.36,1)',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Top accent line */}
+                  <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
+
+                  {/* Header */}
+                  <div className="flex flex-none items-center gap-3 border-b border-white/[0.07] px-5 py-4">
+                    <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full" style={{ backgroundColor: overlayIconColor, color: '#ffffff' }}>
+                      <AmenityIconSvg iconKey={overlayIconKey} className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold leading-snug text-white/90">{overlayTitle}</p>
+                      {aw?.room && <p className="text-xs leading-snug" style={{ color: 'var(--body-color)', opacity: 0.60 }}>{aw.room}</p>}
+                    </div>
+                    <button type="button" onClick={closeAmenity}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white/80"
+                      aria-label="Close">
+                      <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
+                    {openAmenityId === 'wifi' ? (
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Network</p>
+                          <p className="text-sm" style={{ color: 'var(--body-color)' }}>{property.WiFiName}</p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Password</p>
+                            <p className="font-mono text-sm" style={{ color: 'var(--body-color)' }}>{property.WiFiPassword}</p>
+                          </div>
+                          <CopyPasswordButton password={property.WiFiPassword} />
+                        </div>
+                      </div>
+                    ) : openAmenityId === 'garage' ? (
+                      property.GarageCode
+                        ? <div className="space-y-1">
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Code</p>
+                            <p className="font-mono text-sm whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p>
+                          </div>
+                        : <p className="text-sm" style={{ color: 'var(--body-color)', opacity: 0.45 }}>Garage code not provided.</p>
+                    ) : aw ? renderWindowContent(aw) : null}
+                  </div>
+
+                </div>
+              </div>
+            );
+          })()}
 
           <NeedHelpModal
             open={needHelpOpen}

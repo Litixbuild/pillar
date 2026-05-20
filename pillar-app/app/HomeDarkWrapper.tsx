@@ -64,9 +64,9 @@ export default function HomeDarkWrapper() {
           style={{
             opacity: showToggle ? 1 : 0,
             pointerEvents: showToggle ? 'auto' : 'none',
-            borderColor: 'rgba(245,237,213,0.28)',
-            background: 'rgba(245,237,213,0.08)',
-            color: SANDY,
+            borderColor: dark ? 'rgba(245,237,213,0.28)' : 'rgba(255,255,255,0.35)',
+            background: dark ? 'rgba(245,237,213,0.08)' : 'rgba(255,255,255,0.15)',
+            color: dark ? SANDY : 'rgba(255,255,255,0.90)',
           }}
         >
           {dark ? <SunIcon /> : <MoonIcon />}
@@ -76,7 +76,7 @@ export default function HomeDarkWrapper() {
         <Link
           href="/manager/login"
           className="group flex items-center gap-2 text-[11px] lg:text-xs uppercase tracking-[0.22em] transition-opacity duration-300 hover:opacity-70"
-          style={{ color: SANDY }}
+          style={{ color: dark ? SANDY : 'rgba(255,255,255,0.90)' }}
         >
           Login / Sign Up
           <span className="transition-transform duration-300 group-hover:translate-x-1" style={{ fontSize: '13px' }}>
@@ -118,7 +118,7 @@ export default function HomeDarkWrapper() {
           <div className="flex-1 w-full flex justify-center lg:justify-end">
             <div className="relative w-full" style={{ maxWidth: '400px', aspectRatio: '400/525' }}>
               <Image
-                src="/images/splashhome.png"
+                src="/images/newbg1.png"
                 alt="Guest arriving at a luxury property"
                 fill
                 className="object-cover"
@@ -132,13 +132,12 @@ export default function HomeDarkWrapper() {
       <section className="pt-2 pb-6 lg:py-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
-            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/500' }}>
+            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/500', maskImage: 'linear-gradient(to left, transparent, black 6%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 6%)' }}>
               <Image
-                src="/images/splashqr.png"
+                src="/images/newbg2.png"
                 alt="Guest scanning QR code to access property guide"
                 fill
-                className="object-contain"
-                style={{ mixBlendMode: 'screen' }}
+                className="object-cover"
               />
             </div>
           </div>
@@ -188,13 +187,12 @@ export default function HomeDarkWrapper() {
       <section className="py-6 lg:py-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row-reverse items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
-            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/525' }}>
+            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/525', maskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', maskComposite: 'intersect', WebkitMaskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', WebkitMaskComposite: 'destination-in' }}>
               <Image
-                src="/images/splashplan.png"
+                src="/images/newbg3.png"
                 alt="Guest planning their perfect day with AI concierge"
                 fill
-                className="object-contain"
-                style={{ mixBlendMode: 'screen' }}
+                className="object-cover"
               />
             </div>
           </div>

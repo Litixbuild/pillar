@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 export const dynamic = "force-dynamic";
 
 const SANDY = "#F5EDD5";
+const SANDY_RGB = "245,237,213";
 
 function SunIcon() {
   return (
@@ -42,18 +43,36 @@ export default function ManagerSignupPage() {
     localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
+  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.80)";
+  const toggleStyle = dark
+    ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
+    : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
+
+  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
+  const headingColor = "#ffffff";
+  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
+  const signInColor = dark ? "rgba(245,237,213,0.55)" : "rgba(255,255,255,0.55)";
+
+  const inputCls = "h-10 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
+
+  const submitStyle = dark
+    ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
+    : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
+
   return (
     <div
-      className="relative flex flex-col items-center justify-center overflow-hidden px-5"
-      style={{ height: "100dvh" }}
+      className="relative flex flex-col items-center justify-center overflow-y-auto px-5 py-10"
+      style={{ minHeight: "100dvh" }}
     >
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+
       {/* Back arrow — top left */}
       <Link
-        href="/"
-        className="absolute top-5 left-5 z-20 text-white/35 transition-colors duration-200 hover:text-white/70"
-        aria-label="Back to home"
+        href="/manager/login"
+        className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70"
+        style={{ color: backArrowColor }}
+        aria-label="Back to login"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
           <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -65,11 +84,7 @@ export default function ManagerSignupPage() {
         type="button"
         onClick={toggleMode}
         className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
-        style={{
-          borderColor: "rgba(245,237,213,0.28)",
-          background: "rgba(245,237,213,0.08)",
-          color: SANDY,
-        }}
+        style={toggleStyle}
         title={dark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {dark ? <SunIcon /> : <MoonIcon />}
@@ -84,16 +99,16 @@ export default function ManagerSignupPage() {
           alt="Pillar"
           width={300}
           height={200}
-          className="mb-6 h-auto w-52 opacity-90 sm:mb-8 sm:w-72"
+          className="mb-4 h-auto w-36 opacity-90 sm:w-44"
           priority
         />
 
         {/* Heading */}
-        <div className="mb-7 text-center">
-          <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+        <div className="mb-5 text-center">
+          <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
             Create Account
           </h1>
-          <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
+          <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
         </div>
 
         {/* Error */}
@@ -105,7 +120,7 @@ export default function ManagerSignupPage() {
 
         {/* Form */}
         <form
-          className="w-full space-y-4"
+          className="w-full space-y-3"
           onSubmit={async (e) => {
             e.preventDefault();
             setError(null);
@@ -115,89 +130,45 @@ export default function ManagerSignupPage() {
             const email = String(fd.get("email") || "");
             const password = String(fd.get("password") || "");
             const confirmPassword = String(fd.get("confirmPassword") || "");
-
             const res = await fetch("/api/manager/signup", {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ name, email, password, confirmPassword }),
             });
-
             if (!res.ok) {
               const data = (await res.json().catch(() => ({}))) as { error?: string };
               setError(data.error || "Signup failed. Please try again.");
               setLoading(false);
               return;
             }
-
             window.location.href = "/manager";
           }}
         >
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5EDD5]/65">
-              Full Name
-            </p>
-            <input
-              name="name"
-              type="text"
-              autoComplete="name"
-              required
-              placeholder="Jane Smith"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Full Name</p>
+            <input name="name" type="text" autoComplete="name" required placeholder="Jane Smith" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5EDD5]/65">
-              Email
-            </p>
-            <input
-              name="email"
-              type="email"
-              autoComplete="username"
-              required
-              placeholder="you@domain.com"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
+            <input name="email" type="email" autoComplete="username" required placeholder="you@domain.com" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5EDD5]/65">
-              Password
-            </p>
-            <input
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              placeholder="Min. 8 characters"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
+            <input name="password" type="password" autoComplete="new-password" required minLength={8} placeholder="Min. 8 characters" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5EDD5]/65">
-              Confirm Password
-            </p>
-            <input
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              placeholder="••••••••"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Confirm Password</p>
+            <input name="confirmPassword" type="password" autoComplete="new-password" required placeholder="••••••••" className={inputCls} />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
-            style={{
-              background: "linear-gradient(to right, #F5EDD5, #e8d9b8)",
-              color: "#3d2a0a",
-              boxShadow: "0 0 20px rgba(245,237,213,0.25)",
-            }}
+            className="mt-0.5 h-10 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
+            style={submitStyle}
           >
             {loading ? "Creating account…" : "Create Account"}
           </button>
@@ -206,13 +177,12 @@ export default function ManagerSignupPage() {
             <Link
               href="/manager/login"
               className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-              style={{ color: "rgba(245,237,213,0.55)" }}
+              style={{ color: signInColor }}
             >
               Already have an account? Sign in
             </Link>
           </div>
         </form>
-
       </div>
     </div>
   );

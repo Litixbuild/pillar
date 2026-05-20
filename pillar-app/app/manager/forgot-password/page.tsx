@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const SANDY = "#F5EDD5";
+const SANDY_RGB = "245,237,213";
 
 function SunIcon() {
   return (
@@ -44,24 +45,37 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setStatus("loading");
-
     const email = String(new FormData(e.currentTarget).get("email") || "");
-
     const res = await fetch("/api/manager/forgot-password", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ email }),
     });
-
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       setError(data.error || "Something went wrong. Please try again.");
       setStatus("idle");
       return;
     }
-
     setStatus("sent");
   }
+
+  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.80)";
+  const toggleStyle = dark
+    ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
+    : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
+
+  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
+  const headingColor = "#ffffff";
+  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
+  const bodyTextColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.70)";
+  const backLinkColor = dark ? `rgba(${SANDY_RGB},0.55)` : "rgba(255,255,255,0.55)";
+
+  const inputCls = "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
+
+  const submitStyle = dark
+    ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
+    : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
 
   return (
     <div
@@ -70,11 +84,12 @@ export default function ForgotPasswordPage() {
     >
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+
       {/* Back arrow — top left */}
       <Link
         href="/manager/login"
         className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70"
-        style={{ color: "rgba(245,237,213,0.5)" }}
+        style={{ color: backArrowColor }}
         aria-label="Back to login"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
@@ -87,11 +102,7 @@ export default function ForgotPasswordPage() {
         type="button"
         onClick={toggleMode}
         className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
-        style={{
-          borderColor: "rgba(245,237,213,0.28)",
-          background: "rgba(245,237,213,0.08)",
-          color: SANDY,
-        }}
+        style={toggleStyle}
         title={dark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {dark ? <SunIcon /> : <MoonIcon />}
@@ -112,15 +123,14 @@ export default function ForgotPasswordPage() {
 
         {status === "sent" ? (
           <>
-            {/* Heading */}
             <div className="mb-7 text-center">
-              <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
                 Check your inbox
               </h1>
-              <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
             </div>
 
-            <p className="mb-8 text-center text-sm leading-relaxed" style={{ color: "rgba(245,237,213,0.65)" }}>
+            <p className="mb-8 text-center text-sm leading-relaxed" style={{ color: bodyTextColor }}>
               If that email is registered, we&apos;ve sent a reset link.
               Check your inbox and follow the link to set a new password.
             </p>
@@ -128,49 +138,35 @@ export default function ForgotPasswordPage() {
             <Link
               href="/manager/login"
               className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-              style={{ color: "rgba(245,237,213,0.55)" }}
+              style={{ color: backLinkColor }}
             >
               ← Back to Login
             </Link>
           </>
         ) : (
           <>
-            {/* Heading */}
             <div className="mb-7 text-center">
-              <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
                 Reset Password
               </h1>
-              <div className="mx-auto mt-3 h-px w-8" style={{ background: "linear-gradient(to right, rgba(245,237,213,0.5), transparent)" }} />
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
             </div>
 
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>
                   Email Address
                 </p>
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="manager@domain.com"
-                  className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-                />
+                <input name="email" type="email" autoComplete="email" required placeholder="manager@domain.com" className={inputCls} />
               </div>
 
-              {error && (
-                <p className="text-xs text-rose-300/80">{error}</p>
-              )}
+              {error && <p className="text-xs text-rose-300/80">{error}</p>}
 
               <button
                 type="submit"
                 disabled={status === "loading"}
                 className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
-                style={{
-                  background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
-                  color: "#3d2a0a",
-                  boxShadow: "0 0 20px rgba(245,237,213,0.25)",
-                }}
+                style={submitStyle}
               >
                 {status === "loading" ? "Sending…" : "Send Reset Link"}
               </button>
@@ -179,7 +175,7 @@ export default function ForgotPasswordPage() {
                 <Link
                   href="/manager/login"
                   className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-                  style={{ color: "rgba(245,237,213,0.55)" }}
+                  style={{ color: backLinkColor }}
                 >
                   ← Back to Login
                 </Link>

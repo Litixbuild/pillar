@@ -29,6 +29,9 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Pillar - Luxury Property Management Support",
   description: "Luxury property management support services",
+  icons: {
+    icon: '/images/pillarlogowhite.png',
+  },
 };
 
 export default function RootLayout({

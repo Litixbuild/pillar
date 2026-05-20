@@ -61,7 +61,7 @@ async function saveCoreFields(slug: string, fields: Partial<CoreFields>) {
 }
 
 async function saveWindowsToDb(slug: string, windows: AmenityWindow[]) {
-  const clean = windows.map(({ id, title, type, icon, body, url }) => ({ id, title, type, icon, body, url }));
+  const clean = windows.map(({ id, title, type, icon, body, url, room }) => ({ id, title, type, icon, body, url, room }));
   const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
@@ -75,10 +75,20 @@ async function createWindowInDb(slug: string, win: AmenityWindow, displayOrder: 
   const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ id: win.id, title: win.title, type: win.type, icon: win.icon, body: win.body, displayOrder }),
+    body: JSON.stringify({ id: win.id, title: win.title, type: win.type, icon: win.icon, body: win.body, room: win.room, displayOrder }),
   });
   const data = (await res.json().catch(() => null)) as { error?: string } | null;
   if (!res.ok) throw new Error(data?.error ?? `Create window failed (HTTP ${res.status})`);
+}
+
+async function saveRoomsToDb(slug: string, rooms: string[]) {
+  const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/rooms`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ rooms }),
+  });
+  const data = (await res.json().catch(() => null)) as { error?: string } | null;
+  if (!res.ok) throw new Error(data?.error ?? `Rooms save failed (HTTP ${res.status})`);
 }
 
 async function deleteWindowFromDb(slug: string, windowId: string) {
@@ -255,7 +265,7 @@ function IconPickerModal({ current, onSelect, onClose }: {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: `rgba(${SANDY_RGB},0.70)` }}>
+    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-[rgba(245,237,213,0.70)]">
       {children}
     </p>
   );
@@ -269,7 +279,7 @@ function TextInput({ value, onChange, placeholder, type = 'text' }: {
       type={type} value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/30 outline-none transition-all duration-200 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
+      className="h-11 w-full rounded-xl border bg-white/90 dark:bg-black/20 border-slate-200 dark:border-white/10 px-4 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none transition-all duration-200 focus:border-slate-400 dark:focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-slate-100 dark:focus:ring-[#F5EDD5]/15"
     />
   );
 }
@@ -282,7 +292,7 @@ function TextArea({ value, onChange, placeholder, rows = 4 }: {
       value={value} rows={rows}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-all duration-200 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
+      className="w-full resize-y rounded-xl border bg-white/90 dark:bg-black/20 border-slate-200 dark:border-white/10 px-4 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none transition-all duration-200 focus:border-slate-400 dark:focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-slate-100 dark:focus:ring-[#F5EDD5]/15"
     />
   );
 }
@@ -425,49 +435,298 @@ const TILES: Tile[] = [
   },
 ];
 
-function GridView({ onNavigate, propertyName, dark }: { onNavigate: (v: View) => void; propertyName: string; dark: boolean }) {
+function calcCompletion(core: CoreFields, windows: WindowDraft[], woCats: WOCategory[] | undefined): number {
+  const fields = [
+    core.PropertyName, core.PropertyAddress, core.DetailedHouseBio,
+    core.HouseRules, core.WiFiName, core.WiFiPassword, core.GarageCode, core.ManagerPhone,
+  ];
+  const propPct = (fields.filter((f) => f.trim()).length / fields.length) * 100;
+  const amenPct = windows.length === 0 ? 0 : Math.min(100, (windows.length / 3) * 100);
+  const cats = woCats ?? [];
+  const woWithContact = cats.filter((c) => c.phone || c.email).length;
+  const woPct = cats.length === 0 ? 0 : Math.min(100, (woWithContact / cats.length) * 100);
+  return Math.round(propPct * 0.4 + amenPct * 0.3 + woPct * 0.3);
+}
+
+function getMissingItems(core: CoreFields, windows: WindowDraft[], woCats: WOCategory[] | undefined): string[] {
+  const missing: string[] = [];
+  if (!core.PropertyName.trim()) missing.push('Property name');
+  if (!core.PropertyAddress.trim()) missing.push('Property address');
+  if (!core.DetailedHouseBio.trim()) missing.push('Property description');
+  if (!core.HouseRules.trim()) missing.push('House rules');
+  if (!core.WiFiName.trim()) missing.push('Wi-Fi name');
+  if (!core.WiFiPassword.trim()) missing.push('Wi-Fi password');
+  if (!core.ManagerPhone.trim()) missing.push('Manager phone number');
+  if (windows.length === 0) missing.push('Add at least one amenity');
+  else if (windows.length < 3) missing.push(`Add ${3 - windows.length} more ${windows.length === 2 ? 'amenity' : 'amenities'}`);
+  const cats = woCats ?? [];
+  const missingContacts = cats.filter((c) => !c.phone && !c.email).length;
+  if (missingContacts > 0) missing.push(`Add contact info to ${missingContacts} work order ${missingContacts === 1 ? 'category' : 'categories'}`);
+  return missing;
+}
+
+function ProgressBanner({ pct, dark, missing }: { pct: number; dark: boolean; missing: string[] }) {
+  const [open, setOpen] = useState(false);
+  // Interpolate hue 0 (red) → 130 (green) based on completion
+  const hue = Math.round(pct * 1.3);
+  const hueStart = Math.max(0, hue - 18);
+  const fillGradient = `linear-gradient(90deg, hsl(${hueStart},82%,50%), hsl(${hue},76%,58%))`;
+  const glowColor = `hsl(${hue},70%,55%)`;
+  const pctColor = pct >= 100 ? 'hsl(130,60%,42%)' : (dark ? '#ffffff' : '#1e293b');
+  const labelColor = dark ? 'rgba(255,255,255,0.50)' : 'rgba(30,41,59,0.50)';
+  const legendColor = dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.45)';
+  const toggleColor = dark ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.45)';
+  const missingColor = dark ? 'rgba(255,255,255,0.70)' : 'rgba(30,41,59,0.65)';
+
   return (
-    <div className="flex flex-col px-4 pb-4 pt-3" style={{ height: 'calc(100dvh - 64px)' }}>
-      <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
-        {TILES.map((tile) => {
-          const isPropertyInfo = tile.id === 'property-info';
-          const lightBlueOverride = isPropertyInfo && !dark;
+    <div
+      className="rounded-2xl px-5 pt-4 mb-3 shrink-0 overflow-hidden"
+      style={{
+        background: dark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.92)',
+        border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.30)' : '0 2px 12px rgba(0,0,0,0.06)',
+      }}
+    >
+      <div className="flex items-end justify-between mb-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>
+            Profile Complete
+          </p>
+          <p className="text-3xl font-bold tabular-nums mt-0.5" style={{ color: pctColor }}>
+            {pct}<span className="text-base font-semibold opacity-55">%</span>
+          </p>
+        </div>
+        <div className="flex gap-3 pb-0.5">
+          {([
+            { label: 'Info', color: '#F97316' },
+            { label: 'Amenities', color: '#3B82F6' },
+            { label: 'Orders', color: '#10B981' },
+          ] as const).map(({ label, color }) => (
+            <div key={label} className="flex items-center gap-1">
+              <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: color }} />
+              <span className="text-[9px] font-medium uppercase tracking-wide" style={{ color: legendColor }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          const shadow = lightBlueOverride
-            ? '0 0 0 1px rgba(251,146,60,0.38), 0 0 40px rgba(234,88,12,0.22), inset 0 1px 0 rgba(255,255,255,0.07)'
-            : tile.shadow;
-          const shadowHover = lightBlueOverride
-            ? '0 0 0 1px rgba(251,146,60,0.55), 0 0 60px rgba(234,88,12,0.38), inset 0 1px 0 rgba(255,255,255,0.10)'
-            : tile.shadowHover;
-          const borderStyle = lightBlueOverride
-            ? { borderColor: 'rgba(251,146,60,0.35)', background: 'rgba(234,88,12,0.04)' }
-            : tile.borderStyle;
-          const iconStyle = lightBlueOverride
-            ? { background: 'rgba(251,146,60,0.14)', border: '1px solid rgba(254,215,170,0.30)', color: 'rgb(253,186,116)' }
-            : tile.iconStyle;
-          const textStyle = lightBlueOverride
-            ? { color: 'rgb(254,215,170)' }
-            : tile.textStyle;
+      {/* Progress bar */}
+      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)' }}>
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${pct}%`, background: fillGradient, boxShadow: `0 0 12px ${glowColor}44` }}
+        />
+      </div>
 
+      {/* Dropdown toggle — only shown when there are missing items */}
+      {missing.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center justify-center gap-1 pt-2.5 pb-2 transition-opacity duration-200 hover:opacity-80 active:opacity-60"
+          style={{ color: toggleColor }}
+          aria-expanded={open}
+        >
+          <span className="text-[9px] font-semibold uppercase tracking-[0.18em]">
+            {open ? 'Hide' : `${missing.length} item${missing.length > 1 ? 's' : ''} remaining`}
+          </span>
+          <svg
+            width="12" height="12" viewBox="0 0 12 12" fill="none"
+            className="transition-transform duration-300 ease-out"
+            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          >
+            <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+
+      {/* Expandable missing items list */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-out"
+        style={{ maxHeight: open ? `${missing.length * 32 + 16}px` : '0px', opacity: open ? 1 : 0 }}
+      >
+        <div className="pb-3 space-y-1.5">
+          {missing.map((item) => (
+            <div key={item} className="flex items-center gap-2 px-1">
+              <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'hsl(0,72%,64%)' }} />
+              <span className="text-[11px]" style={{ color: missingColor }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom padding when no toggle shown */}
+      {missing.length === 0 && <div className="pb-4" />}
+    </div>
+  );
+}
+
+type GridTileId = 'property-info' | 'amenities' | 'work-orders' | 'help';
+
+interface GridTileDef {
+  id: GridTileId;
+  label: string;
+  sub: string;
+  icon: React.ReactNode;
+}
+
+interface TileColorMode {
+  bg: string;
+  border: string;
+  backdropFilter?: string;
+  label: string;
+  sub: string;
+  shadow: string;
+  shadowHover: string;
+}
+
+/* All four tiles share a neutral slate base — vibrant color lives only in the icons. */
+const SLATE_LIGHT: TileColorMode = {
+  bg: 'rgba(255,255,255,0.92)',
+  border: 'transparent',
+  backdropFilter: 'blur(20px)',
+  label: '#1e293b',
+  sub: 'rgba(30,41,59,0.52)',
+  shadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+  shadowHover: '0 4px 20px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.06)',
+};
+const SLATE_DARK: TileColorMode = {
+  bg: 'rgba(8,8,8,0.95)',
+  border: 'transparent',
+  backdropFilter: 'blur(20px)',
+  label: '#ffffff',
+  sub: 'rgba(255,255,255,0.52)',
+  shadow: '0 4px 24px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)',
+  shadowHover: '0 8px 32px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.10)',
+};
+const TILE_COLORS: Record<GridTileId, { light: TileColorMode; dark: TileColorMode }> = {
+  'property-info': { light: SLATE_LIGHT, dark: SLATE_DARK },
+  amenities:       { light: SLATE_LIGHT, dark: SLATE_DARK },
+  'work-orders':   { light: SLATE_LIGHT, dark: SLATE_DARK },
+  help:            { light: SLATE_LIGHT, dark: SLATE_DARK },
+};
+
+/* Per-tile gradient stops — used for both the icon SVGs and the gradient borders. */
+const TILE_GRADIENTS: Record<GridTileId, [string, string]> = {
+  'property-info': ['#F97316', '#FBBF24'],
+  amenities:       ['#3B82F6', '#06B6D4'],
+  'work-orders':   ['#10B981', '#84CC16'],
+  help:            ['#EF4444', '#FB923C'],
+};
+
+const GRID_TILES: GridTileDef[] = [
+  {
+    id: 'property-info',
+    label: 'Property Info',
+    sub: 'Name, rules & bio',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad-pi" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F97316" />
+            <stop offset="100%" stopColor="#FBBF24" />
+          </linearGradient>
+        </defs>
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="url(#grad-pi)" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d="M9 21V12h6v9" stroke="url(#grad-pi)" strokeWidth="1.8" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: 'amenities',
+    label: 'Amenities',
+    sub: 'Windows & content',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad-am" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="url(#grad-am)" strokeWidth="1.8" />
+        <rect x="13" y="3" width="8" height="8" rx="1.5" stroke="url(#grad-am)" strokeWidth="1.8" />
+        <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="url(#grad-am)" strokeWidth="1.8" />
+        <rect x="13" y="13" width="8" height="8" rx="1.5" stroke="url(#grad-am)" strokeWidth="1.8" />
+      </svg>
+    ),
+  },
+  {
+    id: 'work-orders',
+    label: 'Work Orders',
+    sub: 'Routing & categories',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad-wo" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#84CC16" />
+          </linearGradient>
+        </defs>
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="url(#grad-wo)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    id: 'help',
+    label: 'Help',
+    sub: 'Guides & support',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad-hl" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="100%" stopColor="#FB923C" />
+          </linearGradient>
+        </defs>
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="url(#grad-hl)" strokeWidth="1.8" />
+        <path d="M9.5 9.5a2.5 2.5 0 014.5 1.5c0 2-2.5 2.2-2.5 3.8" stroke="url(#grad-hl)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="17.5" x2="12" y2="17.5" stroke="url(#grad-hl)" strokeWidth="2.6" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
+
+function GridView({ onNavigate, completion, dark, missing }: { onNavigate: (v: View) => void; completion: number; dark: boolean; missing: string[] }) {
+  return (
+    <div className="flex flex-col px-4 pb-4 pt-3" style={{ height: 'calc(100dvh - 64px - 80px)' }}>
+      <ProgressBanner pct={completion} dark={dark} missing={missing} />
+      <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr' }}>
+        {GRID_TILES.map((tile) => {
+          const m = TILE_COLORS[tile.id][dark ? 'dark' : 'light'];
+          const [gFrom, gTo] = TILE_GRADIENTS[tile.id];
           return (
             <button
               key={tile.id}
               type="button"
               onClick={() => onNavigate(tile.id)}
-              className={`group rounded-2xl border backdrop-blur-sm transition-all duration-300 active:scale-[0.97] ${tile.wide ? 'col-span-2 flex items-center justify-center gap-5' : 'flex flex-col items-center justify-center gap-3'} ${tile.border} ${tile.bg}`}
-              style={{ boxShadow: shadow, ...borderStyle }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = shadowHover; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = shadow; }}
+              className="group w-full h-full transition-all duration-300 active:scale-[0.96] flex flex-col items-center justify-center gap-4 rounded-2xl"
+              style={dark ? {
+                backgroundImage: `linear-gradient(rgba(8,8,8,0.95), rgba(8,8,8,0.95)), linear-gradient(135deg, ${gFrom}, ${gTo})`,
+                backgroundOrigin: 'padding-box, border-box',
+                backgroundClip: 'padding-box, border-box',
+                WebkitBackgroundClip: 'padding-box, border-box',
+                border: '1.5px solid transparent',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: m.shadow,
+              } as React.CSSProperties : {
+                background: m.bg,
+                border: '1px solid rgba(0,0,0,0.07)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: m.shadow,
+              } as React.CSSProperties}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = m.shadowHover; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = m.shadow; }}
             >
-              <div
-                className={`flex shrink-0 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-105 ${tile.wide ? 'h-14 w-14' : 'h-14 w-14'} ${tile.iconBg}`}
-                style={iconStyle}
-              >
+              <div className="shrink-0 transition-transform duration-300 group-hover:scale-110">
                 {tile.icon}
               </div>
-              <div className="text-center">
-                <p className={`text-sm font-semibold ${tile.text}`} style={textStyle}>{tile.label}</p>
-                <p className="mt-0.5 text-xs text-white/75">{tile.sub}</p>
+              <div className="text-center px-2">
+                <p className="text-sm font-bold tracking-wide" style={{ color: m.label }}>{tile.label}</p>
+                <p className="mt-0.5 text-xs" style={{ color: m.sub }}>{tile.sub}</p>
               </div>
             </button>
           );
@@ -498,10 +757,10 @@ function PropertyInfoView({
   const logoFileRef = useRef<HTMLInputElement | null>(null);
 
   const cardStyle: React.CSSProperties = dark
-    ? { background: 'rgba(18,18,18,0.80)', border: `1px solid rgba(${SANDY_RGB},0.12)`, backdropFilter: 'blur(20px)' }
-    : { background: 'rgba(255,255,255,0.14)', border: `1px solid rgba(${SANDY_RGB},0.20)`, backdropFilter: 'blur(16px)' };
-  const headerBorder = { borderBottom: `1px solid rgba(${SANDY_RGB},0.10)` };
-  const sectionLabel = { color: `rgba(${SANDY_RGB},0.70)` };
+    ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
+  const headerBorder = { borderBottom: dark ? `1px solid rgba(${SANDY_RGB},0.08)` : '1px solid rgba(0,0,0,0.06)' };
+  const sectionLabel = { color: dark ? `rgba(${SANDY_RGB},0.70)` : 'rgba(51,65,85,0.65)' };
 
   function setField<K extends keyof CoreFields>(key: K, val: string) {
     setCore((prev) => ({ ...prev, [key]: val }));
@@ -521,7 +780,7 @@ function PropertyInfoView({
   }
 
   return (
-    <div className="relative pb-32">
+    <div className="relative pb-48">
       <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
 
         {saveError ? (
@@ -604,7 +863,7 @@ function PropertyInfoView({
                     <img src={logoUrl} alt="Logo preview" className="object-contain" style={{ width: `${core.LogoSize}px`, maxHeight: '120px' }} />
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-black/10 py-5 text-sm text-white/25">
+                  <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/10 py-5 text-sm text-slate-400 dark:text-white/25">
                     No logo uploaded
                   </div>
                 )}
@@ -613,7 +872,7 @@ function PropertyInfoView({
                     onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }}
                   />
                   <button type="button" disabled={logoUploading} onClick={() => logoFileRef.current?.click()}
-                    className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 text-xs font-semibold text-white/55 transition-all hover:bg-white/8 hover:text-white/80 disabled:opacity-45"
+                    className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 dark:border-white/8 bg-slate-50 dark:bg-white/4 px-3 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-800 dark:hover:text-white/80 disabled:opacity-45"
                   >
                     <UploadIcon />
                     {logoUploading ? 'Uploading…' : logoUrl ? 'Replace logo' : 'Upload logo'}
@@ -625,10 +884,10 @@ function PropertyInfoView({
             <FieldGroup label={`Logo Size — ${core.LogoSize}px`}>
               <input type="range" min={40} max={200} step={4} value={core.LogoSize}
                 onChange={(e) => setCore((prev) => ({ ...prev, LogoSize: Number(e.target.value) }))}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10"
-                style={{ accentColor: SANDY }}
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 dark:bg-white/10"
+                style={{ accentColor: dark ? SANDY : '#3b82f6' }}
               />
-              <div className="flex justify-between text-[10px] text-white/22">
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-white/22">
                 <span>Small (40px)</span><span>Large (200px)</span>
               </div>
             </FieldGroup>
@@ -637,10 +896,12 @@ function PropertyInfoView({
       </div>
 
       {/* Save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-6">
+      <div className="fixed inset-x-0 z-40 px-4 pb-2" style={{ bottom: '104px' }}>
         <button type="button" disabled={saving} onClick={onSave}
-          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-[#3d2a0a] transition-all duration-300 disabled:opacity-50"
-          style={{ background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.22)` }}
+          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+          style={dark
+            ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
+            : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
         >
           {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Changes'}
         </button>
@@ -651,8 +912,16 @@ function PropertyInfoView({
 
 /* ─── Amenities view ──────────────────────────────────── */
 
+const ROOM_SUGGESTIONS = [
+  'Entrance', 'Foyer', 'Kitchen', 'Dining Room', 'Living Room',
+  'Family Room', 'Den', 'Office', 'Study',
+  'Master Bedroom', 'Bedroom 1', 'Bedroom 2', 'Bedroom 3',
+  'Bathroom', 'Master Bathroom', 'Half Bath', 'Laundry Room',
+  'Basement', 'Garage', 'Patio', 'Deck', 'Backyard',
+];
+
 function AmenitiesView({
-  slug, windows, setWindows, saving, saved, onSave, saveError, dark,
+  slug, windows, setWindows, saving, saved, onSave, saveError, dark, initialRooms,
 }: {
   slug: string;
   windows: WindowDraft[];
@@ -662,12 +931,36 @@ function AmenitiesView({
   onSave: () => void;
   saveError: string | null;
   dark: boolean;
+  initialRooms: string[];
 }) {
+  const [rooms, setRooms] = useState<string[]>(initialRooms);
+  const [roomInput, setRoomInput] = useState('');
+  const [roomsSaving, setRoomsSaving] = useState(false);
+
+  async function persistRooms(next: string[]) {
+    setRoomsSaving(true);
+    try { await saveRoomsToDb(slug, next); } catch { /* ignore */ }
+    finally { setRoomsSaving(false); }
+  }
+  function addRoom(name: string) {
+    const t = name.trim();
+    if (!t || rooms.includes(t)) return;
+    const next = [...rooms, t];
+    setRooms(next);
+    void persistRooms(next);
+  }
+  function removeRoom(name: string) {
+    const next = rooms.filter((r) => r !== name);
+    setRooms(next);
+    void persistRooms(next);
+  }
+
   const [addOpen, setAddOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType] = useState<AmenityWindow['type']>('text');
   const [newIcon, setNewIcon] = useState(DEFAULT_ICON_KEY);
   const [newBody, setNewBody] = useState('');
+  const [newRoom, setNewRoom] = useState('');
   const [addSaving, setAddSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -675,13 +968,14 @@ function AmenitiesView({
   const [previewWindow, setPreviewWindow] = useState<WindowDraft | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const windowCard: React.CSSProperties = dark
-    ? { background: 'rgba(14,14,14,0.75)', border: `1px solid rgba(${SANDY_RGB},0.10)` }
-    : { background: 'rgba(255,255,255,0.12)', border: `1px solid rgba(${SANDY_RGB},0.16)` };
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const windowCard: React.CSSProperties = dark
+    ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
   const modalCardStyle: React.CSSProperties = dark
     ? { background: 'rgba(12,12,12,0.97)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 80px rgba(0,0,0,0.85)' }
-    : { background: 'rgba(250,246,238,0.97)', border: `1px solid rgba(${SANDY_RGB},0.30)`, boxShadow: '0 24px 80px rgba(0,0,0,0.22)' };
+    : { background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(0,0,0,0.09)', boxShadow: '0 24px 80px rgba(0,0,0,0.22)' };
   const modalHeading = dark ? 'text-white' : 'text-[#2C2C2C]';
   const modalSub = dark ? 'text-white/40' : 'text-[#2C2C2C]/55';
   const modalInputCls = dark
@@ -700,10 +994,14 @@ function AmenitiesView({
   const modalHint = dark ? 'text-white/30' : 'text-[#2C2C2C]/45';
   const modalCancelCls = dark
     ? 'border-white/[0.07] bg-white/4 text-white/55 hover:bg-white/8 hover:text-white/75'
-    : `border-[#F5EDD5]/35 bg-white/50 text-[#2C2C2C]/65 hover:bg-white/75 hover:text-[#2C2C2C]/85`;
+    : 'border-black/10 bg-black/5 text-[#2C2C2C]/65 hover:bg-black/8 hover:text-[#2C2C2C]/85';
 
   function setWindowBody(id: string, body: string) {
     setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, body } : w)));
+  }
+
+  function setWindowRoom(id: string, room: string) {
+    setWindows((prev) => prev.map((w) => (w.id === id ? { ...w, room } : w)));
   }
 
   function setWindowIcon(id: string, icon: string) {
@@ -726,13 +1024,13 @@ function AmenitiesView({
     const title = newTitle.trim();
     if (!title) return;
     const id = generateWindowId();
-    const win: WindowDraft = { id, title, type: newType, icon: newIcon || DEFAULT_ICON_KEY, body: newType === 'text' && newBody.trim() ? newBody.trim() : undefined };
+    const win: WindowDraft = { id, title, type: newType, icon: newIcon || DEFAULT_ICON_KEY, body: newType === 'text' && newBody.trim() ? newBody.trim() : undefined, room: newRoom.trim() || undefined };
     setAddSaving(true);
     try {
       await createWindowInDb(slug, win, windows.length);
       setWindows((prev) => [...prev, win]);
       setAddOpen(false);
-      setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody('');
+      setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); setNewRoom('');
     } catch (e) {
       // error surfaced via saveError in parent
     } finally {
@@ -762,7 +1060,7 @@ function AmenitiesView({
   }
 
   return (
-    <div className="relative pb-32">
+    <div className="relative pb-48">
       <div className="mx-auto max-w-2xl space-y-3 px-4 pt-4">
 
         {saveError ? (
@@ -771,108 +1069,210 @@ function AmenitiesView({
           </div>
         ) : null}
 
+        {/* Rooms panel */}
+        <div className="overflow-hidden rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)]" style={windowCard}>
+          <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 border-b" style={{ borderColor: dark ? `rgba(${SANDY_RGB},0.08)` : 'rgba(0,0,0,0.06)' }}>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Property Rooms</p>
+              <p className="text-xs mt-0.5" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.50)' }}>
+                Define rooms so guests see amenities organized by room.
+              </p>
+            </div>
+            {roomsSaving && <span className="text-xs" style={{ color: dark ? `rgba(${SANDY_RGB},0.55)` : 'rgba(30,41,59,0.40)' }}>Saving…</span>}
+          </div>
+          <div className="px-4 py-3 space-y-3">
+            {rooms.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {rooms.map((r) => (
+                  <span key={r} className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+                    style={dark
+                      ? { background: `rgba(${SANDY_RGB},0.10)`, color: `rgba(${SANDY_RGB},0.80)`, border: `1px solid rgba(${SANDY_RGB},0.18)` }
+                      : { background: 'rgba(0,0,0,0.06)', color: '#1e293b', border: '1px solid rgba(0,0,0,0.10)' }}>
+                    {r}
+                    <button type="button" onClick={() => removeRoom(r)}
+                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100"
+                      aria-label={`Remove ${r}`}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input type="text" value={roomInput} onChange={(e) => setRoomInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addRoom(roomInput); setRoomInput(''); } }}
+                placeholder="e.g. Master Bedroom, Patio…"
+                className={`flex-1 h-9 rounded-xl border px-3 text-xs outline-none transition-all focus:ring-1 ${modalInputCls}`}
+              />
+              <button type="button" disabled={!roomInput.trim() || rooms.includes(roomInput.trim())} onClick={() => { addRoom(roomInput); setRoomInput(''); }}
+                className="inline-flex h-9 items-center justify-center rounded-xl px-3 text-xs font-semibold transition-all disabled:opacity-40"
+                style={dark ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` } : { background: 'rgba(15,23,42,0.88)', color: '#fff' }}>
+                Add
+              </button>
+            </div>
+            {ROOM_SUGGESTIONS.filter((s) => !rooms.includes(s)).length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-[0.15em]" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.40)' }}>Quick add</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ROOM_SUGGESTIONS.filter((s) => !rooms.includes(s)).slice(0, 10).map((s) => (
+                    <button key={s} type="button" onClick={() => addRoom(s)}
+                      className="rounded-full px-2.5 py-0.5 text-xs transition-all hover:opacity-80"
+                      style={dark
+                        ? { background: `rgba(${SANDY_RGB},0.05)`, color: `rgba(${SANDY_RGB},0.55)`, border: `1px solid rgba(${SANDY_RGB},0.12)` }
+                        : { background: 'rgba(0,0,0,0.04)', color: 'rgba(30,41,59,0.60)', border: '1px solid rgba(0,0,0,0.08)' }}>
+                      + {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {windows.length === 0 ? (
-          <p className="py-6 text-center text-sm text-white/30">
+          <p className="py-6 text-center text-sm text-slate-400 dark:text-white/30">
             No windows yet — add text, images, videos, or PDFs that guests see inside the amenities screen.
           </p>
         ) : (
-          windows.map((w, idx) => (
-            <div key={w.id} className="overflow-hidden rounded-xl" style={windowCard}>
-              <div className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <button type="button" onClick={() => setIconPickerFor(w.id)} title="Change icon"
-                      className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
-                      style={{ borderColor: `rgba(${SANDY_RGB},0.22)`, background: `rgba(${SANDY_RGB},0.08)`, color: SANDY }}
-                    >
-                      <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-4 w-4" />
-                    </button>
-                    <span className="truncate text-sm font-medium text-white/85">{w.title}</span>
+          windows.map((w, idx) => {
+            const isExpanded = expandedId === w.id;
+            return (
+              <div key={w.id} className="overflow-hidden rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)]" style={windowCard}>
+                {/* Always-rendered hidden file input */}
+                {w.type !== 'text' && (
+                  <input type="file" ref={(el) => { fileRefs.current[w.id] = el; }}
+                    accept={w.type === 'image' ? 'image/*' : w.type === 'video' ? 'video/*' : w.type === 'pdf' ? 'application/pdf' : undefined}
+                    className="hidden"
+                    onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleUpload(w.id, f); }}
+                  />
+                )}
+
+                {/* Title row: icon + name + type badge */}
+                <div className="flex items-center gap-3 px-4 pt-3.5 pb-2.5">
+                  <button type="button" onClick={() => setIconPickerFor(w.id)} title="Change icon"
+                    className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
+                    style={dark
+                      ? { borderColor: `rgba(${SANDY_RGB},0.22)`, background: `rgba(${SANDY_RGB},0.08)`, color: SANDY }
+                      : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.06)', color: '#475569' }}
+                  >
+                    <AmenityIconSvg iconKey={w.icon ?? DEFAULT_ICON_KEY} className="h-4 w-4" />
+                  </button>
+                  <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-slate-800 dark:text-white/90 leading-snug">{w.title}</span>
+                    {w.room && <span className="text-xs text-slate-400 dark:text-white/35 leading-snug">{w.room}</span>}
                   </div>
-                  <div className="flex flex-none items-center gap-1.5">
-                    {deleteConfirmId === w.id ? (
-                      <>
-                        <span className="text-xs text-white/50">Delete?</span>
-                        <button type="button"
-                          onClick={() => { setDeleteConfirmId(null); handleRemoveWindow(w.id); }}
-                          className="inline-flex h-7 items-center rounded-lg border border-rose-500/35 bg-rose-500/15 px-2.5 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/25"
-                        >Yes</button>
-                        <button type="button" onClick={() => setDeleteConfirmId(null)}
-                          className="inline-flex h-7 items-center rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs font-semibold text-white/55 transition-all hover:bg-white/10 hover:text-white/80"
-                        >No</button>
-                      </>
-                    ) : (
-                      <button type="button" disabled={deletingId === w.id} onClick={() => setDeleteConfirmId(w.id)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/18 bg-rose-500/6 text-rose-400/55 transition-all hover:bg-rose-500/14 hover:text-rose-300/85 disabled:opacity-40"
-                      >
-                        {deletingId === w.id
-                          ? <span className="h-3 w-3 animate-spin rounded-full border border-rose-400/40 border-t-rose-400" />
-                          : <TrashIcon />}
-                      </button>
-                    )}
-                  </div>
+                  <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/30 border border-slate-200 dark:border-white/8">{w.type}</span>
                 </div>
-                <div className="border-t border-white/5 px-4 py-3">
-                {w.type === 'text' ? (
-                  <TextArea value={w.body ?? ''} onChange={(v) => setWindowBody(w.id, v)} placeholder="Enter content for guests…" rows={3} />
-                ) : (
-                  <div className="flex flex-col items-center gap-2.5">
-                    {w.url ? (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewWindow(w)}
-                        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all hover:brightness-110 active:scale-[0.98] ${TYPE_STYLES[w.type]}`}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        {w.type === 'image' ? 'Image' : w.type === 'video' ? 'Video' : 'PDF'} attached — tap to preview
-                      </button>
-                    ) : (
-                      <p className="text-xs text-white/30">No file uploaded yet.</p>
-                    )}
-                    <div className="flex flex-col items-center gap-2">
-                      <input type="file" ref={(el) => { fileRefs.current[w.id] = el; }}
-                        accept={w.type === 'image' ? 'image/*' : w.type === 'video' ? 'video/*' : w.type === 'pdf' ? 'application/pdf' : undefined}
-                        className="hidden"
-                        onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleUpload(w.id, f); }}
-                      />
-                      <button type="button" disabled={w._uploading} onClick={() => fileRefs.current[w.id]?.click()}
-                        className="inline-flex h-8 items-center gap-2 rounded-lg border border-white/20 bg-white/8 px-3 text-xs font-semibold text-white transition-all hover:bg-white/14 disabled:opacity-45"
-                      >
-                        <UploadIcon />
-                        {w._uploading ? 'Uploading…' : w.url ? 'Replace file' : 'Upload file'}
-                      </button>
-                      {w._uploadError ? <span className="text-xs text-rose-400/75">{w._uploadError}</span> : null}
-                    </div>
+
+                {/* Room selector */}
+                {rooms.length > 0 && (
+                  <div className="flex items-center gap-2 px-4 pb-2">
+                    <span className="shrink-0 text-[10px] uppercase tracking-[0.15em]" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.40)' }}>Room</span>
+                    <select value={w.room ?? ''} onChange={(e) => setWindowRoom(w.id, e.target.value)}
+                      className={`flex-1 h-7 appearance-none rounded-lg border px-2 text-xs outline-none transition-all ${dark
+                        ? 'border-white/10 bg-black/25 text-white/70'
+                        : 'border-black/[0.10] bg-white/80 text-slate-600'}`}>
+                      <option value="">— Unassigned —</option>
+                      {rooms.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
                   </div>
                 )}
+
+                {/* Actions row */}
+                <div className="flex items-center gap-1.5 px-4 pb-3 border-t border-slate-100 dark:border-white/5 pt-2.5">
+                  {w.type !== 'text' && (
+                    <button type="button" disabled={w._uploading} onClick={() => fileRefs.current[w.id]?.click()}
+                      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/6 px-2.5 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/12 disabled:opacity-40"
+                    >
+                      <UploadIcon />
+                      {w._uploading ? 'Uploading…' : w.url ? 'Replace file' : 'Upload file'}
+                    </button>
+                  )}
+                  {w.type === 'text' && (
+                    <button type="button" onClick={() => setExpandedId(isExpanded ? null : w.id)}
+                      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/6 px-2.5 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/12"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {isExpanded ? 'Hide content' : 'Edit content'}
+                    </button>
+                  )}
+                  <div className="flex-1" />
+                  <button type="button" disabled={idx === 0} onClick={() => moveWindow(w.id, -1)}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/40 transition-all hover:bg-slate-100 dark:hover:bg-white/8 disabled:opacity-25"
+                  ><ChevronUpIcon /></button>
+                  <button type="button" disabled={idx === windows.length - 1} onClick={() => moveWindow(w.id, 1)}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/40 transition-all hover:bg-slate-100 dark:hover:bg-white/8 disabled:opacity-25"
+                  ><ChevronDownIcon /></button>
+                  {deleteConfirmId === w.id ? (
+                    <>
+                      <span className="text-xs text-slate-500 dark:text-white/50">Delete?</span>
+                      <button type="button" onClick={() => { setDeleteConfirmId(null); handleRemoveWindow(w.id); }}
+                        className="inline-flex h-7 items-center rounded-lg border border-rose-500/35 bg-rose-500/15 px-2.5 text-xs font-semibold text-rose-400 transition-all hover:bg-rose-500/25"
+                      >Yes</button>
+                      <button type="button" onClick={() => setDeleteConfirmId(null)}
+                        className="inline-flex h-7 items-center rounded-lg border border-slate-200 dark:border-white/10 px-2.5 text-xs font-semibold text-slate-500 dark:text-white/45 transition-all hover:bg-slate-100 dark:hover:bg-white/8"
+                      >No</button>
+                    </>
+                  ) : (
+                    <button type="button" disabled={deletingId === w.id} onClick={() => setDeleteConfirmId(w.id)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-400/20 text-rose-400/50 transition-all hover:bg-rose-500/10 hover:text-rose-400 disabled:opacity-40"
+                    >
+                      {deletingId === w.id
+                        ? <span className="h-3 w-3 animate-spin rounded-full border border-rose-400/40 border-t-rose-400" />
+                        : <TrashIcon />}
+                    </button>
+                  )}
+                </div>
+
+                {/* Expandable text content */}
+                {isExpanded && w.type === 'text' && (
+                  <div className="border-t border-slate-100 dark:border-white/5 px-4 pb-4 pt-3">
+                    <TextArea value={w.body ?? ''} onChange={(v) => setWindowBody(w.id, v)} placeholder="Enter content for guests…" rows={3} />
+                  </div>
+                )}
+
+                {/* File preview (non-text, when a file exists) */}
+                {w.type !== 'text' && w.url && (
+                  <div className="border-t border-slate-100 dark:border-white/5 px-4 pb-4 pt-3">
+                    <button type="button" onClick={() => setPreviewWindow(w)}
+                      className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-all hover:brightness-110 active:scale-[0.98] ${TYPE_STYLES[w.type]}`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {w.type === 'image' ? 'Image' : w.type === 'video' ? 'Video' : 'PDF'} attached — tap to preview
+                    </button>
+                    {w._uploadError && <p className="mt-1.5 text-xs text-rose-400/75 text-center">{w._uploadError}</p>}
+                  </div>
+                )}
+                {w.type !== 'text' && !w.url && w._uploadError && (
+                  <div className="border-t border-slate-100 dark:border-white/5 px-4 pb-3 pt-2">
+                    <p className="text-xs text-rose-400/75">{w._uploadError}</p>
+                  </div>
+                )}
+
               </div>
-              {/* Bottom bar: arrows bottom-right */}
-              <div className="flex items-center justify-end gap-1 border-t border-white/5 px-3 py-2">
-                <button type="button" disabled={idx === 0} onClick={() => moveWindow(w.id, -1)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-white/6 text-white transition-all hover:bg-white/12 disabled:opacity-25"
-                ><ChevronUpIcon /></button>
-                <button type="button" disabled={idx === windows.length - 1} onClick={() => moveWindow(w.id, 1)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-white/6 text-white transition-all hover:bg-white/12 disabled:opacity-25"
-                ><ChevronDownIcon /></button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         <button type="button" onClick={() => setAddOpen(true)}
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed py-3.5 text-sm font-semibold transition-all duration-200"
-          style={{ borderColor: `rgba(${SANDY_RGB},0.22)`, background: `rgba(${SANDY_RGB},0.04)`, color: `rgba(${SANDY_RGB},0.60)` }}
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 text-sm font-semibold transition-all duration-200 hover:opacity-90 active:scale-[0.99]"
+          style={dark
+            ? { borderColor: `rgba(${SANDY_RGB},0.20)`, background: `rgba(${SANDY_RGB},0.07)`, color: `rgba(${SANDY_RGB},0.75)` }
+            : { borderColor: 'rgba(0,0,0,0.12)', background: '#ffffff', color: '#1e293b', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
         >
           <PlusIcon /> Add Window
         </button>
       </div>
 
       {/* Save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-6">
+      <div className="fixed inset-x-0 z-40 px-4 pb-2" style={{ bottom: '104px' }}>
         <button type="button" disabled={saving} onClick={onSave}
-          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold text-[#3d2a0a] transition-all duration-300 disabled:opacity-50"
-          style={{ background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.22)` }}
+          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+          style={dark
+            ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
+            : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
         >
           {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Changes'}
         </button>
@@ -886,7 +1286,7 @@ function AmenitiesView({
             className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.85)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />{/* modal top accent — always dark context */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
               <span className="text-sm font-medium text-white/80">{previewWindow.title}</span>
               <button
@@ -929,11 +1329,11 @@ function AmenitiesView({
       {/* Add window modal */}
       {addOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center px-5 pb-8 sm:items-center">
-          <button type="button" onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
+          <button type="button" onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); setNewRoom(''); }}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-label="Close"
           />
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl p-6" style={modalCardStyle}>
-            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` }} />
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: dark ? `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` : 'linear-gradient(to right, transparent, rgba(0,0,0,0.10), transparent)' }} />
             <h3 className={`text-base font-semibold ${modalHeading}`}>Add a Window</h3>
             <p className={`mt-1 text-sm ${modalSub}`}>Creates a new amenity section guests can open.</p>
             <div className="mt-5 space-y-4">
@@ -941,10 +1341,10 @@ function AmenitiesView({
                 <Label>Icon</Label>
                 <button type="button" onClick={() => setIconPickerFor('new')}
                   className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all w-full ${modalIconRow}`}
-                  style={{ borderColor: `rgba(${SANDY_RGB},0.22)` }}
+                  style={{ borderColor: dark ? `rgba(${SANDY_RGB},0.22)` : 'rgba(0,0,0,0.12)' }}
                 >
                   <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border transition-all"
-                    style={{ borderColor: dark ? `rgba(${SANDY_RGB},0.25)` : 'rgba(44,44,44,0.30)', background: `rgba(${SANDY_RGB},0.10)`, color: modalIconColor }}
+                    style={{ borderColor: dark ? `rgba(${SANDY_RGB},0.25)` : 'rgba(0,0,0,0.12)', background: dark ? `rgba(${SANDY_RGB},0.10)` : 'rgba(0,0,0,0.05)', color: modalIconColor }}
                   >
                     <AmenityIconSvg iconKey={newIcon} className="h-4 w-4" />
                   </div>
@@ -988,12 +1388,14 @@ function AmenitiesView({
             </div>
             <div className="mt-5 flex items-center justify-end gap-2">
               <button type="button"
-                onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); }}
+                onClick={() => { setAddOpen(false); setNewTitle(''); setNewType('text'); setNewIcon(DEFAULT_ICON_KEY); setNewBody(''); setNewRoom(''); }}
                 className={`inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm font-semibold transition-all ${modalCancelCls}`}
               >Cancel</button>
               <button type="button" disabled={!newTitle.trim() || addSaving} onClick={handleAddWindow}
-                className="inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-[#3d2a0a] transition-all disabled:opacity-50"
-                style={{ background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, boxShadow: `0 0 16px rgba(${SANDY_RGB},0.18)` }}
+                className="inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all disabled:opacity-50"
+                style={dark
+                  ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
+                  : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.14)' }}
               >{addSaving ? 'Creating…' : 'Add Window'}</button>
             </div>
           </div>
@@ -1051,7 +1453,7 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
         {regenSuccess ? (
           <p className="mt-3 text-center text-sm font-semibold text-amber-400">New QR code generated ✓</p>
         ) : (
-          <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/45">
+          <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/85">
             Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
           </p>
         )}
@@ -1149,11 +1551,12 @@ const BG_PALETTES: Record<BgKey, { label: string; accent: string; heading: strin
   bg6:        { label: 'Sandstone',      accent: '#b8864e', heading: '#fffaf5', text: '#d4b896' },
 };
 
-function SubBackButton({ onClick }: { onClick: () => void }) {
+function SubBackButton({ onClick, dark }: { onClick: () => void; dark?: boolean }) {
   return (
     <button
       type="button" onClick={onClick}
-      className="mb-6 flex items-center gap-1.5 self-start text-sm font-semibold text-white/45 transition hover:text-white/75"
+      className="mb-6 flex items-center gap-1.5 self-start text-sm font-semibold transition"
+      style={{ color: dark === false ? 'rgba(30,41,59,0.50)' : 'rgba(255,255,255,0.45)' }}
     >
       <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
         <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1214,14 +1617,18 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   }
 
   if (sub === 'backgrounds') {
+    const arrowStyle: React.CSSProperties = dark
+      ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.60)' }
+      : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(255,255,255,0.92)', color: 'rgba(30,41,59,0.55)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' };
     return (
       <div className="flex flex-col items-center px-4 pt-6 pb-32">
-        <SubBackButton onClick={() => setSub('grid')} />
-        <h2 className="mb-6 text-base font-semibold text-white/80">Choose a Theme</h2>
+        <SubBackButton onClick={() => setSub('grid')} dark={dark} />
+        <h2 className="mb-6 text-base font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>Choose a Theme</h2>
 
         <div className="flex w-full max-w-sm items-center gap-3">
           <button type="button" onClick={() => setBgIndex((i) => (i - 1 + BG_KEYS.length) % BG_KEYS.length)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/12 hover:text-white/90"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition"
+            style={arrowStyle}
             aria-label="Previous theme"
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
@@ -1248,7 +1655,8 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           </div>
 
           <button type="button" onClick={() => setBgIndex((i) => (i + 1) % BG_KEYS.length)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/12 hover:text-white/90"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition"
+            style={arrowStyle}
             aria-label="Next theme"
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
@@ -1258,12 +1666,12 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
         </div>
 
         <div className="mt-5 flex w-full max-w-sm flex-col items-center gap-4">
-          <p className="text-sm font-semibold text-white/70">{palette.label}</p>
+          <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.70)' : '#1e293b' }}>{palette.label}</p>
           <div className="flex items-center gap-8">
             {(['accent', 'heading', 'text'] as const).map((k, i) => (
               <div key={k} className="flex flex-col items-center gap-1.5">
-                <div className="h-9 w-9 rounded-full border-2 border-white/20 shadow-lg" style={{ backgroundColor: palette[k] }} />
-                <p className="text-[10px] text-white/40">{['Accent', 'Titles', 'Text'][i]}</p>
+                <div className="h-9 w-9 rounded-full border-2 shadow-lg" style={{ backgroundColor: palette[k], borderColor: dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.12)' }} />
+                <p className="text-[10px]" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.50)' }}>{['Accent', 'Titles', 'Text'][i]}</p>
               </div>
             ))}
           </div>
@@ -1271,7 +1679,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
             {BG_KEYS.map((_, idx) => (
               <button key={idx} type="button" onClick={() => setBgIndex(idx)} aria-label={`Theme ${idx + 1}`}
                 className="h-1.5 rounded-full transition-all duration-200"
-                style={{ width: idx === bgIndex ? '20px' : '6px', backgroundColor: idx === bgIndex ? palette.accent : 'rgba(255,255,255,0.2)' }}
+                style={{ width: idx === bgIndex ? '20px' : '6px', backgroundColor: idx === bgIndex ? palette.accent : (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)') }}
               />
             ))}
           </div>
@@ -1282,7 +1690,9 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           className="mt-5 h-12 w-full max-w-sm rounded-2xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
           style={themeSaved
             ? { background: 'rgba(52,211,153,0.15)', color: 'rgb(52,211,153)' }
-            : { borderColor: `rgba(${SANDY_RGB},0.30)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.10)` }
+            : dark
+              ? { borderColor: `rgba(${SANDY_RGB},0.30)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.10)` }
+              : { border: '1px solid rgba(0,0,0,0.12)', background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.10)' }
           }
         >
           {themeSaving ? 'Applying…' : themeSaved ? 'Theme Applied ✓' : `Apply ${palette.label} Theme`}
@@ -1291,20 +1701,26 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
     );
   }
 
+  const settingCard: React.CSSProperties = dark
+    ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
+  const settingIconStyle: React.CSSProperties = dark
+    ? { borderColor: 'rgba(255,255,255,0.20)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.80)' }
+    : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.05)', color: '#475569' };
+  const settingTitle = dark ? '#ffffff' : '#1e293b';
+  const settingSub = dark ? 'rgba(255,255,255,0.65)' : 'rgba(30,41,59,0.50)';
+  const dividerColor = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)';
+  const resetDesc = 'rgba(255,255,255,0.55)';
+  const swatchBorder = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+
   return (
     <div className="px-4 pt-6 pb-32">
       <button
         type="button" onClick={() => setSub('backgrounds')}
-        className="flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
-        style={{
-          borderColor: `rgba(${SANDY_RGB},0.25)`,
-          background: `rgba(${SANDY_RGB},0.06)`,
-          boxShadow: `0 0 0 1px rgba(${SANDY_RGB},0.10), 0 0 28px rgba(${SANDY_RGB},0.06)`,
-        }}
+        className="flex w-full items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200"
+        style={settingCard}
       >
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border"
-          style={{ borderColor: `rgba(${SANDY_RGB},0.28)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }}
-        >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style={settingIconStyle}>
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
             <rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor" strokeWidth="1.6" />
             <path d="M2 8h20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -1313,26 +1729,26 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: SANDY }}>Themes & Colors</p>
-          <p className="mt-0.5 text-xs text-white/35">Background + complementary palette</p>
+          <p className="text-sm font-semibold" style={{ color: settingTitle }}>Themes & Colors</p>
+          <p className="mt-0.5 text-xs" style={{ color: settingSub }}>Background + complementary palette</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {(['accent', 'heading', 'text'] as const).map((k) => (
-            <div key={k} className="h-4 w-4 rounded-full border border-white/15" style={{ backgroundColor: BG_PALETTES[BG_KEYS[bgIndex]][k] }} />
+            <div key={k} className="h-4 w-4 rounded-full border" style={{ backgroundColor: BG_PALETTES[BG_KEYS[bgIndex]][k], borderColor: swatchBorder }} />
           ))}
         </div>
       </button>
 
       <div className="mt-6">
-        <div className="h-px bg-white/5" />
+        <div className="h-px" style={{ background: dividerColor }} />
         <div className="mt-5">
-          <p className="mb-2 text-xs text-white/28">Reset all visual customizations back to the original defaults.</p>
+          <p className="mb-2 text-xs" style={{ color: resetDesc }}>Reset all visual customizations back to the original defaults.</p>
           <button type="button" onClick={() => void handleResetAll()} disabled={resetSaving}
-            className={`h-10 w-full rounded-xl border text-sm font-semibold transition-all duration-200 ${
-              resetDone
-                ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-400'
-                : 'border-white/8 bg-white/3 text-white/35 hover:border-white/15 hover:bg-white/6 hover:text-white/55'
-            } disabled:opacity-40`}
+            className={`h-10 w-full rounded-xl border text-sm font-semibold transition-all duration-200 disabled:opacity-40 ${resetDone ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-400' : ''}`}
+            style={!resetDone ? (dark
+              ? { borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)' }
+              : { borderColor: 'rgba(255,255,255,0.30)', background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.70)' }
+            ) : undefined}
           >
             {resetSaving ? 'Resetting…' : resetDone ? 'Reset ✓' : 'Reset to Defaults'}
           </button>
@@ -1369,9 +1785,11 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const cardStyle: React.CSSProperties = dark
-    ? { background: 'rgba(18,18,18,0.80)', border: `1px solid rgba(${SANDY_RGB},0.12)`, backdropFilter: 'blur(20px)' }
-    : { background: 'rgba(255,255,255,0.14)', border: `1px solid rgba(${SANDY_RGB},0.20)`, backdropFilter: 'blur(16px)' };
+    ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 
   function updateCategories(next: WOCategory[] | ((prev: WOCategory[]) => WOCategory[])) {
     setCategories((prev) => {
@@ -1429,7 +1847,6 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
   }
 
   async function deleteCategory(id: string) {
-    if (!confirm('Delete this category?')) return;
     const res = await fetch(
       `/api/manager/properties/${encodeURIComponent(slug)}/work-order-categories/${encodeURIComponent(id)}`,
       { method: 'DELETE' }
@@ -1470,8 +1887,8 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
         <p className="text-sm text-red-400">{loadError}</p>
       ) : null}
 
-      <p className="text-xs leading-relaxed" style={{ color: `rgba(${SANDY_RGB},0.50)` }}>
-        Set a phone number or email for each work order type. Tenants only see the category name — contacts stay private.
+      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+        Assign a phone or email to each work order type so tenant requests are routed to the right contact. Tenants only see the category name — your contact info stays private.
       </p>
 
       <div className="space-y-3">
@@ -1482,9 +1899,9 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
             <div key={cat.id} className="rounded-2xl p-4 space-y-3" style={cardStyle}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-semibold text-white/85 truncate">{cat.name}</span>
+                  <span className="text-sm font-semibold text-slate-800 dark:text-white/85 truncate">{cat.name}</span>
                   {cat.is_builtin ? (
-                    <span className="shrink-0 inline-flex h-4 items-center rounded-full border border-white/10 bg-white/6 px-1.5 text-[9px] font-semibold uppercase tracking-widest text-white/30">
+                    <span className="shrink-0 inline-flex h-4 items-center rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/6 px-1.5 text-[9px] font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30">
                       built-in
                     </span>
                   ) : null}
@@ -1498,33 +1915,36 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                         onClick={() => void saveEdit(cat.id)}
                         disabled={saving}
                         className="h-7 rounded-lg px-3 text-xs font-semibold transition-all disabled:opacity-50"
-                        style={{ background: `rgba(${SANDY_RGB},0.14)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, color: SANDY }}
+                        style={dark
+                          ? { background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', color: '#ffffff' }
+                          : { background: 'rgba(15,23,42,0.88)', border: '1px solid transparent', color: '#fff' }}
                       >
                         {saving ? 'Saving…' : 'Save'}
                       </button>
-                      <button type="button" onClick={cancelEdit} className="h-7 rounded-lg px-2 text-xs text-white/35 transition hover:text-white/60">
+                      <button type="button" onClick={cancelEdit} className="h-7 rounded-lg px-2 text-xs transition"
+                        style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.45)' }}>
                         Cancel
                       </button>
                     </>
-                  ) : (
+                  ) : confirmDeleteId === cat.id ? null : (
                     <>
                       <button
                         type="button"
                         onClick={() => startEdit(cat)}
-                        className="h-7 rounded-lg px-3 text-xs font-medium text-white/45 transition hover:text-white/75 border border-white/8 hover:border-white/15"
+                        className="h-7 rounded-lg px-3 text-xs font-medium transition border"
+                        style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(30,41,59,0.55)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)' }}
                       >
                         Edit
                       </button>
-                      {!cat.is_builtin ? (
-                        <button
-                          type="button"
-                          onClick={() => void deleteCategory(cat.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/8 text-white/30 transition hover:border-red-500/30 hover:text-red-400"
-                          aria-label="Delete category"
-                        >
-                          <TrashIcon />
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(cat.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border transition"
+                        style={{ borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)', color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }}
+                        aria-label="Delete category"
+                      >
+                        <TrashIcon />
+                      </button>
                     </>
                   )}
                 </div>
@@ -1539,14 +1959,42 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                     <TextInput value={editEmail} onChange={setEditEmail} placeholder="repairs@co.com" type="email" />
                   </FieldGroup>
                 </div>
+              ) : confirmDeleteId === cat.id ? (
+                <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)' }}>
+                  <span className="text-xs" style={{ color: dark ? 'rgba(255,255,255,0.70)' : 'rgba(30,41,59,0.80)' }}>
+                    Are you sure you want to delete{' '}
+                    <strong style={{ color: dark ? '#ffffff' : '#1e293b' }}>{cat.name}</strong>?
+                  </span>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="h-7 rounded-lg px-3 text-xs font-medium transition"
+                      style={dark
+                        ? { color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.12)' }
+                        : { color: 'rgba(30,41,59,0.60)', border: '1px solid rgba(0,0,0,0.14)' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { void deleteCategory(cat.id); setConfirmDeleteId(null); }}
+                      className="h-7 rounded-lg px-3 text-xs font-semibold transition"
+                      style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', color: dark ? '#f87171' : '#dc2626' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="flex gap-4 text-xs" style={{ color: `rgba(${SANDY_RGB},0.50)` }}>
+                <div className="flex gap-4 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.50)' }}>
                   {cat.phone
                     ? <span>📞 {cat.phone}</span>
-                    : <span className="italic text-white/20">No phone</span>}
+                    : <span className="italic" style={{ color: dark ? 'rgba(255,255,255,0.20)' : 'rgba(30,41,59,0.28)' }}>No phone</span>}
                   {cat.email
                     ? <span>✉ {cat.email}</span>
-                    : <span className="italic text-white/20">No email</span>}
+                    : <span className="italic" style={{ color: dark ? 'rgba(255,255,255,0.20)' : 'rgba(30,41,59,0.28)' }}>No email</span>}
                 </div>
               )}
             </div>
@@ -1555,8 +2003,8 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
       </div>
 
       {/* Add custom category */}
-      <div className="rounded-2xl p-4 space-y-3" style={{ ...cardStyle, border: `1px dashed rgba(${SANDY_RGB},0.18)` }}>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: `rgba(${SANDY_RGB},0.55)` }}>
+      <div className="rounded-2xl p-4 space-y-3" style={{ ...cardStyle, border: dark ? `1px dashed rgba(${SANDY_RGB},0.18)` : '1px dashed rgba(0,0,0,0.12)' }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-[rgba(245,237,213,0.55)]">
           Add Custom Category
         </p>
         <FieldGroup label="Category Name">
@@ -1576,7 +2024,9 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
           onClick={() => void handleAdd()}
           disabled={adding}
           className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50"
-          style={{ borderColor: `rgba(${SANDY_RGB},0.25)`, background: `rgba(${SANDY_RGB},0.07)`, color: SANDY }}
+          style={dark
+            ? { borderColor: `rgba(${SANDY_RGB},0.25)`, background: `rgba(${SANDY_RGB},0.07)`, color: SANDY }
+            : { borderColor: 'rgba(0,0,0,0.14)', background: 'rgba(0,0,0,0.04)', color: 'rgba(30,41,59,0.65)' }}
         >
           <PlusIcon />
           {adding ? 'Adding…' : 'Add Category'}
@@ -1626,31 +2076,32 @@ function FaqItem({ q, a, dark }: { q: string; a: string; dark: boolean }) {
   );
 }
 
-/* per-section card colors for the How-To list */
-const HOWTO_COLORS: Record<string, {
-  lBg: string; lBorder: string; lTitle: string; lSub: string; lDivider: string; lBadgeBg: string;
-  dBg: string; dBorder: string; dTitle: string; dSub: string; dDivider: string; dBadgeBg: string;
-}> = {
-  qr: {
-    lBg: 'rgba(253,230,138,0.75)', lBorder: 'rgba(251,191,36,0.42)', lTitle: 'rgb(92,44,8)', lSub: 'rgba(92,44,8,0.58)', lDivider: 'rgba(251,191,36,0.22)', lBadgeBg: 'rgba(92,44,8,0.11)',
-    dBg: 'rgba(251,191,36,0.14)', dBorder: 'rgba(251,191,36,0.32)', dTitle: 'rgb(253,230,138)', dSub: 'rgba(253,230,138,0.52)', dDivider: 'rgba(251,191,36,0.16)', dBadgeBg: 'rgba(253,230,138,0.13)',
-  },
-  'property-info': {
-    lBg: 'rgba(253,186,116,0.75)', lBorder: 'rgba(251,146,60,0.40)', lTitle: 'rgb(120,36,8)', lSub: 'rgba(120,36,8,0.58)', lDivider: 'rgba(251,146,60,0.22)', lBadgeBg: 'rgba(120,36,8,0.11)',
-    dBg: 'rgba(251,146,60,0.14)', dBorder: 'rgba(254,215,170,0.26)', dTitle: 'rgb(254,215,170)', dSub: 'rgba(254,215,170,0.52)', dDivider: 'rgba(254,215,170,0.13)', dBadgeBg: 'rgba(254,215,170,0.13)',
-  },
-  amenities: {
-    lBg: 'rgba(216,180,254,0.75)', lBorder: 'rgba(168,85,247,0.34)', lTitle: 'rgb(59,7,100)', lSub: 'rgba(59,7,100,0.58)', lDivider: 'rgba(168,85,247,0.19)', lBadgeBg: 'rgba(59,7,100,0.11)',
-    dBg: 'rgba(168,85,247,0.14)', dBorder: 'rgba(192,132,252,0.30)', dTitle: 'rgb(233,213,255)', dSub: 'rgba(233,213,255,0.52)', dDivider: 'rgba(192,132,252,0.14)', dBadgeBg: 'rgba(233,213,255,0.13)',
-  },
-  settings: {
-    lBg: 'rgba(187,247,208,0.75)', lBorder: 'rgba(74,222,128,0.40)', lTitle: 'rgb(5,46,22)', lSub: 'rgba(5,46,22,0.58)', lDivider: 'rgba(74,222,128,0.22)', lBadgeBg: 'rgba(5,46,22,0.11)',
-    dBg: 'rgba(74,222,128,0.10)', dBorder: 'rgba(134,239,172,0.26)', dTitle: 'rgb(187,247,208)', dSub: 'rgba(187,247,208,0.52)', dDivider: 'rgba(134,239,172,0.13)', dBadgeBg: 'rgba(187,247,208,0.13)',
-  },
-  'work-orders': {
-    lBg: 'rgba(226,232,240,0.75)', lBorder: 'rgba(100,116,139,0.30)', lTitle: 'rgb(15,23,42)', lSub: 'rgba(15,23,42,0.58)', lDivider: 'rgba(100,116,139,0.16)', lBadgeBg: 'rgba(15,23,42,0.09)',
-    dBg: 'rgba(255,255,255,0.08)', dBorder: 'rgba(255,255,255,0.18)', dTitle: 'rgba(255,255,255,0.90)', dSub: 'rgba(255,255,255,0.45)', dDivider: 'rgba(255,255,255,0.09)', dBadgeBg: 'rgba(255,255,255,0.11)',
-  },
+/* per-section card colors for the How-To list — all cards now use the shared clean style */
+const HOWTO_CARD_LIGHT = {
+  lBg: 'rgba(255,255,255,0.92)', lBorder: 'rgba(0,0,0,0.07)',
+  lTitle: '#1e293b', lSub: 'rgba(30,41,59,0.55)',
+  lDivider: 'rgba(0,0,0,0.06)', lBadgeBg: 'rgba(0,0,0,0.06)',
+};
+const HOWTO_CARD_DARK = {
+  dBg: 'rgba(8,8,8,0.95)', dBorder: 'rgba(255,255,255,0.08)',
+  dTitle: 'rgba(255,255,255,0.88)', dSub: 'rgba(255,255,255,0.50)',
+  dDivider: 'rgba(255,255,255,0.08)', dBadgeBg: 'rgba(255,255,255,0.08)',
+};
+const HOWTO_COLORS: Record<string, typeof HOWTO_CARD_LIGHT & typeof HOWTO_CARD_DARK> = {
+  qr:              { ...HOWTO_CARD_LIGHT, ...HOWTO_CARD_DARK },
+  'property-info': { ...HOWTO_CARD_LIGHT, ...HOWTO_CARD_DARK },
+  amenities:       { ...HOWTO_CARD_LIGHT, ...HOWTO_CARD_DARK },
+  settings:        { ...HOWTO_CARD_LIGHT, ...HOWTO_CARD_DARK },
+  'work-orders':   { ...HOWTO_CARD_LIGHT, ...HOWTO_CARD_DARK },
+};
+
+/* gradient-matched icon container styles per tile */
+const HOWTO_ICON_COLORS: Record<string, { bg: string; border: string; color: string }> = {
+  'property-info': { bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.32)',  color: '#F97316' },
+  amenities:       { bg: 'rgba(59,130,246,0.12)',  border: 'rgba(59,130,246,0.32)',  color: '#3B82F6' },
+  'work-orders':   { bg: 'rgba(16,185,129,0.12)',  border: 'rgba(16,185,129,0.32)',  color: '#10B981' },
+  settings:        { bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.32)',  color: '#4ADE80' },
+  qr:              { bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.32)',  color: '#FBBF24' },
 };
 
 const HOWTO_STEPS: Record<string, { title: string; desc: string }[]> = {
@@ -1703,8 +2154,8 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
 
   /* Shared card style for FAQ / Contact — warm cream in light, dark glass in dark */
   const cardStyle: React.CSSProperties = dark
-    ? { background: 'rgba(18,18,18,0.82)', border: '1px solid rgba(245,237,213,0.10)', backdropFilter: 'blur(20px)' }
-    : { background: 'rgba(245,237,213,0.32)', border: '1px solid rgba(44,44,44,0.10)', backdropFilter: 'blur(16px)' };
+    ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 
   /* Label color always readable in both modes */
   const labelColor = dark ? 'rgba(245,237,213,0.50)' : 'rgba(44,44,44,0.50)';
@@ -1756,7 +2207,9 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
             onClick={() => setTab(t.id)}
             className="flex-1 rounded-xl py-2 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-200"
             style={tab === t.id
-              ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 14px rgba(245,237,213,0.18)' }
+              ? dark
+                ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 14px rgba(245,237,213,0.18)' }
+                : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.14)' }
               : { color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(44,44,44,0.50)' }}
           >
             {t.label}
@@ -1778,9 +2231,8 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
             const divider = dark ? c.dDivider : c.lDivider;
             const badgeBg = dark ? c.dBadgeBg : c.lBadgeBg;
 
-            const iconStyle: React.CSSProperties = tile.id === 'property-info' && !dark
-              ? { background: 'rgba(251,146,60,0.22)', border: '1px solid rgba(120,36,8,0.20)', color: 'rgb(120,36,8)' }
-              : (tile.iconStyle ?? {});
+            const ic = HOWTO_ICON_COLORS[tile.id] ?? { bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.12)', color: '#999' };
+            const iconStyle: React.CSSProperties = { background: ic.bg, border: `1px solid ${ic.border}`, color: ic.color };
 
             return (
               <div
@@ -1946,11 +2398,9 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
                 onClick={handleContactSubmit}
                 disabled={contactStatus === 'sending' || !topic || !description.trim()}
                 className="flex items-center justify-center gap-2 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
-                style={{
-                  background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
-                  color: '#3d2a0a',
-                  boxShadow: '0 0 20px rgba(245,237,213,0.22)',
-                }}
+                style={dark
+                  ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 20px rgba(245,237,213,0.22)' }
+                  : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 16px rgba(0,0,0,0.14)' }}
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
                   <path d="M22 2L11 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -1966,6 +2416,85 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Bottom bar ──────────────────────────────────────── */
+
+function BottomBar({ view, onNavigate, dark }: { view: View; onNavigate: (v: View) => void; dark: boolean }) {
+  const iconInactive: React.CSSProperties = {
+    color: dark ? 'rgba(255,255,255,0.48)' : 'rgba(0,0,0,0.40)',
+  };
+
+  return (
+    <div className="fixed left-1/2 bottom-5 z-30 -translate-x-1/2">
+      <div
+        className="flex items-center rounded-2xl px-5 py-1.5"
+        style={{
+          background: dark ? 'rgba(18,18,18,0.96)' : 'rgba(255,255,255,0.96)',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)'}`,
+          backdropFilter: 'blur(24px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10)',
+          gap: '8px',
+        }}
+      >
+        {/* QR Code */}
+        <button
+          type="button"
+          onClick={() => onNavigate('qr')}
+          className="flex h-9 w-12 items-center justify-center rounded-xl transition-all duration-200 active:scale-90"
+          style={view === 'qr'
+            ? { background: 'rgba(251,191,36,0.14)', color: '#FBBF24' }
+            : iconInactive}
+          aria-label="QR Code"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3zM18 18v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {/* Divider */}
+        <div className="h-6 w-px mx-0.5 shrink-0" style={{ background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+
+        {/* Home */}
+        <button
+          type="button"
+          onClick={() => onNavigate('grid')}
+          className="flex h-9 w-14 items-center justify-center rounded-xl transition-all duration-200 active:scale-90"
+          style={view === 'grid'
+            ? { background: dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)', color: dark ? '#ffffff' : '#1e293b' }
+            : { ...iconInactive, color: dark ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.52)' }}
+          aria-label="Home"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {/* Divider */}
+        <div className="h-6 w-px mx-0.5 shrink-0" style={{ background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+
+        {/* Design / Settings */}
+        <button
+          type="button"
+          onClick={() => onNavigate('settings')}
+          className="flex h-9 w-12 items-center justify-center rounded-xl transition-all duration-200 active:scale-90"
+          style={view === 'settings'
+            ? { background: 'rgba(74,222,128,0.14)', color: 'rgb(22,163,74)' }
+            : iconInactive}
+          aria-label="Design settings"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -2026,7 +2555,7 @@ export default function ManagerPropertyEditorClient({
 
   function goTo(next: View) {
     setFading(true);
-    setTimeout(() => { setView(next); setFading(false); }, 160);
+    setTimeout(() => { setView(next); setFading(false); }, 200);
   }
 
   function goBack() {
@@ -2062,19 +2591,22 @@ export default function ManagerPropertyEditorClient({
 
   const glowGradient = dark ? (
     view === 'property-info' ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,146,60,0.50) 0%, transparent 65%),'
-    : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(192,132,252,0.40) 0%, transparent 65%),'
+    : view === 'amenities'    ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(59,130,246,0.45) 0%, transparent 65%),'
     : view === 'settings'     ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(74,222,128,0.35) 0%, transparent 65%),'
     : view === 'qr'           ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(251,191,36,0.40) 0%, transparent 65%),'
-    : view === 'work-orders'  ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(255,255,255,0.12) 0%, transparent 65%),'
+    : view === 'work-orders'  ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(16,185,129,0.45) 0%, transparent 65%),'
     : view === 'help'         ? 'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(248,113,113,0.40) 0%, transparent 65%),'
     : ''
   ) : '';
 
   const toggleStyle: React.CSSProperties = {
-    borderColor: `rgba(${SANDY_RGB},0.25)`,
-    background: `rgba(${SANDY_RGB},0.08)`,
-    color: SANDY,
+    borderColor: 'rgba(255,255,255,0.25)',
+    background: 'rgba(255,255,255,0.10)',
+    color: 'rgba(255,255,255,0.85)',
   };
+
+  const completion = calcCompletion(core, windows, prefetchedWOCategories);
+  const missingItems = getMissingItems(core, windows, prefetchedWOCategories);
 
   return (
     <div className="relative min-h-screen text-white">
@@ -2087,10 +2619,10 @@ export default function ManagerPropertyEditorClient({
       )}
 
       {/* Header */}
-      <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: `rgba(${SANDY_RGB},0.10)`, background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.10)', backdropFilter: 'blur(16px)' }}>
+      <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: 'rgba(255,255,255,0.12)', background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.10)', backdropFilter: 'blur(16px)' }}>
         <button
           type="button" onClick={goBack}
-          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/55 transition-all hover:bg-white/8 hover:text-white/80"
+          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/20 bg-white/12 text-white/75 transition-all hover:bg-white/20 hover:text-white"
           aria-label={view === 'grid' ? 'Back to dashboard' : 'Back to menu'}
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
@@ -2122,7 +2654,7 @@ export default function ManagerPropertyEditorClient({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-all"
-              style={{ borderColor: `rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.08)`, color: SANDY }}
+              style={{ borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.90)' }}
             >
               View live ↗
             </a>
@@ -2131,8 +2663,8 @@ export default function ManagerPropertyEditorClient({
       </div>
 
       {/* Content with fade */}
-      <div className="relative" style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.16s ease' }}>
-        {view === 'grid' && <GridView onNavigate={goTo} propertyName={core.PropertyName} dark={dark} />}
+      <div className="relative" style={{ opacity: fading ? 0 : 1, transform: fading ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)', transition: 'opacity 0.20s ease, transform 0.20s ease' }}>
+        {view === 'grid' && <GridView onNavigate={goTo} completion={completion} dark={dark} missing={missingItems} />}
         {view === 'property-info' && (
           <PropertyInfoView
             slug={slug} core={core} setCore={setCore}
@@ -2145,7 +2677,7 @@ export default function ManagerPropertyEditorClient({
           <AmenitiesView
             slug={slug} windows={windows} setWindows={setWindows}
             saving={saving} saved={saved} onSave={handleSave} saveError={saveError}
-            dark={dark}
+            dark={dark} initialRooms={property.rooms ?? []}
           />
         )}
         {view === 'qr' && <QRView slug={slug} dark={dark} />}
@@ -2153,6 +2685,9 @@ export default function ManagerPropertyEditorClient({
         {view === 'work-orders' && <WorkOrdersView slug={slug} dark={dark} initialCategories={prefetchedWOCategories} onCategoriesChange={setPrefetchedWOCategories} />}
         {view === 'help' && <HelpView dark={dark} slug={slug} propertyName={core.PropertyName} />}
       </div>
+
+      {/* Bottom navigation bar */}
+      <BottomBar view={view} onNavigate={goTo} dark={dark} />
     </div>
   );
 }

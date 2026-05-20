@@ -64,7 +64,6 @@ export default function ManagerDashboardClient({
     localStorage.setItem('pillar-theme', next ? 'dark' : 'light');
   }
 
-
   function openDeleteModal(p: Property) {
     setDeleteTarget(p);
     setDeleteConfirmName('');
@@ -105,58 +104,53 @@ export default function ManagerDashboardClient({
     window.location.href = `/manager/properties/${encodeURIComponent(slug)}/edit`;
   }
 
-  /* ── Theme helpers — both modes use sandy palette, different backgrounds ── */
+  /* ── Theme helpers ── */
 
   const card = dark
-    ? { background: 'rgba(18,18,18,0.78)', border: `1px solid rgba(${SANDY_RGB},0.14)`, backdropFilter: 'blur(20px)' }
-    : { background: 'rgba(255,255,255,0.14)', border: `1px solid rgba(${SANDY_RGB},0.2)`, backdropFilter: 'blur(16px)' };
+    ? { background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
+    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' };
 
-  const cardHeader = { borderBottom: `1px solid rgba(${SANDY_RGB},0.14)` };
+  const cardHeader = dark
+    ? { borderBottom: '1px solid rgba(255,255,255,0.07)' }
+    : { borderBottom: '1px solid rgba(0,0,0,0.06)' };
 
-  const labelColor = `rgba(${SANDY_RGB},${dark ? '0.90' : '0.70'})`;
-  const mutedColor = `rgba(255,255,255,${dark ? '0.72' : '0.65'})`;
-  const badgeBg = `rgba(${SANDY_RGB},0.12)`;
-  const badgeBorder = `rgba(${SANDY_RGB},${dark ? '0.30' : '0.3'})`;
-  const badgeText = `rgba(${SANDY_RGB},0.90)`;
+  const labelColor = dark ? 'rgba(255,255,255,0.50)' : '#64748b';
+  const mutedColor = dark ? 'rgba(255,255,255,0.55)' : 'rgba(30,41,59,0.55)';
+  const headingColor = '#ffffff';
+
+  const badgeBg = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const badgeBorder = dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.10)';
+  const badgeText = dark ? 'rgba(255,255,255,0.60)' : '#64748b';
 
   const propCardStyle = dark
-    ? { background: 'rgba(10,10,10,0.60)', border: `1px solid rgba(${SANDY_RGB},0.12)`, backdropFilter: 'blur(8px)' }
-    : { background: 'rgba(255,255,255,0.10)', border: `1px solid rgba(${SANDY_RGB},0.18)`, backdropFilter: 'blur(8px)' };
+    ? { background: 'rgba(0,0,0,0.40)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)' }
+    : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' };
 
-  const addBtnStyle = {
-    borderColor: `rgba(${SANDY_RGB},0.4)`,
-    background: `rgba(${SANDY_RGB},0.12)`,
-    color: SANDY,
-    boxShadow: `0 0 20px rgba(${SANDY_RGB},0.12)`,
-  };
+  const propNameColor = dark ? 'rgba(255,255,255,0.90)' : '#1e293b';
 
-  const viewLinkStyle = {
-    borderColor: `rgba(${SANDY_RGB},0.3)`,
-    background: `rgba(${SANDY_RGB},0.10)`,
-    color: SANDY,
-  };
+  const addBtnStyle = dark
+    ? { borderColor: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.08)', color: '#ffffff', boxShadow: '0 0 14px rgba(255,255,255,0.18), 0 0 4px rgba(255,255,255,0.10)' }
+    : { borderColor: 'rgba(0,0,0,0.16)', background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.14)' };
 
-  const editLinkStyle = {
-    borderColor: `rgba(${SANDY_RGB},0.18)`,
-    background: `rgba(${SANDY_RGB},0.06)`,
-    color: 'rgba(255,255,255,0.75)',
-  };
+  const viewLinkStyle = dark
+    ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.85)' }
+    : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.06)', color: '#1e293b' };
 
-  const signOutStyle = {
-    borderColor: `rgba(${SANDY_RGB},0.25)`,
-    background: `rgba(${SANDY_RGB},0.07)`,
-    color: SANDY,
-  };
+  const editLinkStyle = dark
+    ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.55)' }
+    : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.65)' };
 
-  const toggleStyle = {
-    borderColor: `rgba(${SANDY_RGB},0.25)`,
-    background: `rgba(${SANDY_RGB},0.08)`,
-    color: SANDY,
-  };
+  const signOutStyle = dark
+    ? { borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.80)' }
+    : { borderColor: 'rgba(0,0,0,0.14)', background: 'rgba(15,23,42,0.88)', color: '#fff' };
+
+  const toggleStyle = dark
+    ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.80)' }
+    : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(255,255,255,0.80)', color: '#475569', backdropFilter: 'blur(8px)' };
 
   return (
-    <div className="relative min-h-screen text-white">
-      {/* Fixed background layers — driven by CSS dark class to avoid flash */}
+    <div className="relative min-h-screen">
+      {/* Fixed background layers */}
       <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
       <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
 
@@ -165,10 +159,10 @@ export default function ManagerDashboardClient({
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: labelColor }}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60">
               Manager Portal
             </p>
-            <h1 className="mt-1 text-[1.75rem] font-light leading-tight tracking-tight text-white">
+            <h1 className="mt-1 text-[1.75rem] font-light leading-tight tracking-tight" style={{ color: headingColor }}>
               Hello, {managerName}
             </h1>
           </div>
@@ -198,7 +192,7 @@ export default function ManagerDashboardClient({
         <div className="space-y-4">
 
           {/* Properties card */}
-          <div className="overflow-hidden rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.25)]" style={card}>
+          <div className="overflow-hidden rounded-2xl" style={card}>
             <div className="flex items-center justify-between px-6 py-4" style={cardHeader}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
                 Your Properties
@@ -222,7 +216,8 @@ export default function ManagerDashboardClient({
                   </button>
                 ) : (
                   <div title="Set up billing to add properties">
-                    <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border border-white/[0.07] bg-white/3 px-4 text-sm font-semibold text-white/25">
+                    <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border px-4 text-sm font-semibold"
+                      style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.25)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.30)' }}>
                       <span className="text-base leading-none">+</span> Add Property
                     </button>
                     <p className="mt-1.5 text-[11px]" style={{ color: mutedColor }}>Active subscription required</p>
@@ -242,7 +237,7 @@ export default function ManagerDashboardClient({
                       <div key={`${p.PropertyName}-${p.PropertyAddress}`} className="rounded-xl p-4 transition-all duration-200" style={propCardStyle}>
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-white/90">{p.PropertyName || '—'}</div>
+                            <div className="text-sm font-semibold" style={{ color: propNameColor }}>{p.PropertyName || '—'}</div>
                             {p.PropertyAddress ? (
                               <div className="mt-0.5 truncate text-xs" style={{ color: mutedColor }}>{p.PropertyAddress}</div>
                             ) : null}
@@ -278,7 +273,7 @@ export default function ManagerDashboardClient({
           </div>
 
           {/* Billing card */}
-          <div className="overflow-hidden rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.25)]" style={card}>
+          <div className="overflow-hidden rounded-2xl" style={card}>
             <div className="px-6 py-4" style={cardHeader}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
                 Billing
@@ -288,7 +283,7 @@ export default function ManagerDashboardClient({
               <p className="text-sm" style={{ color: mutedColor }}>
                 Stripe integration coming soon. Once connected, subscription checkout and invoices will appear here.
               </p>
-              <p className="mt-2 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.45)' }}>
+              <p className="mt-2 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.22)' : 'rgba(30,41,59,0.35)' }}>
                 No payments are being collected yet.
               </p>
             </div>
@@ -346,11 +341,13 @@ export default function ManagerDashboardClient({
               <p className="mt-1 text-xs text-white/40">Enter a name to get started. You can change everything after.</p>
               <div className="mt-5 space-y-1.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: `rgba(${SANDY_RGB},0.65)` }}>Property Name</p>
-                <input autoFocus type="text" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate(); }} placeholder="e.g. Oceanfront Villa" className="h-11 w-full rounded-xl border border-white/8 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/22 focus:border-[#F5EDD5]/25 focus:ring-1 focus:ring-[#F5EDD5]/12" />
+                <input autoFocus type="text" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate(); }} placeholder="e.g. Oceanfront Villa" className="h-11 w-full rounded-xl border border-white/8 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/22 focus:border-white/20 focus:ring-1 focus:ring-white/10" />
               </div>
               {createError ? <p className="mt-3 text-xs text-rose-400/80">{createError}</p> : null}
               <div className="mt-5 flex gap-2">
-                <button type="button" onClick={() => void handleCreate()} disabled={!propertyName.trim() || isCreating} className="h-10 flex-1 rounded-xl text-sm font-semibold text-[#3d2a0a] transition-all duration-300 disabled:opacity-50" style={{ background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.22)` }}>
+                <button type="button" onClick={() => void handleCreate()} disabled={!propertyName.trim() || isCreating}
+                  className="h-10 flex-1 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50"
+                  style={{ background: 'rgba(15,23,42,0.92)', boxShadow: '0 0 20px rgba(0,0,0,0.30)' }}>
                   {isCreating ? 'Creating…' : 'Create Property'}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="h-10 rounded-xl border border-white/[0.07] bg-white/3 px-4 text-sm font-semibold text-white/50 transition-all duration-200 hover:bg-white/[0.07] hover:text-white/75">

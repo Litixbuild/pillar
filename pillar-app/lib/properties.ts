@@ -20,6 +20,7 @@ function rowToWindow(row: SupabaseRow): AmenityWindow {
     icon: typeof row.icon === 'string' && row.icon ? row.icon : undefined,
     body: typeof row.body === 'string' && row.body ? row.body : undefined,
     url: typeof row.url === 'string' && row.url ? row.url : undefined,
+    room: typeof row.room === 'string' && row.room ? row.room : undefined,
   };
 }
 
@@ -44,6 +45,9 @@ function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = []): Propert
     HeadingColor: typeof row.heading_color === 'string' && row.heading_color ? row.heading_color : undefined,
     TextColor: typeof row.text_color === 'string' && row.text_color ? row.text_color : undefined,
     windows,
+    rooms: Array.isArray(row.rooms)
+      ? (row.rooms as unknown[]).filter((s): s is string => typeof s === 'string')
+      : [],
   };
 }
 
@@ -184,6 +188,7 @@ export async function createPropertyWindow(
     icon: window.icon ?? null,
     body: window.body ?? null,
     url: window.url ?? null,
+    room: window.room ?? null,
     display_order: displayOrder,
   });
   if (error) throw new Error(`Failed to create window: ${error.message}`);
@@ -204,6 +209,7 @@ export async function savePropertyWindows(
     icon: w.icon ?? null,
     body: w.body ?? null,
     url: w.url ?? null,
+    room: w.room ?? null,
     display_order: idx,
   }));
 
@@ -212,6 +218,15 @@ export async function savePropertyWindows(
     .upsert(rows, { onConflict: 'id' });
 
   if (error) throw new Error(`Failed to save windows: ${error.message}`);
+}
+
+export async function savePropertyRooms(slug: string, rooms: string[]): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from('properties')
+    .update({ rooms })
+    .eq('slug', slug.trim());
+  if (error) throw new Error(`Failed to save rooms: ${error.message}`);
 }
 
 export async function deletePropertyWindow(windowId: string): Promise<void> {

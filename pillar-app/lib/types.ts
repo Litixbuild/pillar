@@ -19,6 +19,7 @@ export interface AmenityWindow {
   icon?: string;
   url?: string;
   body?: string;
+  room?: string;
 }
 
 export interface Property {
@@ -42,6 +43,7 @@ export interface Property {
   HeadingColor?: string;
   TextColor?: string;
   windows?: AmenityWindow[];
+  rooms?: string[];
 }
 
 function parseLayoutItem(x: unknown): ManagerLayoutItem | null {
@@ -90,6 +92,7 @@ function parseWindowItem(x: unknown): AmenityWindow | null {
     icon: typeof w.icon === 'string' ? w.icon : undefined,
     url: typeof w.url === 'string' ? w.url : undefined,
     body: typeof w.body === 'string' ? w.body : undefined,
+    room: typeof w.room === 'string' ? w.room : undefined,
   };
 }
 

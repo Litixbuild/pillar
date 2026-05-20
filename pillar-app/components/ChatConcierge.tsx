@@ -114,12 +114,15 @@ function ButlerIcon({ className }: { className?: string }) {
 /* ─── Typing indicator ───────────────────────────────────────── */
 
 function TypingDots() {
+  const [dots, setDots] = useState(1);
+  useEffect(() => {
+    const id = setInterval(() => setDots((d) => (d % 3) + 1), 500);
+    return () => clearInterval(id);
+  }, []);
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.2s]" style={{ backgroundColor: 'var(--accent-45)' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.1s]" style={{ backgroundColor: 'var(--accent-45)' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full" style={{ backgroundColor: 'var(--accent-45)' }} />
-    </div>
+    <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+      Thinking{'.'.repeat(dots)}
+    </span>
   );
 }
 
@@ -428,7 +431,6 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
     const sections = Array.isArray(data.sections) ? data.sections : [];
     return (
       <div className="space-y-3">
-        {data.intro ? <div className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.intro}</div> : null}
         {sections.map((s, si) => (
           <div key={si} className="space-y-2">
             <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>{s.title}</div>
@@ -437,8 +439,12 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                 <div key={pi} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name || '—'}</div>
-                      {p.blurb ? <div className="mt-0.5 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
+                      <div className="lux-title text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+                        {p.googleMapsUri
+                          ? <a href={p.googleMapsUri} target="_blank" rel="noreferrer" className="underline underline-offset-2">{p.name || '—'}</a>
+                          : (p.name || '—')}
+                      </div>
+                      {p.blurb ? <div className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
                     </div>
                     <div className="flex flex-col items-end justify-between self-stretch shrink-0">
                       {p.googleMapsUri ? <MapsButton href={p.googleMapsUri} /> : null}
@@ -564,12 +570,12 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
         const summarizeCard = (data: ButlerCardData): string => {
           if (data.kind === 'text') return data.text;
           if (data.kind === 'itinerary') {
-            const names = data.sections.flatMap(s => s.places.map(p => p.name)).filter(Boolean);
-            return `[Showed a day plan itinerary. ${data.intro || ''} Places included: ${names.join(', ')}]`;
+            const sectionLines = data.sections.map(s => `${s.title}: ${s.places.map(p => p.name).filter(Boolean).join(', ')}`).join('; ');
+            return `[Showed a full-day itinerary. Sections — ${sectionLines}]`;
           }
           if (data.kind === 'places') {
             const names = data.places.map(p => p.name).filter(Boolean);
-            return `[Showed place recommendations: ${names.join(', ')}]`;
+            return `[Showed place recommendations (${data.label || 'nearby'}): ${names.join(', ')}]`;
           }
           if (data.kind === 'weather') return `[Showed current weather: ${data.summary}]`;
           if (data.kind === 'wifi') return `[Showed WiFi credentials]`;
@@ -693,7 +699,6 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               </div>
               <div>
                 <p className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>Pillar Concierge</p>
-                <p className="text-xs" style={{ color: 'var(--header-sub)' }}>Elegant. Concise. Professional.</p>
                 {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--header-sub)' }}>{statusText}</p> : null}
               </div>
             </div>
@@ -748,7 +753,9 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 onClick={() => send(p)}
                 disabled={isTyping}
                 className="whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-45"
-                style={{ borderColor: 'var(--accent-28)', backgroundColor: 'var(--accent-22)', color: dark ? 'var(--accent)' : 'rgba(61,42,10,0.88)' }}
+                style={dark
+                  ? { borderColor: 'var(--accent-28)', backgroundColor: 'var(--accent-22)', color: 'var(--accent)' }
+                  : { borderColor: 'rgba(30,41,59,0.22)', backgroundColor: 'rgba(30,41,59,0.05)', color: 'rgba(30,41,59,0.80)' }}
               >
                 {p}
               </button>

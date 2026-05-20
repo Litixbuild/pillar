@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 export const dynamic = "force-dynamic";
 
 const SANDY = "#F5EDD5";
+const SANDY_RGB = "245,237,213";
 
 function SunIcon() {
   return (
@@ -40,6 +41,28 @@ export default function ManagerLoginPage() {
     localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
+  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.80)";
+  const toggleStyle = dark
+    ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
+    : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
+
+
+  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
+  const headingColor = "#ffffff";
+  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
+
+  const inputCls = "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
+
+  const submitStyle = dark
+    ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
+    : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
+
+  const forgotColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.55)";
+
+  const signupStyle = dark
+    ? { borderColor: "rgba(245,237,213,0.30)", backgroundColor: "rgba(245,237,213,0.08)", color: "rgba(245,237,213,0.85)" }
+    : { borderColor: "rgba(255,255,255,0.30)", backgroundColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.85)" };
+
   return (
     <div
       className="relative flex flex-col items-center justify-center overflow-hidden px-5"
@@ -47,11 +70,12 @@ export default function ManagerLoginPage() {
     >
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+
       {/* Back arrow — top left */}
       <Link
         href="/"
         className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70"
-        style={{ color: "rgba(245,237,213,0.5)" }}
+        style={{ color: backArrowColor }}
         aria-label="Back to home"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
@@ -64,11 +88,7 @@ export default function ManagerLoginPage() {
         type="button"
         onClick={toggleMode}
         className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
-        style={{
-          borderColor: "rgba(245,237,213,0.28)",
-          background: "rgba(245,237,213,0.08)",
-          color: SANDY,
-        }}
+        style={toggleStyle}
         title={dark ? "Switch to light mode" : "Switch to dark mode"}
       >
         {dark ? <SunIcon /> : <MoonIcon />}
@@ -83,16 +103,16 @@ export default function ManagerLoginPage() {
           alt="Pillar"
           width={300}
           height={200}
-          className="mb-6 h-auto w-52 opacity-90 sm:mb-8 sm:w-72"
+          className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56"
           priority
         />
 
         {/* Heading */}
         <div className="mb-7 text-center">
-          <h1 className="text-xl font-light tracking-tight text-white sm:text-2xl">
+          <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
             Manager Login
           </h1>
-          <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, rgba(245,237,213,0.5), transparent)` }} />
+          <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
         </div>
 
         {/* Form */}
@@ -104,58 +124,33 @@ export default function ManagerLoginPage() {
             const fd = new FormData(form);
             const email = String(fd.get("email") || "");
             const password = String(fd.get("password") || "");
-
             const res = await fetch("/api/manager/login", {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ email, password }),
             });
-
             if (!res.ok) {
               const data = (await res.json().catch(() => ({}))) as { error?: string };
               alert(data.error || "Login failed");
               return;
             }
-
             window.location.href = "/manager";
           }}
         >
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
-              Email
-            </p>
-            <input
-              name="email"
-              type="email"
-              autoComplete="username"
-              required
-              placeholder="manager@domain.com"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
+            <input name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
-              Password
-            </p>
-            <input
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              placeholder="••••••••"
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-[#F5EDD5]/30 focus:ring-1 focus:ring-[#F5EDD5]/15"
-            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
+            <input name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
           </div>
 
           <button
             type="submit"
             className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
-            style={{
-              background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
-              color: "#3d2a0a",
-              boxShadow: "0 0 20px rgba(245,237,213,0.25)",
-            }}
+            style={submitStyle}
           >
             Sign In
           </button>
@@ -164,7 +159,7 @@ export default function ManagerLoginPage() {
             <Link
               href="/manager/forgot-password"
               className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-              style={{ color: "rgba(245,237,213,0.5)" }}
+              style={{ color: forgotColor }}
             >
               Forgot Password?
             </Link>
@@ -172,11 +167,7 @@ export default function ManagerLoginPage() {
             <Link
               href="/manager/signup"
               className="group flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-300"
-              style={{
-                borderColor: "rgba(245,237,213,0.3)",
-                backgroundColor: "rgba(245,237,213,0.08)",
-                color: "rgba(245,237,213,0.85)",
-              }}
+              style={signupStyle}
             >
               Don&apos;t have an account?
               <span className="transition-transform duration-300 group-hover:translate-x-0.5">Sign up →</span>

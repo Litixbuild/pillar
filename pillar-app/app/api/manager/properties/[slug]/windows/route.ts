@@ -48,6 +48,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ slug: string }
       type,
       icon: typeof body.icon === 'string' && body.icon.trim() ? body.icon.trim() : undefined,
       body: typeof body.body === 'string' && body.body.trim() ? body.body.trim() : undefined,
+      room: typeof body.room === 'string' && body.room.trim() ? body.room.trim() : undefined,
     };
 
     await createPropertyWindow(slug, window, displayOrder);
@@ -82,6 +83,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ slug: string 
         icon: typeof w.icon === 'string' && w.icon.trim() ? w.icon.trim() : undefined,
         body: typeof w.body === 'string' && w.body.trim() ? w.body.trim() : undefined,
         url: typeof w.url === 'string' && w.url.trim() ? w.url.trim() : undefined,
+        room: typeof w.room === 'string' && w.room.trim() ? w.room.trim() : undefined,
       }))
       .filter((w) => w.id);
 
