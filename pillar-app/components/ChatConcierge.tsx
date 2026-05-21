@@ -394,6 +394,9 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
     if (!data.places.length) return <div className="text-xs" style={{ color: 'var(--text-muted)' }}>No results found nearby.</div>;
     return (
       <div className="space-y-2.5">
+        {data.intro ? (
+          <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{data.intro}</div>
+        ) : null}
         <div className="lux-title text-sm" style={{ color: 'var(--text-primary)' }}>{data.label || 'Nearby options'}</div>
         <div className="space-y-2">
           {data.places.map((p, idx) => (
@@ -474,7 +477,7 @@ type ButlerCardData =
   | { kind: 'phone'; phoneNumber: string; model?: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model?: string }
   | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string; rating?: number }> }>; model?: string }
-  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
+  | { kind: 'places'; label?: string; intro?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
   | { kind: 'weather'; summary: string; model?: string };
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
@@ -489,7 +492,7 @@ type ChatOkResponse =
   | { kind: 'phone'; phoneNumber: string; model: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model: string }
   | { kind: 'itinerary'; intro: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string }> }>; model: string }
-  | { kind: 'places'; label?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
+  | { kind: 'places'; label?: string; intro?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
   | { kind: 'weather'; summary: string; model: string };
 
 const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Check-out instructions'] as const;
@@ -603,7 +606,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               : data.kind === 'itinerary' ? { kind: 'itinerary', intro: typeof (data as { intro?: unknown }).intro === 'string' ? (data as { intro: string }).intro : undefined, sections: Array.isArray(data.sections) ? data.sections : [], model: data.model }
               : data.kind === 'weather' ? { kind: 'weather', summary: data.summary || '—', model: data.model }
               : data.kind === 'property' ? { kind: 'property', address: data.address || '', zip: data.zip || '', houseRules: data.houseRules || '', managerPhone: data.managerPhone || '', wifiName: data.wifiName || '', model: data.model }
-              : { kind: 'places', label: (data as { label?: string }).label, places: Array.isArray(data.places) ? data.places : [], model: data.model };
+              : { kind: 'places', label: (data as { label?: string }).label, intro: (data as { intro?: string }).intro, places: Array.isArray(data.places) ? data.places : [], model: data.model };
 
             setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: card.kind === 'text' ? (card.text || '').trim() || '—' : '—', data: card }]);
             return;

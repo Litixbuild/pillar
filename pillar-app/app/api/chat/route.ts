@@ -131,6 +131,7 @@ type ChatOkResponse =
   | {
       kind: "places";
       label?: string;
+      intro?: string;
       places: Array<{
         name: string;
         cuisine?: string;
@@ -616,9 +617,9 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
     })
     .filter((p) => p.name);
 
-  // Enrich the top 8 so that after any intent-based filtering, at least 5 enriched places remain.
-  const top = base.slice(0, 8);
-  const rest = base.slice(8);
+  // Enrich the top 5 we'll actually show — fewer parallel calls, same UX.
+  const top = base.slice(0, 5);
+  const rest = base.slice(5);
 
   const enrichedTopSettled = await Promise.allSettled(
     top.map(async (p) => {
@@ -632,7 +633,14 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
         "&key=" +
         encodeURIComponent(apiKey);
 
-      const detailsRes = await fetch(detailsUrl, { cache: "no-store" });
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 3000);
+      let detailsRes: Response;
+      try {
+        detailsRes = await fetch(detailsUrl, { cache: "no-store", signal: controller.signal });
+      } finally {
+        clearTimeout(tid);
+      }
       if (!detailsRes.ok) return p;
 
       const details = (await detailsRes.json()) as {
@@ -670,12 +678,20 @@ async function classifyWithAI(
   modelId: string,
   history: Array<{ role: "user" | "model"; text: string }>,
   message: string,
-  near: string
+  near: string,
+  historyHasPlacesContext: boolean
 ): Promise<IntentResult> {
   const ctx = history
     .slice(-6)
     .map((h) => `${h.role === "user" ? "Guest" : "Concierge"}: ${h.text.slice(0, 300)}`)
     .join("\n");
+
+  const placesContextNote = historyHasPlacesContext
+    ? `\nCRITICAL — The concierge already showed place recommendations or a full-day itinerary in this conversation. Rules for follow-ups:
+• If the history shows a FULL-DAY ITINERARY and the guest wants to adjust/modify/redo it in any way (indoor, outdoor, vegetarian, romantic, budget, different options, different vibe, etc.) → isDayPlan:true, needsPlaces:true, dayPlanModifiers:"the preference". Even vague requests like "something different" or "make it better" count as plan modifications.
+• If the guest asks for ONE specific new category ("just coffee shops", "only bars", "find me a spa") → isDayPlan:false, needsPlaces:true.
+• Only set needsPlaces:false if the guest is asking about WiFi, house rules, check-in/out, or weather — nothing else qualifies.`
+    : "";
 
   const prompt = `You are classifying a hotel guest’s message to determine what data to fetch.
 Property location: ${near}
@@ -689,14 +705,14 @@ Reply with ONLY valid JSON, no markdown fences:
 {"needsPlaces":boolean,"isDayPlan":boolean,"needsWeather":boolean,"placesQuery":"specific Google Places search query","dayPlanModifiers":"short phrase or empty string"}
 
 Rules:
-- needsPlaces: true when the guest wants FRESH place data from Google — any request for a type of place (restaurant, spa, activity, bar, shop, attraction, coffee, gym, etc.). Set true even after a day plan was already shown — if they ask about places, always fetch fresh results. Set false ONLY for purely conversational questions needing no new data ("which of those is closest?", "what are the hours?", "tell me more about that place", "sounds great, let's go").
+- needsPlaces: true when the guest wants FRESH place data from Google — any request for a type of place (restaurant, spa, activity, bar, shop, attraction, coffee, gym, etc.). Set true even after a day plan was already shown — if they ask about places, always fetch fresh results. ALWAYS true when isDayPlan is true. Set false ONLY for purely conversational questions needing no new data that are NOT about local places.
 - isDayPlan: true ONLY when (a) guest explicitly requests a full-day itinerary ("plan my day", "full itinerary", "what should we do all day"), OR (b) a full itinerary was previously shown AND guest clearly wants to redo the whole plan ("keep it indoors", "show me a different version", "redo the plan outdoors"). A single-category request ("what restaurants?", "good coffee nearby?", "show me activities") is NEVER isDayPlan even after a prior day plan.
 - needsWeather: true if guest asks about current weather or forecast
-- placesQuery: best Google Places search string for the guest's actual intent, informed by the full conversation — e.g. if earlier turns discussed wellness and guest says "spa sounds great", return "spa near ${near}"
+- placesQuery: best Google Places search string for the guest’s actual intent, informed by the full conversation — e.g. if earlier turns discussed wellness and guest says "spa sounds great", return "spa near ${near}". For follow-up questions about shown places ("any vegetarian?", "which is closest?"), derive a contextually appropriate search (e.g. "vegetarian restaurants near ${near}").
 - dayPlanModifiers: ONLY when isDayPlan is true — short phrase capturing preferences from the full conversation ("indoor only", "outdoor", "rainy day", "romantic", "budget"). Empty string if none. If guest said "indoors", "inside", "rainy", or "not outdoor" use "indoor only".
-- If needsPlaces is false, placesQuery can be empty`;
+- Always provide a non-empty placesQuery when needsPlaces is true.${placesContextNote}`;
 
-  const model = genAI.getGenerativeModel({ model: modelId });
+  const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 160 } });
   const result = await withOverloadRetry(() => model.generateContent(prompt));
   const raw = result.response
     .text()
@@ -723,18 +739,34 @@ Rules:
 function buildDayPlanQueries(near: string, modifiers: string) {
   const m = modifiers.toLowerCase();
   const indoor = /indoor|inside|rainy|bad.weather|stay.in|not.outdoor|no.outdoor|indoors/i.test(m);
+  const vegetarian = /vegetarian|vegan|plant.based/i.test(m);
+  const romantic = /romantic|date.night|couples/i.test(m);
+  const budget = /budget|cheap|affordable|inexpensive/i.test(m);
+
+  const mealSuffix = [
+    vegetarian ? 'vegetarian' : '',
+    romantic ? 'romantic upscale' : '',
+    budget ? 'affordable casual' : '',
+    indoor ? 'indoor' : '',
+  ].filter(Boolean).join(' ');
+
+  const activitySuffix = [
+    indoor ? 'indoor' : 'outdoor',
+    romantic ? 'romantic' : '',
+    budget ? 'free or affordable' : '',
+  ].filter(Boolean).join(' ');
 
   return {
-    breakfast: `breakfast cafe near ${near}`,
+    breakfast: `${mealSuffix} breakfast cafe near ${near}`.trim(),
     morningActivity: indoor
       ? `indoor activities museum gallery art exhibit near ${near}`
-      : `things to do morning sightseeing attractions near ${near}`,
-    lunch: `lunch restaurant near ${near}`,
+      : `${activitySuffix} morning sightseeing attractions near ${near}`.trim(),
+    lunch: `${mealSuffix} lunch restaurant near ${near}`.trim(),
     afternoonActivity: indoor
       ? `indoor entertainment bowling escape room shopping cinema near ${near}`
-      : `afternoon activities parks gardens scenic outdoor near ${near}`,
-    dinner: `dinner restaurant near ${near}`,
-    dessert: `dessert ice cream bakery cafe near ${near}`,
+      : `${activitySuffix} afternoon activities parks scenic near ${near}`.trim(),
+    dinner: `${mealSuffix} dinner restaurant near ${near}`.trim(),
+    dessert: `${mealSuffix} dessert bakery cafe near ${near}`.trim(),
   };
 }
 
@@ -820,17 +852,68 @@ export async function POST(req: Request) {
     const keywordWantsLocal = wantsLocal;
     const keywordWantsDayPlan = wantsDayPlan;
 
+    // Detect if places or an itinerary were shown earlier in this conversation.
+    // When true we keep every response in structured-card mode.
+    const historyHasPlacesContext = history.some(
+      (h) =>
+        h.role === "model" &&
+        (h.text.includes("[Showed place") || h.text.includes("[Showed a full-day itinerary"))
+    );
+
+    // Derive a fallback query from the previous shown label, e.g. "[Showed place recommendations (Dinner spots): ...]"
+    let historyPlacesQuery = "";
+    if (historyHasPlacesContext) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const h = history[i];
+        if (h.role !== "model") continue;
+        const labelMatch = h.text.match(/\[Showed place recommendations \(([^)]+)\)/);
+        if (labelMatch) { historyPlacesQuery = `${labelMatch[1]} near ${near}`; break; }
+        if (h.text.includes("[Showed a full-day itinerary")) { historyPlacesQuery = `restaurants and activities near ${near}`; break; }
+      }
+    }
+
+    // Was a full-day itinerary shown earlier? If so, follow-ups should redo the plan.
+    const historyHasItinerary = history.some(
+      (h) => h.role === "model" && h.text.includes("[Showed a full-day itinerary")
+    );
+
     if (hasHistory) {
+      const forceLocal = historyHasPlacesContext &&
+        !looksLikePropertyInfoQuestion(message) &&
+        !looksLikeWeatherQuestion(message);
+
       try {
-        const intent = await classifyWithAI(genAI, modelId, history, message, near);
-        // AI can upgrade but not downgrade keyword-detected place intent
-        wantsLocal = intent.needsPlaces || keywordWantsLocal;
+        const intent = await classifyWithAI(genAI, modelId, history, message, near, historyHasPlacesContext);
+
+        wantsLocal = intent.needsPlaces || intent.isDayPlan || keywordWantsLocal || forceLocal;
         wantsDayPlan = intent.isDayPlan || keywordWantsDayPlan;
         wantsWeather = intent.needsWeather;
         smartPlacesModifier = intent.dayPlanModifiers || '';
-        if (intent.needsPlaces) smartPlacesQuery = intent.placesQuery;
+
+        if (intent.needsPlaces || intent.isDayPlan) {
+          smartPlacesQuery = intent.placesQuery;
+        } else if (forceLocal && historyPlacesQuery) {
+          smartPlacesQuery = historyPlacesQuery;
+        }
+
+        // Safety net: if an itinerary was shown and the classifier flagged local intent
+        // but didn't set isDayPlan, default to redoing the full plan so the guest
+        // always gets a structured itinerary response rather than a single places card.
+        if (historyHasItinerary && wantsLocal && !wantsDayPlan) {
+          wantsDayPlan = true;
+        }
+        // When redoing the plan without a modifier from the classifier, use the raw
+        // message so keywords like "indoor", "vegetarian", "romantic" are picked up.
+        if (wantsDayPlan && !smartPlacesModifier) {
+          smartPlacesModifier = message;
+        }
       } catch {
-        // Fall through with keyword-based detection
+        wantsLocal = keywordWantsLocal || forceLocal;
+        if (historyHasItinerary && wantsLocal) {
+          wantsDayPlan = true;
+          smartPlacesModifier = message;
+        }
+        if (forceLocal && historyPlacesQuery) smartPlacesQuery = historyPlacesQuery;
       }
     }
 
@@ -915,28 +998,48 @@ export async function POST(req: Request) {
     // Uses an offset when the guest asks for "more options" so results rotate.
     if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
       const offset = wantsMoreOptions ? 5 : 0;
-      const selected = livePlaces.slice(offset, offset + 5);
+      // If the rotation offset would produce an empty slice (fewer results than expected),
+      // fall back to showing the first available set rather than falling through to plain text.
+      const selected = livePlaces.slice(offset, offset + 5).length > 0
+        ? livePlaces.slice(offset, offset + 5)
+        : livePlaces.slice(0, 5);
       if (selected.length > 0) {
-        // Generate a one-sentence blurb per place in a single compact Gemini call.
+        // Single Gemini call: warm intro sentence + one blurb per place.
         let blurbs: Record<string, string> = {};
+        let placesIntro: string | undefined;
         try {
-          const blurbModel = genAI.getGenerativeModel({ model: modelId });
-          const blurbPrompt = `You are a luxury estate concierge. For each place below write ONE short sentence (max 12 words) that tells a guest why they will love it. Be specific to each place — mention what makes it distinctive (cuisine style, vibe, specialty). Return ONLY valid JSON, no markdown: {"blurbs":[{"name":"exact name","blurb":"sentence"}]}\n\nPlaces:\n${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_/g, " ")})` : ""}`).join("\n")}`;
+          const blurbModel = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 600 } });
+          const blurbPrompt = `You are Pillar — a warm, attentive personal concierge for a private estate. The guest just asked: "${message}"
+
+Write ONE brief intro sentence (12 words max) as if you're personally steering them toward these spots — genuine, specific to their ask, not a generic opener. Sound like a trusted friend who knows the area.
+
+Then for each place write ONE sentence (12 words max) in a concierge's personal voice — a genuine endorsement, not a review snippet. Highlight what makes it worth visiting.
+
+Return ONLY valid JSON, no markdown:
+{"intro":"your warm sentence","blurbs":[{"name":"exact name","blurb":"sentence"}]}
+
+Places:
+${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_/g, " ")})` : ""}`).join("\n")}`;
           const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
-          const blurbRaw = blurbResult.response.text().trim()
-            .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
-          const blurbParsed = JSON.parse(blurbRaw) as { blurbs?: Array<{ name: string; blurb: string }> };
+          // Robust extraction: find the outermost { ... } so any prose Gemini adds before/after doesn't break parsing
+          const rawBlurbText = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
+          const bStart = rawBlurbText.indexOf("{");
+          const bEnd = rawBlurbText.lastIndexOf("}");
+          const blurbRaw = bStart !== -1 && bEnd > bStart ? rawBlurbText.slice(bStart, bEnd + 1) : rawBlurbText.trim();
+          const blurbParsed = JSON.parse(blurbRaw) as { intro?: string; blurbs?: Array<{ name: string; blurb: string }> };
+          if (blurbParsed.intro) placesIntro = stripMarkdown(blurbParsed.intro);
           for (const b of blurbParsed.blurbs ?? []) {
             if (b.name && b.blurb) blurbs[b.name.toLowerCase().trim()] = stripMarkdown(b.blurb);
           }
         } catch {
-          // Blurbs are optional — fall through without them if Gemini fails
+          // Blurbs/intro are optional — fall through without them if Gemini fails
         }
 
         return Response.json(
           {
             kind: "places",
             label: getPlacesLabel(message),
+            intro: placesIntro,
             places: selected.map((p) => ({
               name: p.name,
               cuisine: inferCuisine(p),
@@ -1121,10 +1224,10 @@ Return ONLY valid JSON (no markdown fences, no extra text):
               const blurbModel = genAI.getGenerativeModel({ model: modelId });
               const blurbPrompt = `You are a luxury estate concierge. For each place write ONE vivid sentence (max 15 words) telling a nearby guest why they will love visiting it. Return ONLY valid JSON, no markdown: {"blurbs":[{"name":"exact name","blurb":"sentence"}]}\n\nPlaces:\n${allSelected.map((p) => `- ${p.name}${p.formattedAddress ? ` (${p.formattedAddress.split(",").slice(0, 2).join(",")})` : ""}`).join("\n")}`;
               const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
-              const blurbStripped = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
-              const bStart = blurbStripped.indexOf("{");
-              const bEnd = blurbStripped.lastIndexOf("}");
-              const blurbRaw = bStart !== -1 && bEnd > bStart ? blurbStripped.slice(bStart, bEnd + 1) : blurbStripped.trim();
+              const blurbStrippedRaw = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
+              const bStart = blurbStrippedRaw.indexOf("{");
+              const bEnd = blurbStrippedRaw.lastIndexOf("}");
+              const blurbRaw = bStart !== -1 && bEnd > bStart ? blurbStrippedRaw.slice(bStart, bEnd + 1) : blurbStrippedRaw.trim();
               const blurbParsed = JSON.parse(blurbRaw) as { blurbs?: Array<{ name: string; blurb: string }> };
               for (const b of blurbParsed.blurbs ?? []) {
                 if (b.name && b.blurb) blurbs[b.name.toLowerCase().trim()] = stripMarkdown(b.blurb);
