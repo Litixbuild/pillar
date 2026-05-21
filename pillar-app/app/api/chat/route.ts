@@ -1,5 +1,109 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// New Places API (places.googleapis.com) text search — richer fields than the legacy endpoint.
+async function placesTextSearchV1(apiKey: string, query: string): Promise<PlaceResult[]> {
+  const cacheKey = `v2:${query.trim().toLowerCase()}`;
+  const cached = getCachedPlaces(cacheKey);
+  if (cached) return cached;
+
+  const url = 'https://places.googleapis.com/v1/places:searchText';
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 4500);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        // Field mask keeps responses fast/cheap.
+        'X-Goog-FieldMask': [
+          'places.id',
+          'places.displayName',
+          'places.formattedAddress',
+          'places.types',
+          'places.primaryType',
+          'places.primaryTypeDisplayName',
+          'places.editorialSummary',
+          'places.priceLevel',
+          'places.takeout',
+          'places.delivery',
+          'places.dineIn',
+          'places.reservable',
+          'places.servesBeer',
+          'places.servesWine',
+          'places.servesVegetarianFood',
+          'places.nationalPhoneNumber',
+          'places.internationalPhoneNumber',
+          'places.websiteUri',
+          'places.googleMapsUri',
+          'places.rating',
+        ].join(','),
+      },
+      body: JSON.stringify({ textQuery: query, languageCode: 'en', regionCode: 'US' }),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(tid);
+  }
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Places v1 searchText failed (HTTP ${res.status}): ${body.slice(0, 200)}`);
+  }
+
+  const data = (await res.json()) as {
+    places?: Array<{
+      id?: string;
+      displayName?: { text?: string };
+      formattedAddress?: string;
+      types?: string[];
+      primaryType?: string;
+      editorialSummary?: { text?: string };
+      priceLevel?: string;
+      takeout?: boolean;
+      delivery?: boolean;
+      dineIn?: boolean;
+      reservable?: boolean;
+      servesBeer?: boolean;
+      servesWine?: boolean;
+      servesVegetarianFood?: boolean;
+      nationalPhoneNumber?: string;
+      internationalPhoneNumber?: string;
+      websiteUri?: string;
+      googleMapsUri?: string;
+      rating?: number;
+    }>;
+  };
+
+  const out = (data.places || [])
+    .map((p) => ({
+      placeId: p.id,
+      name: p.displayName?.text || '',
+      formattedAddress: p.formattedAddress,
+      types: Array.isArray(p.types) ? p.types : undefined,
+      primaryType: typeof p.primaryType === 'string' ? p.primaryType : undefined,
+      editorialSummary: p.editorialSummary?.text || undefined,
+      priceLevel: typeof p.priceLevel === 'string' ? p.priceLevel : undefined,
+      takeout: typeof p.takeout === 'boolean' ? p.takeout : undefined,
+      delivery: typeof p.delivery === 'boolean' ? p.delivery : undefined,
+      dineIn: typeof p.dineIn === 'boolean' ? p.dineIn : undefined,
+      reservable: typeof p.reservable === 'boolean' ? p.reservable : undefined,
+      servesBeer: typeof p.servesBeer === 'boolean' ? p.servesBeer : undefined,
+      servesWine: typeof p.servesWine === 'boolean' ? p.servesWine : undefined,
+      servesVegetarianFood: typeof p.servesVegetarianFood === 'boolean' ? p.servesVegetarianFood : undefined,
+      phone: p.internationalPhoneNumber || p.nationalPhoneNumber || undefined,
+      websiteUri: p.websiteUri,
+      googleMapsUri: p.googleMapsUri,
+      rating: p.rating,
+    }) satisfies PlaceResult)
+    .filter((p) => p.name);
+
+  setCachedPlaces(cacheKey, out);
+  return out;
+}
+
 
 function getPlacesLabel(userMessage: string): string {
   const m = userMessage.toLowerCase();
@@ -8,15 +112,50 @@ function getPlacesLabel(userMessage: string): string {
   if (m.includes("breakfast")) return "Breakfast spots";
   if (m.includes("lunch")) return "Lunch spots";
   if (m.includes("coffee") || m.includes("café") || m.includes("cafe")) return "Coffee spots";
-  if (m.includes("bar") || m.includes("cocktail")) return "Bars nearby";
-  if (m.includes("spa") || m.includes("wellness")) return "Wellness nearby";
-  if (m.includes("gym") || m.includes("fitness")) return "Fitness nearby";
+  if (m.includes("cocktail") || m.includes("bar") || m.includes("pub")) return "Bars nearby";
+  if (m.includes("brewery") || m.includes("winery")) return "Breweries & wineries";
+  if (m.includes("spa") || m.includes("massage") || m.includes("wellness")) return "Wellness nearby";
+  if (m.includes("yoga") || m.includes("pilates") || m.includes("crossfit")) return "Fitness studios";
+  if (m.includes("gym") || m.includes("fitness")) return "Gyms nearby";
+  if (m.includes("bike") || m.includes("bicycle") || m.includes("cycling")) return "Bike shops & rentals";
+  if (m.includes("kayak") || m.includes("paddleboard") || m.includes("canoe")) return "Water sports";
+  if (m.includes("surf")) return "Surf shops";
+  if (m.includes("golf")) return "Golf nearby";
+  if (m.includes("tennis") || m.includes("pickleball")) return "Courts nearby";
+  if (m.includes("bowling")) return "Bowling alleys";
+  if (m.includes("pool") || m.includes("swim")) return "Pools & aquatics";
+  if (m.includes("beach")) return "Beaches nearby";
+  if (m.includes("park") || m.includes("trail") || m.includes("hike")) return "Parks & trails";
+  if (m.includes("waterpark") || m.includes("water park") || m.includes("amusement")) return "Attractions";
+  if (m.includes("museum")) return "Museums nearby";
+  if (m.includes("gallery") || m.includes("art")) return "Art & galleries";
+  if (m.includes("theater") || m.includes("cinema") || m.includes("movie")) return "Entertainment";
+  if (m.includes("concert") || m.includes("live music")) return "Live music";
+  if (m.includes("nightclub")) return "Nightlife";
+  if (m.includes("smoke") || m.includes("vape") || m.includes("tobacco") || m.includes("cigar") || m.includes("hookah")) return "Smoke shops";
+  if (m.includes("dispensary") || m.includes("cannabis")) return "Dispensaries";
   if (m.includes("grocery") || m.includes("supermarket")) return "Grocery stores";
-  if (m.includes("pharmacy")) return "Pharmacies nearby";
-  if (m.includes("museum") || m.includes("art")) return "Arts & culture";
-  if (m.includes("shopping") || m.includes("shop")) return "Shopping nearby";
+  if (m.includes("pharmacy") || m.includes("drug store")) return "Pharmacies nearby";
+  if (m.includes("gas station")) return "Gas stations";
+  if (m.includes("car wash") || m.includes("auto")) return "Auto services";
+  if (m.includes("salon") || m.includes("barber") || m.includes("nail")) return "Salons & barbers";
+  if (m.includes("laundry") || m.includes("dry clean")) return "Laundry nearby";
+  if (m.includes("pet store") || m.includes("vet")) return "Pet services";
+  if (m.includes("urgent care") || m.includes("clinic") || m.includes("doctor") || m.includes("dentist")) return "Medical nearby";
+  if (m.includes("bank") || m.includes("atm")) return "Banks & ATMs";
+  if (m.includes("hardware")) return "Hardware stores";
+  if (m.includes("tire") || m.includes("mechanic") || m.includes("oil change") || m.includes("auto repair")) return "Auto services";
+  if (m.includes("locksmith")) return "Locksmiths nearby";
+  if (m.includes("liquor") || m.includes("wine store")) return "Liquor & wine";
+  if (m.includes("ice cream") || m.includes("dessert") || m.includes("bakery") || m.includes("donut")) return "Desserts nearby";
+  if (m.includes("sandwich") || m.includes("deli") || m.includes("bagel")) return "Delis & cafes";
+  if (m.includes("florist") || m.includes("flower")) return "Florists nearby";
+  if (m.includes("jewelry") || m.includes("antique")) return "Shops nearby";
+  if (m.includes("bookstore") || m.includes("book store")) return "Bookstores nearby";
+  if (m.includes("mall") || m.includes("boutique") || m.includes("clothing") || m.includes("shoes")) return "Shopping nearby";
+  if (m.includes("shopping") || m.includes("shop") || m.includes("store")) return "Shopping nearby";
   if (m.includes("restaurant") || m.includes("food") || m.includes("eat")) return "Restaurants nearby";
-  if (m.includes("activities") || m.includes("things to do")) return "Things to do";
+  if (m.includes("activities") || m.includes("things to do") || m.includes("attractions")) return "Things to do";
   return "Nearby options";
 }
 
@@ -28,7 +167,18 @@ function looksLikeMoreOptionsRequest(userMessage: string): boolean {
     m.includes('something else') ||
     m.includes('different options') ||
     m.includes('another option') ||
-    m.includes('others')
+    m.includes('others') ||
+    m.includes('show me more') ||
+    m.includes('see more') ||
+    m.includes('give me more') ||
+    m.includes('any others') ||
+    m.includes('more choices') ||
+    m.includes('other choices') ||
+    m.includes('different ones') ||
+    m.includes('show me others') ||
+    m.includes('let me see more') ||
+    m.includes('other suggestions') ||
+    m.includes('more suggestions')
   );
 }
 
@@ -72,6 +222,27 @@ type OverloadedError = {
   retryAfterMs: number;
 };
 
+type CacheEntry<T> = { value: T; expiresAtMs: number };
+
+// Best-effort in-memory caches to reduce latency/cost for repeated queries.
+// Note: these live only for the lifetime of the Node process (works well on warm lambdas).
+const PLACES_CACHE_TTL_MS = Math.max(5_000, Number(process.env.PLACES_CACHE_TTL_MS || 60_000));
+const placesCache: Map<string, CacheEntry<PlaceResult[]>> = new Map();
+
+function getCachedPlaces(key: string): PlaceResult[] | null {
+  const hit = placesCache.get(key);
+  if (!hit) return null;
+  if (Date.now() >= hit.expiresAtMs) {
+    placesCache.delete(key);
+    return null;
+  }
+  return hit.value;
+}
+
+function setCachedPlaces(key: string, value: PlaceResult[]) {
+  placesCache.set(key, { value, expiresAtMs: Date.now() + PLACES_CACHE_TTL_MS });
+}
+
 type ChatRequestBody = {
   message: string;
   slug: string;
@@ -94,6 +265,16 @@ type PlaceResult = {
   name: string;
   formattedAddress?: string;
   types?: string[];
+  primaryType?: string;
+  editorialSummary?: string;
+  priceLevel?: string;
+  takeout?: boolean;
+  delivery?: boolean;
+  dineIn?: boolean;
+  reservable?: boolean;
+  servesBeer?: boolean;
+  servesWine?: boolean;
+  servesVegetarianFood?: boolean;
   phone?: string;
   websiteUri?: string;
   googleMapsUri?: string;
@@ -287,32 +468,57 @@ async function vertexGenerateContent(opts: {
 
 function looksLikeLocalBusinessQuestion(userMessage: string): boolean {
   const m = userMessage.toLowerCase();
-  return [
-    "itinerary",
-    "plan a day",
-    "plan my day",
-    "nearby",
-    "near me",
-    "around here",
-    "local",
-    "restaurant",
-    "breakfast",
-    "brunch",
-    "lunch",
-    "dinner",
-    "coffee",
-    "bar",
-    "bike",
-    "rent",
-    "rental",
-    "pharmacy",
-    "grocery",
-    "spa",
-    "gym",
-    "museum",
-    "shopping",
-    "things to do",
-  ].some((k) => m.includes(k));
+  // Specific place types and activities
+  const specific = [
+    "restaurant", "breakfast", "brunch", "lunch", "dinner", "eat", "food", "taco", "pizza",
+    "burger", "sushi", "bbq", "seafood", "steakhouse", "italian", "mexican", "thai", "chinese",
+    "coffee", "cafe", "café", "bar", "pub", "cocktail", "brewery", "winery", "nightclub",
+    "bike", "bicycle", "cycling", "kayak", "canoe", "paddleboard", "surf", "skate", "golf",
+    "gym", "fitness", "yoga", "pilates", "crossfit", "pool", "tennis", "bowling",
+    "spa", "massage", "salon", "barber", "nail",
+    "museum", "gallery", "art", "theater", "cinema", "movie", "concert", "live music",
+    "park", "trail", "hike", "beach", "waterpark", "water park", "amusement",
+    "grocery", "supermarket", "pharmacy", "drug store", "cvs", "walgreens",
+    "shopping", "mall", "boutique", "clothing", "shoes",
+    "smoke", "vape", "tobacco", "cigar", "hookah",
+    "dispensary", "cannabis",
+    "gas station", "car wash", "auto",
+    "hotel", "motel", "airbnb",
+    "urgent care", "hospital", "clinic", "dentist", "doctor",
+    "bank", "atm",
+    "laundry", "dry clean",
+    "pet store", "vet",
+    "rent", "rental",
+    "hardware", "home depot", "ace hardware", "lowe",
+    "tire", "mechanic", "oil change", "auto repair",
+    "locksmith", "storage", "print", "fedex", "ups store",
+    "liquor", "wine store", "beer",
+    "ice cream", "dessert", "bakery", "donut", "pastry",
+    "food truck", "sandwich", "deli", "bagel",
+    "florist", "flower",
+    "jewelry", "watch", "antique",
+    "bookstore", "book store",
+    "itinerary", "plan a day", "plan my day", "day plan", "full day",
+    "things to do", "activities", "attractions",
+  ];
+  if (specific.some((k) => m.includes(k))) return true;
+
+  // Generic "find me a ___" / "where is a ___" / "___ near me" patterns — catches anything
+  const genericPatterns = [
+    /\bnear(by| me| here| us)\b/,
+    /\baround here\b/,
+    /\bin the area\b/,
+    /\bclose by\b/,
+    /\blocal\b/,
+    /\bwhere (can|do|is|are)\b/,
+    /\b(find|show|get) me\b/,
+    /\blooking for\b/,
+    /\bany .{2,30} (near|around|close|in)\b/,
+    /\b\w+ shop\b/,
+    /\b\w+ store\b/,
+    /\b\w+ place\b/,
+  ];
+  return genericPatterns.some((re) => re.test(m));
 }
 
 function looksLikeDayPlanQuestion(userMessage: string): boolean {
@@ -340,6 +546,37 @@ function looksLikeDayPlanQuestion(userMessage: string): boolean {
   return explicit || (mealHits >= 2 && wantsActivities);
 }
 
+function looksLikeDayPlanModification(userMessage: string): boolean {
+  const m = userMessage.toLowerCase();
+  // Signals that the guest wants to redo or modify a previously proposed full-day itinerary.
+  // Does NOT include "more options" / "other options" — those are single-category rotation
+  // requests handled by looksLikeMoreOptionsRequest, not full plan redos.
+  return [
+    'redo',
+    'revise',
+    'adjust',
+    'change the plan',
+    'update the plan',
+    'modify',
+    'make it better',
+    'different version',
+    'different plan',
+    'redo the plan',
+    'redo the day',
+    'indoors',
+    'indoor',
+    'inside',
+    'outdoor',
+    'rainy',
+    'vegetarian',
+    'vegan',
+    'romantic',
+    'budget',
+    'kid',
+    'family',
+  ].some((k) => m.includes(k));
+}
+
 type MealIntent = "breakfast" | "brunch" | "lunch" | "dinner" | null;
 
 function getMealIntent(userMessage: string): MealIntent {
@@ -351,17 +588,25 @@ function getMealIntent(userMessage: string): MealIntent {
   return null;
 }
 
-function shapePlacesQuery(userMessage: string, property: { PropertyZipCode: string; PropertyAddress: string }) {
-  const meal = getMealIntent(userMessage);
-  const base = `${userMessage} near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
-  if (!meal) return base;
+function extractPlaceSearchTerms(userMessage: string): string {
+  // Strip common filler from the front so Google Places gets clean search terms.
+  let s = userMessage.trim();
+  s = s.replace(/^(can you |could you |please )?(are there any|find me( a| an| some)?|show me( a| an| some)?|i('m| am) looking for( a| an| some)?|where (can i find|is there a?|are there( any)?)|give me( a| an| some)?|i want( to find)?( a| an| some)?|looking for( a| an| some)?|what (are|is)|tell me about( some)?|any good|any)\s+/i, '');
+  // Strip trailing location phrases ("near me", "around here", etc.)
+  s = s.replace(/\s*(near me|nearby|around here|in the area|close by|around|near here|close to here|in this area)\s*[?.!]?$/i, '').trim();
+  return s.length >= 2 ? s : userMessage.trim();
+}
 
-  // Bias toward the right kind of result from Places.
-  if (meal === "dinner") return `${userMessage} dinner restaurant`.trim() + ` near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
-  if (meal === "lunch") return `${userMessage} lunch restaurant`.trim() + ` near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
-  if (meal === "breakfast") return `${userMessage} breakfast`.trim() + ` near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
-  if (meal === "brunch") return `${userMessage} brunch`.trim() + ` near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
-  return base;
+function shapePlacesQuery(userMessage: string, property: { PropertyZipCode: string; PropertyAddress: string }) {
+  const terms = extractPlaceSearchTerms(userMessage);
+  const near = `near ${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
+  const meal = getMealIntent(terms);
+  if (!meal) return `${terms} ${near}`.trim();
+  if (meal === "dinner") return `${terms} dinner restaurant ${near}`.trim();
+  if (meal === "lunch") return `${terms} lunch restaurant ${near}`.trim();
+  if (meal === "breakfast") return `${terms} breakfast ${near}`.trim();
+  if (meal === "brunch") return `${terms} brunch ${near}`.trim();
+  return `${terms} ${near}`.trim();
 }
 
 function filterPlacesForIntent(userMessage: string, places: PlaceResult[]): PlaceResult[] {
@@ -486,6 +731,46 @@ function inferCuisine(place: PlaceResult): string | undefined {
   return undefined;
 }
 
+function buildPlaceDescription(place: PlaceResult): string {
+  // Priority 1: use Google's editorial summary — it's always place-specific.
+  if (place.editorialSummary?.trim()) return place.editorialSummary.trim();
+
+  // Priority 2: build a real description sentence from structured data.
+  const typeRaw = place.primaryType
+    || place.types?.find(t => !['point_of_interest', 'establishment', 'food', 'store', 'premise'].includes(t))
+    || place.types?.[0]
+    || 'local spot';
+  const type = typeRaw.replace(/_/g, ' ').trim();
+  const article = /^[aeiou]/i.test(type) ? 'An' : 'A';
+  const city = place.formattedAddress?.split(',').slice(1, 2).join('').trim();
+  const ratingStr = place.rating ? `, rated ${place.rating} out of 5` : '';
+  let description = `${article} ${type}${city ? ` in ${city}` : ''}${ratingStr}.`;
+
+  const extras: string[] = [];
+  const priceMap: Record<string, string> = {
+    PRICE_LEVEL_FREE: 'Free admission.',
+    PRICE_LEVEL_INEXPENSIVE: 'Budget-friendly.',
+    PRICE_LEVEL_MODERATE: 'Moderately priced.',
+    PRICE_LEVEL_EXPENSIVE: 'Upscale.',
+    PRICE_LEVEL_VERY_EXPENSIVE: 'Fine dining.',
+  };
+  if (place.priceLevel && priceMap[place.priceLevel]) extras.push(priceMap[place.priceLevel]);
+  const services: string[] = [];
+  if (place.dineIn) services.push('dine-in');
+  if (place.takeout) services.push('takeout');
+  if (place.delivery) services.push('delivery');
+  if (services.length) extras.push(`Offers ${services.join(' and ')}.`);
+  if (place.reservable) extras.push('Reservations available.');
+  if (place.servesVegetarianFood) extras.push('Vegetarian-friendly.');
+  if (place.servesBeer || place.servesWine) extras.push('Serves beer and wine.');
+
+  return [description, ...extras].join(' ');
+}
+
+function placeBlurbFromApi(place: PlaceResult): string {
+  return buildPlaceDescription(place);
+}
+
 function wmoToCondition(code: number): string {
   if (code === 0) return "Clear sky";
   if (code <= 2) return "Partly cloudy";
@@ -532,6 +817,63 @@ function stripMarkdown(text: string): string {
     .replace(/^#{1,6}\s+/gm, "");
 }
 
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&nbsp;/g, ' ');
+}
+
+// Fetches a place's website and extracts the best available description text.
+// Tries og:description → meta description → first substantial paragraph.
+async function fetchWebsiteDescription(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 3000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' },
+        cache: 'no-store',
+        redirect: 'follow',
+      });
+    } finally {
+      clearTimeout(tid);
+    }
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // og:description — written specifically for social/preview summaries
+    const ogA = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{20,})["']/i)?.[1];
+    const ogB = html.match(/<meta[^>]+content=["']([^"']{20,})["'][^>]+property=["']og:description["']/i)?.[1];
+    const og = (ogA || ogB)?.trim();
+    if (og) return decodeHtmlEntities(og).slice(0, 700);
+
+    // meta description
+    const mA = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{20,})["']/i)?.[1];
+    const mB = html.match(/<meta[^>]+content=["']([^"']{20,})["'][^>]+name=["']description["']/i)?.[1];
+    const meta = (mA || mB)?.trim();
+    if (meta) return decodeHtmlEntities(meta).slice(0, 700);
+
+    // First substantial paragraph (50+ chars of visible text)
+    const pMatches = html.match(/<p[^>]*>([\s\S]{50,?}?)<\/p>/gi);
+    if (pMatches?.length) {
+      const text = decodeHtmlEntities(pMatches[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+      if (text.length >= 40) return text.slice(0, 700);
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function openMeteoGeocodeZip(zip: string): Promise<LatLng> {
   const z = zip.trim();
   if (!z) throw new Error("Missing zip code for weather lookup.");
@@ -571,13 +913,24 @@ async function fetchOpenMeteoCurrent(latLng: LatLng): Promise<unknown> {
 }
 
 async function placesTextSearchLegacy(apiKey: string, query: string): Promise<PlaceResult[]> {
+  const cacheKey = `v1:${query.trim().toLowerCase()}`;
+  const cached = getCachedPlaces(cacheKey);
+  if (cached) return cached;
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 3500);
   const url =
     "https://maps.googleapis.com/maps/api/place/textsearch/json?query=" +
     encodeURIComponent(query) +
     "&key=" +
     encodeURIComponent(apiKey);
 
-  const res = await fetch(url, { cache: "no-store" });
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: "no-store", signal: controller.signal });
+  } finally {
+    clearTimeout(tid);
+  }
   if (!res.ok) {
     throw new Error(`Places text search failed (HTTP ${res.status}).`);
   }
@@ -634,7 +987,8 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
         encodeURIComponent(apiKey);
 
       const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 3000);
+      const detailsTimeoutMs = Math.max(2500, Number(process.env.PLACES_DETAILS_TIMEOUT_MS || 5000));
+      const tid = setTimeout(() => controller.abort(), detailsTimeoutMs);
       let detailsRes: Response;
       try {
         detailsRes = await fetch(detailsUrl, { cache: "no-store", signal: controller.signal });
@@ -668,7 +1022,9 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
     r.status === "fulfilled" ? r.value : top[idx]
   );
 
-  return [...enrichedTop, ...rest];
+  const out = [...enrichedTop, ...rest];
+  setCachedPlaces(cacheKey, out);
+  return out;
 }
 
 // AI-powered intent classifier — uses conversation history so follow-ups like
@@ -688,8 +1044,9 @@ async function classifyWithAI(
 
   const placesContextNote = historyHasPlacesContext
     ? `\nCRITICAL — The concierge already showed place recommendations or a full-day itinerary in this conversation. Rules for follow-ups:
-• If the history shows a FULL-DAY ITINERARY and the guest wants to adjust/modify/redo it in any way (indoor, outdoor, vegetarian, romantic, budget, different options, different vibe, etc.) → isDayPlan:true, needsPlaces:true, dayPlanModifiers:"the preference". Even vague requests like "something different" or "make it better" count as plan modifications.
-• If the guest asks for ONE specific new category ("just coffee shops", "only bars", "find me a spa") → isDayPlan:false, needsPlaces:true.
+• "More options", "show me others", "other options", "something else", "different ones", "see more" → needsPlaces:true. Re-use the SAME category from the previous shown results as the placesQuery (e.g. if spas were shown, placesQuery should be "spa near ${near}").
+• If the history shows a FULL-DAY ITINERARY and the guest wants to adjust/modify/redo it → isDayPlan:true, needsPlaces:true, dayPlanModifiers:"the preference".
+• If the guest asks for any new type of place or activity (restaurant, spa, bike shop, grocery, smoke shop, bar, museum — anything) → isDayPlan:false, needsPlaces:true, placesQuery describes that specific thing.
 • Only set needsPlaces:false if the guest is asking about WiFi, house rules, check-in/out, or weather — nothing else qualifies.`
     : "";
 
@@ -712,15 +1069,14 @@ Rules:
 - dayPlanModifiers: ONLY when isDayPlan is true — short phrase capturing preferences from the full conversation ("indoor only", "outdoor", "rainy day", "romantic", "budget"). Empty string if none. If guest said "indoors", "inside", "rainy", or "not outdoor" use "indoor only".
 - Always provide a non-empty placesQuery when needsPlaces is true.${placesContextNote}`;
 
-  const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 160 } });
+  const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 300 } });
   const result = await withOverloadRetry(() => model.generateContent(prompt));
-  const raw = result.response
-    .text()
-    .trim()
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
+  // Strip any markdown fences (global), then find the outermost JSON object —
+  // same approach used for place-description parsing; far more robust than anchored strip.
+  let raw = result.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+  const jStart = raw.indexOf("{");
+  const jEnd = raw.lastIndexOf("}");
+  if (jStart !== -1 && jEnd > jStart) raw = raw.slice(jStart, jEnd + 1);
 
   const parsed = JSON.parse(raw) as Partial<IntentResult>;
   return {
@@ -800,9 +1156,9 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(geminiKey);
 
     // ── Reliable fast paths: WiFi / phone / property profile ─────────────────
-    // These are stateless lookups that don’t need conversation context.
+    // These are stateless lookups — always apply regardless of conversation history.
     const propertyFastPathEnabled = (process.env.CHAT_PROPERTY_FAST_PATH || "1") !== "0";
-    if (propertyFastPathEnabled && looksLikePropertyInfoQuestion(message) && !hasHistory) {
+    if (propertyFastPathEnabled && looksLikePropertyInfoQuestion(message)) {
       if (looksLikeWifiQuestion(message) || looksLikeWifiPasswordQuestion(message)) {
         return Response.json(
           { kind: "wifi", wifiName: property.WiFiName || "", wifiPassword: property.WiFiPassword || "", model: "fast-wifi" } satisfies ChatOkResponse,
@@ -843,7 +1199,7 @@ export async function POST(req: Request) {
     if (hasHistory && wantsLocal && !wantsDayPlan && speculativeApiKey) {
       speculativeQuery = smartPlacesQuery;
       speculativeFetch = placesTextSearchLegacy(speculativeApiKey, speculativeQuery)
-        .then(r => r.slice(0, 8))
+        .then(r => r.slice(0, 12))
         .catch(() => []);
     }
 
@@ -860,22 +1216,25 @@ export async function POST(req: Request) {
         (h.text.includes("[Showed place") || h.text.includes("[Showed a full-day itinerary"))
     );
 
-    // Derive a fallback query from the previous shown label, e.g. "[Showed place recommendations (Dinner spots): ...]"
-    let historyPlacesQuery = "";
-    if (historyHasPlacesContext) {
-      for (let i = history.length - 1; i >= 0; i--) {
-        const h = history[i];
-        if (h.role !== "model") continue;
-        const labelMatch = h.text.match(/\[Showed place recommendations \(([^)]+)\)/);
-        if (labelMatch) { historyPlacesQuery = `${labelMatch[1]} near ${near}`; break; }
-        if (h.text.includes("[Showed a full-day itinerary")) { historyPlacesQuery = `restaurants and activities near ${near}`; break; }
-      }
-    }
-
     // Was a full-day itinerary shown earlier? If so, follow-ups should redo the plan.
     const historyHasItinerary = history.some(
       (h) => h.role === "model" && h.text.includes("[Showed a full-day itinerary")
     );
+
+    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
+
+    // For "more options" requests, extract the previous shown category from history so we
+    // can re-run the same query with an offset. Used as a fallback if the classifier misses it.
+    let prevCategoryQuery = "";
+    if (wantsMoreOptions && historyHasPlacesContext) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const h = history[i];
+        if (h.role !== "model") continue;
+        const m = h.text.match(/\[Showed place recommendations \(([^)]+)\)/);
+        if (m) { prevCategoryQuery = `${m[1]} near ${near}`; break; }
+        if (h.text.includes("[Showed a full-day itinerary")) { prevCategoryQuery = `restaurants and activities near ${near}`; break; }
+      }
+    }
 
     if (hasHistory) {
       const forceLocal = historyHasPlacesContext &&
@@ -892,14 +1251,21 @@ export async function POST(req: Request) {
 
         if (intent.needsPlaces || intent.isDayPlan) {
           smartPlacesQuery = intent.placesQuery;
-        } else if (forceLocal && historyPlacesQuery) {
-          smartPlacesQuery = historyPlacesQuery;
+        } else if (wantsMoreOptions && prevCategoryQuery) {
+          // "More options" — classifier missed it; re-fetch the previous category.
+          smartPlacesQuery = prevCategoryQuery;
+          wantsLocal = true;
+        } else if (forceLocal) {
+          // Use the raw message as the query — never recycle the old category from history
+          // since the guest may be asking about a completely different type of place.
+          smartPlacesQuery = `${message} near ${near}`;
         }
 
-        // Safety net: if an itinerary was shown and the classifier flagged local intent
-        // but didn't set isDayPlan, default to redoing the full plan so the guest
-        // always gets a structured itinerary response rather than a single places card.
-        if (historyHasItinerary && wantsLocal && !wantsDayPlan) {
+        // Safety net (narrow): if an itinerary was shown earlier and the guest is clearly
+        // trying to adjust/redo the plan, default to day-plan mode even if the classifier
+        // missed it. NEVER triggers for "more options" requests — those are single-category
+        // rotations, not plan redos.
+        if (historyHasItinerary && wantsLocal && !wantsDayPlan && !wantsMoreOptions && looksLikeDayPlanModification(message)) {
           wantsDayPlan = true;
         }
         // When redoing the plan without a modifier from the classifier, use the raw
@@ -909,16 +1275,35 @@ export async function POST(req: Request) {
         }
       } catch {
         wantsLocal = keywordWantsLocal || forceLocal;
-        if (historyHasItinerary && wantsLocal) {
+        if (historyHasItinerary && wantsLocal && looksLikeDayPlanModification(message)) {
           wantsDayPlan = true;
           smartPlacesModifier = message;
         }
-        if (forceLocal && historyPlacesQuery) smartPlacesQuery = historyPlacesQuery;
+        // For "more options", re-fetch the previous category even when classifier fails.
+        if (wantsMoreOptions && prevCategoryQuery) {
+          smartPlacesQuery = prevCategoryQuery;
+          wantsLocal = true;
+        }
+        // Otherwise keep the shapePlacesQuery already set from the current message —
+        // never recycle the old category for a completely different follow-up request.
+      }
+    } else if (wantsLocal || wantsDayPlan) {
+      // First message: run classifier with empty history to get a clean Places query.
+      // shapePlacesQuery already strips filler words, but the classifier also resolves
+      // ambiguous phrasing ("find me a smoke shop" → "smoke shop near [zip]").
+      try {
+        const intent = await classifyWithAI(genAI, modelId, [], message, near, false);
+        if (intent.needsPlaces || intent.isDayPlan) {
+          smartPlacesQuery = intent.placesQuery;
+        }
+        wantsDayPlan = intent.isDayPlan || keywordWantsDayPlan;
+        if (intent.isDayPlan) smartPlacesModifier = intent.dayPlanModifiers || '';
+      } catch {
+        // keep keyword-based shapePlacesQuery as-is
       }
     }
 
     // ── Fetch live data ───────────────────────────────────────────────────────
-    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
     let livePlaces: PlaceResult[] = [];
     let dayPlanPlaces: {
       breakfast: PlaceResult[];
@@ -933,7 +1318,15 @@ export async function POST(req: Request) {
     if (wantsLocal) {
       const placesKey = requireGooglePlacesApiKey();
       const fetchPlaces = async (query: string): Promise<PlaceResult[]> =>
-        (await withOverloadRetry(() => placesTextSearchLegacy(placesKey, query))).slice(0, 8);
+        (await withOverloadRetry(async () => {
+          try {
+            return await placesTextSearchV1(placesKey, query);
+          } catch {
+            // Fallback to legacy if v1 isn't enabled on the key.
+            return await placesTextSearchLegacy(placesKey, query);
+          }
+        // Fetch up to 12 so "more options" requests can show a distinct second page (offset 5).
+        })).slice(0, 12);
 
       if (wantsDayPlan) {
         const dayPlanQ = buildDayPlanQueries(near, smartPlacesModifier);
@@ -994,66 +1387,48 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── Places fast path: structured card + one-shot blurb generation ────────
-    // Uses an offset when the guest asks for "more options" so results rotate.
+    // Enrich single-category results with phone/website now.
+    // Descriptions are generated later, after systemInstruction is built with full place context.
+    let singlePlacesSelected: PlaceResult[] = [];
     if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
       const offset = wantsMoreOptions ? 5 : 0;
-      // If the rotation offset would produce an empty slice (fewer results than expected),
-      // fall back to showing the first available set rather than falling through to plain text.
-      const selected = livePlaces.slice(offset, offset + 5).length > 0
+      singlePlacesSelected = livePlaces.slice(offset, offset + 5).length > 0
         ? livePlaces.slice(offset, offset + 5)
         : livePlaces.slice(0, 5);
-      if (selected.length > 0) {
-        // Single Gemini call: warm intro sentence + one blurb per place.
-        let blurbs: Record<string, string> = {};
-        let placesIntro: string | undefined;
+      if (singlePlacesSelected.length > 0) {
         try {
-          const blurbModel = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 600 } });
-          const blurbPrompt = `You are Pillar — a warm, attentive personal concierge for a private estate. The guest just asked: "${message}"
-
-Write ONE brief intro sentence (12 words max) as if you're personally steering them toward these spots — genuine, specific to their ask, not a generic opener. Sound like a trusted friend who knows the area.
-
-Then for each place write ONE sentence (12 words max) in a concierge's personal voice — a genuine endorsement, not a review snippet. Highlight what makes it worth visiting.
-
-Return ONLY valid JSON, no markdown:
-{"intro":"your warm sentence","blurbs":[{"name":"exact name","blurb":"sentence"}]}
-
-Places:
-${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_/g, " ")})` : ""}`).join("\n")}`;
-          const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
-          // Robust extraction: find the outermost { ... } so any prose Gemini adds before/after doesn't break parsing
-          const rawBlurbText = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
-          const bStart = rawBlurbText.indexOf("{");
-          const bEnd = rawBlurbText.lastIndexOf("}");
-          const blurbRaw = bStart !== -1 && bEnd > bStart ? rawBlurbText.slice(bStart, bEnd + 1) : rawBlurbText.trim();
-          const blurbParsed = JSON.parse(blurbRaw) as { intro?: string; blurbs?: Array<{ name: string; blurb: string }> };
-          if (blurbParsed.intro) placesIntro = stripMarkdown(blurbParsed.intro);
-          for (const b of blurbParsed.blurbs ?? []) {
-            if (b.name && b.blurb) blurbs[b.name.toLowerCase().trim()] = stripMarkdown(b.blurb);
+          const placesKey = requireGooglePlacesApiKey();
+          const missingDetails = singlePlacesSelected.filter((p) => p.placeId && !p.phone);
+          if (missingDetails.length) {
+            const settled = await Promise.allSettled(
+              missingDetails.map(async (p) => {
+                const detailsUrl =
+                  "https://maps.googleapis.com/maps/api/place/details/json?place_id=" +
+                  encodeURIComponent(String(p.placeId)) +
+                  "&fields=" +
+                  encodeURIComponent("formatted_phone_number,website,url") +
+                  "&key=" +
+                  encodeURIComponent(placesKey);
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), Math.max(2500, Number(process.env.PLACES_DETAILS_TIMEOUT_MS || 5000)));
+                try {
+                  const res = await fetch(detailsUrl, { cache: 'no-store', signal: controller.signal });
+                  if (!res.ok) return p;
+                  const json = (await res.json()) as { status?: string; result?: { formatted_phone_number?: string; website?: string; url?: string } };
+                  if (json.status !== 'OK') return p;
+                  return { ...p, phone: json.result?.formatted_phone_number || p.phone, websiteUri: json.result?.website || p.websiteUri, googleMapsUri: json.result?.url || p.googleMapsUri };
+                } finally { clearTimeout(tid); }
+              })
+            );
+            const byId = new Map(settled.map((r, i) => [missingDetails[i].placeId, r.status === 'fulfilled' ? r.value : missingDetails[i]]));
+            for (let i = 0; i < singlePlacesSelected.length; i++) {
+              const id = singlePlacesSelected[i].placeId;
+              if (!id) continue;
+              const enriched = byId.get(id);
+              if (enriched) singlePlacesSelected[i] = enriched;
+            }
           }
-        } catch {
-          // Blurbs/intro are optional — fall through without them if Gemini fails
-        }
-
-        return Response.json(
-          {
-            kind: "places",
-            label: getPlacesLabel(message),
-            intro: placesIntro,
-            places: selected.map((p) => ({
-              name: p.name,
-              cuisine: inferCuisine(p),
-              blurb: blurbs[p.name.toLowerCase().trim()],
-              formattedAddress: p.formattedAddress,
-              phone: p.phone,
-              websiteUri: p.websiteUri,
-              googleMapsUri: p.googleMapsUri,
-              rating: p.rating,
-            })),
-            model: modelId,
-          } satisfies ChatOkResponse,
-          { status: 200 }
-        );
+        } catch { /* best-effort */ }
       }
     }
 
@@ -1062,10 +1437,14 @@ ${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_
       const parts = [
         p.name,
         p.formattedAddress ? `Address: ${p.formattedAddress}` : null,
+        p.editorialSummary ? `Description: ${p.editorialSummary}` : null,
+        typeof p.rating === "number" ? `Rating: ${p.rating}` : null,
+        p.priceLevel ? `Price: ${p.priceLevel.replace(/_/g, ' ')}` : null,
+        p.primaryType ? `Type: ${p.primaryType.replace(/_/g, ' ')}` : null,
+        [p.dineIn && 'dine-in', p.takeout && 'takeout', p.delivery && 'delivery', p.reservable && 'reservations', p.servesVegetarianFood && 'vegetarian options'].filter(Boolean).join(', ') || null,
         p.phone ? `Phone: ${p.phone}` : null,
         p.websiteUri ? `Website: ${p.websiteUri}` : null,
         p.googleMapsUri ? `Maps: ${p.googleMapsUri}` : null,
-        typeof p.rating === "number" ? `Rating: ${p.rating}` : null,
       ].filter(Boolean);
       return `- ${parts.join(" | ")}`;
     };
@@ -1133,6 +1512,99 @@ ${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_
       .filter((h) => h.text.trim())
       .map((h) => ({ role: h.role, parts: [{ text: h.text }] }));
 
+    // ── Single-category places: Gemini generates descriptions with full place context ──
+    // systemInstruction already has all place data (editorialSummary, type, price, etc.)
+    // via fmtPlace — same setup that makes day-plan descriptions work perfectly.
+    if (singlePlacesSelected.length > 0) {
+      // Fetch websites in parallel for richer description source material.
+      const websiteResults = await Promise.allSettled(
+        singlePlacesSelected.map((p) => p.websiteUri ? fetchWebsiteDescription(p.websiteUri) : Promise.resolve(null))
+      );
+      // Inject any website text back into the place context so Gemini sees it.
+      const enrichedForDesc = singlePlacesSelected.map((p, idx) => {
+        const webText = websiteResults[idx].status === 'fulfilled' ? websiteResults[idx].value : null;
+        return webText ? { ...p, editorialSummary: webText } : p;
+      });
+
+      let descBlurbs: Record<string, string> = {};
+      let descIntro: string | undefined;
+      try {
+        // Build a fresh placesText that includes any website-sourced editorialSummary.
+        const enrichedPlacesText = enrichedForDesc.map((p) => {
+          const parts = [
+            p.name,
+            p.formattedAddress ? `Address: ${p.formattedAddress}` : null,
+            p.editorialSummary ? `Description: ${p.editorialSummary}` : null,
+            typeof p.rating === 'number' ? `Rating: ${p.rating}` : null,
+            p.priceLevel ? `Price: ${p.priceLevel.replace(/_/g, ' ')}` : null,
+            p.primaryType ? `Type: ${p.primaryType.replace(/_/g, ' ')}` : null,
+            [p.dineIn && 'dine-in', p.takeout && 'takeout', p.delivery && 'delivery', p.reservable && 'reservations', p.servesVegetarianFood && 'vegetarian options'].filter(Boolean).join(', ') || null,
+          ].filter(Boolean);
+          return `- ${parts.join(' | ')}`;
+        }).join('\n');
+
+        const descSystemInstruction = [
+          'You are Pillar — a warm, knowledgeable concierge for a luxury private estate.',
+          '',
+          '## Live local data (Google Places)',
+          enrichedPlacesText,
+          '',
+          '## Guidelines',
+          '- Write descriptions using ALL available data: Description, Type, Rating, Price, and attributes.',
+          '- If no Description is provided, write from the Type and Name — make it specific and useful.',
+          '- Never write "I don\'t have information". Always write something compelling.',
+          '- Tone: confident, warm, specific — no filler phrases like "a great place to visit".',
+        ].join('\n');
+
+        // JSON response mode: forces clean JSON output and avoids thinking overhead
+        // consuming all the token budget before visible output is generated.
+        const descModel = genAI.getGenerativeModel({
+          model: modelId,
+          systemInstruction: descSystemInstruction,
+          generationConfig: {
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+          },
+        });
+        const names = enrichedForDesc.map((p) => `"${p.name}"`).join(', ');
+        const descPrompt = `Write concierge-voice descriptions for these places. Use Description data when available; otherwise use the Type, Rating, and Name to craft something specific. Also write one short warm intro sentence (max 20 words) for the overall list.\n\nPlaces: ${names}\n\nReturn JSON:\n{"intro":"one warm intro sentence","blurbs":[{"name":"Exact Name","blurb":"2-3 sentence description"}]}`;
+
+        // Always use generateContent — description generation is structured data extraction,
+        // not conversation continuation. Chat history about prior places confuses the model.
+        const r = await withOverloadRetry(() => descModel.generateContent(descPrompt));
+        const rawDescText = r.response.text();
+        const strippedDesc = rawDescText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '');
+        const dS = strippedDesc.indexOf('{');
+        const dE = strippedDesc.lastIndexOf('}');
+        const cleanedDesc = dS !== -1 && dE > dS ? strippedDesc.slice(dS, dE + 1) : strippedDesc.trim();
+        const parsedDesc = JSON.parse(cleanedDesc) as { intro?: string; blurbs?: Array<{ name: string; blurb: string }> };
+        if (typeof parsedDesc.intro === 'string' && parsedDesc.intro.trim()) descIntro = parsedDesc.intro.trim();
+        for (const b of parsedDesc.blurbs ?? []) {
+          if (b.name && b.blurb) descBlurbs[b.name.toLowerCase().trim()] = stripMarkdown(b.blurb);
+        }
+      } catch { /* fall through to buildPlaceDescription */ }
+
+      return Response.json(
+        {
+          kind: 'places',
+          label: getPlacesLabel(message),
+          intro: descIntro,
+          places: enrichedForDesc.map((p) => ({
+            name: p.name,
+            cuisine: inferCuisine(p),
+            blurb: descBlurbs[p.name.toLowerCase().trim()] || placeBlurbFromApi(p),
+            formattedAddress: p.formattedAddress,
+            phone: p.phone,
+            websiteUri: p.websiteUri,
+            googleMapsUri: p.googleMapsUri,
+            rating: p.rating,
+          })),
+          model: modelId,
+        } satisfies ChatOkResponse,
+        { status: 200 }
+      );
+    }
+
     // ── Day plan: ask AI to return structured itinerary JSON ─────────────────
     // Falls through to text generation if JSON parsing fails.
     if (wantsDayPlan && dayPlanPlaces) {
@@ -1154,18 +1626,15 @@ ${selected.map((p) => `- ${p.name}${p.types?.length ? ` (${p.types[0].replace(/_
           ? `\n\nGuest's stated preferences: "${smartPlacesModifier}". You MUST honor this when picking places. For example, if the guest wants indoor activities, only pick indoor venues for activity sections — never parks, trails, or outdoor attractions.`
           : '';
         const itPrompt = `Using the places listed in your context, build a full-day itinerary with exactly these 6 sections. Pick ONE place per section — the best option from the available data for that time of day. Use exact place names from the data. Write blurbs in plain text only — no asterisks, no markdown, no bold formatting.${prefLine}
-Return ONLY valid JSON (no markdown fences, no extra text):
-{"sections":[{"title":"Breakfast","places":[{"name":"Exact Name","blurb":"one vivid sentence describing the experience"}]},{"title":"Morning Activity","places":[{"name":"Exact Name","blurb":"one vivid sentence describing what to do there"}]},{"title":"Lunch","places":[{"name":"Exact Name","blurb":"one vivid sentence describing the experience"}]},{"title":"Afternoon Activity","places":[{"name":"Exact Name","blurb":"one vivid sentence describing what to do there"}]},{"title":"Dinner","places":[{"name":"Exact Name","blurb":"one vivid sentence describing the experience"}]},{"title":"Dessert","places":[{"name":"Exact Name","blurb":"one vivid sentence describing the experience"}]}]}`;
 
-        let rawText: string;
-        if (geminiHistory.length > 0) {
-          const chat = itModel.startChat({ history: geminiHistory });
-          const r = await withOverloadRetry(() => chat.sendMessage(itPrompt));
-          rawText = r.response.text();
-        } else {
-          const r = await withOverloadRetry(() => itModel.generateContent(itPrompt));
-          rawText = r.response.text();
-        }
+For each blurb: write 2-3 sentences that are SPECIFIC to that actual place. Use the Description, Type, Price, and attribute data provided (dine-in, vegetarian, reservations, etc.) to ground every sentence in what that place actually is. Do not write generic descriptions.
+
+Return ONLY valid JSON (no markdown fences, no extra text):
+{"sections":[{"title":"Breakfast","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Morning Activity","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Lunch","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Afternoon Activity","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Dinner","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Dessert","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]}]}`;
+
+        // Always use generateContent for itinerary — structured data extraction, not chat continuation.
+        const r2 = await withOverloadRetry(() => itModel.generateContent(itPrompt));
+        const rawText = r2.response.text();
 
         // Strip all markdown fences (may appear mid-text, not just at start/end),
         // then find the outermost JSON object in whatever Gemini returns.
@@ -1221,8 +1690,21 @@ Return ONLY valid JSON (no markdown fences, no extra text):
           let blurbs: Record<string, string> = {};
           if (allSelected.length > 0) {
             try {
-              const blurbModel = genAI.getGenerativeModel({ model: modelId });
-              const blurbPrompt = `You are a luxury estate concierge. For each place write ONE vivid sentence (max 15 words) telling a nearby guest why they will love visiting it. Return ONLY valid JSON, no markdown: {"blurbs":[{"name":"exact name","blurb":"sentence"}]}\n\nPlaces:\n${allSelected.map((p) => `- ${p.name}${p.formattedAddress ? ` (${p.formattedAddress.split(",").slice(0, 2).join(",")})` : ""}`).join("\n")}`;
+              const blurbModel = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 700 } });
+              const placeCtx = allSelected.map((p) => {
+                const attrs: string[] = [];
+                if (p.editorialSummary) attrs.push(`Google description: "${p.editorialSummary}"`);
+                if (p.rating) attrs.push(`Rating: ${p.rating}`);
+                if (p.priceLevel) attrs.push(`Price: ${p.priceLevel.replace(/_/g, ' ')}`);
+                const typeStr2 = p.primaryType || (p.types && p.types.length > 0 ? p.types.find(t => !['point_of_interest','establishment','food'].includes(t)) || p.types[0] : undefined);
+                if (typeStr2) attrs.push(`Type: ${typeStr2.replace(/_/g, ' ')}`);
+                if (p.dineIn) attrs.push('dine-in');
+                if (p.takeout) attrs.push('takeout');
+                if (p.reservable) attrs.push('accepts reservations');
+                if (p.servesVegetarianFood) attrs.push('vegetarian options');
+                return `Name: ${p.name}\n  Location: ${p.formattedAddress ? p.formattedAddress.split(',').slice(0, 2).join(',') : 'nearby'}\n  ${attrs.length ? attrs.join(' | ') : '(no additional data)'}`.trimEnd();
+              }).join('\n\n');
+              const blurbPrompt = `You are a luxury estate concierge building a day itinerary. For each place write 2-3 sentences SPECIFIC to what that place actually is — use the description, type, and attribute data provided. Plain text only, no markdown. Return ONLY valid JSON, no markdown fences: {"blurbs":[{"name":"exact name","blurb":"2-3 sentence description"}]}\n\nPlaces:\n${placeCtx}`;
               const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
               const blurbStrippedRaw = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
               const bStart = blurbStrippedRaw.indexOf("{");

@@ -411,8 +411,18 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                         : p.name;
                     })()}
                   </div>
-                  {p.cuisine ? (
-                    <div className="mt-0.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{p.cuisine}</div>
+                  {(p.cuisine || typeof p.rating === 'number') ? (
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                      {p.cuisine ? <span>{p.cuisine}</span> : null}
+                      {typeof p.rating === 'number' ? (
+                        <span className="flex items-center gap-0.5">
+                          {p.cuisine ? <span style={{ opacity: 0.35 }}>·</span> : null}
+                          <span style={{ color: 'var(--star-col)' }}>{'★'.repeat(Math.min(5, Math.round(p.rating)))}</span>
+                          <span style={{ opacity: 0.25 }}>{'★'.repeat(5 - Math.min(5, Math.round(p.rating)))}</span>
+                          <span className="ml-0.5">{p.rating.toFixed(1)}</span>
+                        </span>
+                      ) : null}
+                    </div>
                   ) : null}
                   {p.blurb ? (
                     <div className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div>
@@ -447,6 +457,13 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                           ? <a href={p.googleMapsUri} target="_blank" rel="noreferrer" className="underline underline-offset-2">{p.name || '—'}</a>
                           : (p.name || '—')}
                       </div>
+                      {typeof p.rating === 'number' ? (
+                        <div className="mt-0.5 flex items-center gap-0.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                          <span style={{ color: 'var(--star-col)' }}>{'★'.repeat(Math.min(5, Math.round(p.rating)))}</span>
+                          <span style={{ opacity: 0.25 }}>{'★'.repeat(5 - Math.min(5, Math.round(p.rating)))}</span>
+                          <span className="ml-0.5">{p.rating.toFixed(1)}</span>
+                        </div>
+                      ) : null}
                       {p.blurb ? <div className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{p.blurb}</div> : null}
                     </div>
                     <div className="flex flex-col items-end justify-between self-stretch shrink-0">
