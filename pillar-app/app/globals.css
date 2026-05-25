@@ -62,15 +62,15 @@ input, textarea, select {
 /* Luxury titles */
 h1, h2, h3 {
   font-family: var(--font-lux-title), ui-serif, Georgia, serif;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  letter-spacing: 0.03em;
 }
 
 /* For non-heading elements that behave like titles. */
 .lux-title {
   font-family: var(--font-lux-title), ui-serif, Georgia, serif;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  letter-spacing: 0.03em;
 }
 
 /*

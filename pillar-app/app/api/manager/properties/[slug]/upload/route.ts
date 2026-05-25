@@ -13,6 +13,7 @@ const BUCKET = 'property-media';
 const FIELD_TO_COLUMN: Record<string, string> = {
   hero: 'hero_image_url',
   logo: 'logo_url',
+  logo_dark: 'logo_url_dark',
 };
 
 async function requireManagerSession() {
@@ -109,7 +110,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ slug: string }
       return Response.json({ error: `Unknown field: ${field}` }, { status: 400 });
     }
 
-    const path = `${session.userId}/${slug}/${field}.${rawExt}`;
+    const path = `${session.userId}/${slug}/${field}_${Date.now()}.${rawExt}`;
     const publicUrl = await uploadToStorage(supabase, path, buffer, file.type);
 
     const { error: updateError } = await supabase

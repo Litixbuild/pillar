@@ -37,6 +37,7 @@ export interface Property {
   ManagerEmail?: string;
   HeroImage?: string;
   LogoUrl?: string;
+  LogoUrlDark?: string;
   LogoSize?: number;
   BackgroundKey?: string;
   AccentColor?: string;
@@ -44,6 +45,7 @@ export interface Property {
   TextColor?: string;
   windows?: AmenityWindow[];
   rooms?: string[];
+  photos?: string[];
 }
 
 function parseLayoutItem(x: unknown): ManagerLayoutItem | null {

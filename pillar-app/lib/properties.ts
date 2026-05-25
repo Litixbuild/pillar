@@ -9,6 +9,7 @@ import {
   type Property,
   type AmenityWindow,
 } from '@/lib/types';
+import { getPropertyPhotos } from '@/lib/propertyPhotos';
 
 type SupabaseRow = Record<string, unknown>;
 
@@ -24,7 +25,7 @@ function rowToWindow(row: SupabaseRow): AmenityWindow {
   };
 }
 
-function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = []): Property {
+function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = [], photos: string[] = []): Property {
   return {
     Slug: typeof row.slug === 'string' && row.slug ? row.slug : undefined,
     PropertyName: (row.name as string) || '',
@@ -39,12 +40,14 @@ function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = []): Propert
     ManagerName: (row.manager_name as string) || undefined,
     HeroImage: (row.hero_image_url as string) || undefined,
     LogoUrl: (row.logo_url as string) || undefined,
+    LogoUrlDark: (row.logo_url_dark as string) || undefined,
     LogoSize: typeof row.logo_size === 'number' ? row.logo_size : undefined,
     BackgroundKey: typeof row.background_key === 'string' && row.background_key ? row.background_key : undefined,
     AccentColor: typeof row.accent_color === 'string' && row.accent_color ? row.accent_color : undefined,
     HeadingColor: typeof row.heading_color === 'string' && row.heading_color ? row.heading_color : undefined,
     TextColor: typeof row.text_color === 'string' && row.text_color ? row.text_color : undefined,
     windows,
+    photos,
     rooms: Array.isArray(row.rooms)
       ? (row.rooms as unknown[]).filter((s): s is string => typeof s === 'string')
       : [],
@@ -105,13 +108,14 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
   const supabase = createServiceClient();
   const trimmed = slug.trim();
 
-  const [{ data, error }, windows] = await Promise.all([
+  const [{ data, error }, windows, photoRecords] = await Promise.all([
     supabase.from('properties').select('*').eq('slug', trimmed).single(),
     fetchWindowsBySlug(trimmed),
+    getPropertyPhotos(trimmed),
   ]);
 
   if (error || !data) return null;
-  return rowToProperty(data as SupabaseRow, windows);
+  return rowToProperty(data as SupabaseRow, windows, photoRecords.map((p) => p.url));
 }
 
 export async function getPropertyFieldsBySlug(slug: string): Promise<PropertyFields | null> {

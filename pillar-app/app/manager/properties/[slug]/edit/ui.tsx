@@ -739,13 +739,15 @@ function GridView({ onNavigate, completion, dark, missing }: { onNavigate: (v: V
 /* ─── Property Info view ──────────────────────────────── */
 
 function PropertyInfoView({
-  slug, core, setCore, logoUrl, setLogoUrl, saving, saved, onSave, saveError, dark,
+  slug, core, setCore, logoUrl, setLogoUrl, logoUrlDark, setLogoUrlDark, saving, saved, onSave, saveError, dark,
 }: {
   slug: string;
   core: CoreFields;
   setCore: React.Dispatch<React.SetStateAction<CoreFields>>;
   logoUrl: string | undefined;
   setLogoUrl: (url: string) => void;
+  logoUrlDark: string | undefined;
+  setLogoUrlDark: (url: string) => void;
   saving: boolean;
   saved: boolean;
   onSave: () => void;
@@ -755,6 +757,9 @@ function PropertyInfoView({
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const logoFileRef = useRef<HTMLInputElement | null>(null);
+  const [logoDarkUploading, setLogoDarkUploading] = useState(false);
+  const [logoDarkUploadError, setLogoDarkUploadError] = useState<string | null>(null);
+  const logoDarkFileRef = useRef<HTMLInputElement | null>(null);
 
   const cardStyle: React.CSSProperties = dark
     ? { background: 'rgba(8,8,8,0.95)', border: `1px solid rgba(${SANDY_RGB},0.10)`, backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
@@ -776,6 +781,19 @@ function PropertyInfoView({
       setLogoUploadError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
       setLogoUploading(false);
+    }
+  }
+
+  async function handleLogoDarkUpload(file: File) {
+    setLogoDarkUploading(true);
+    setLogoDarkUploadError(null);
+    try {
+      const url = await uploadFile(slug, 'logo_dark', file);
+      setLogoUrlDark(url);
+    } catch (e) {
+      setLogoDarkUploadError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setLogoDarkUploading(false);
     }
   }
 
@@ -855,32 +873,107 @@ function PropertyInfoView({
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={sectionLabel}>Branding</p>
           </div>
           <div className="space-y-5 p-5">
-            <FieldGroup label="Property Logo">
-              <div className="space-y-3">
-                {logoUrl ? (
-                  <div className="flex items-center justify-center rounded-xl border border-white/8 bg-black/20 p-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={logoUrl} alt="Logo preview" className="object-contain" style={{ width: `${core.LogoSize}px`, maxHeight: '120px' }} />
+            {/* Logo uploads — dark mode + light mode side by side */}
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(51,65,85,0.50)' }}>Logo</p>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Dark Mode logo */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(51,65,85,0.55)' }}>Dark Mode</p>
+                  <div
+                    className="flex min-h-[100px] items-center justify-center overflow-hidden rounded-xl"
+                    style={{
+                      backgroundColor: '#0a0a0a',
+                      backgroundImage: 'linear-gradient(45deg,#1a1a1a 25%,transparent 25%),linear-gradient(135deg,#1a1a1a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1a 75%),linear-gradient(135deg,transparent 75%,#1a1a1a 75%)',
+                      backgroundSize: '10px 10px',
+                      backgroundPosition: '0 0,5px 0,5px -5px,0 5px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrl} alt="Dark mode logo" className="object-contain p-3" style={{ maxWidth: '100%', maxHeight: '80px' }} />
+                    ) : (
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.20)' }}>No logo</span>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/10 py-5 text-sm text-slate-400 dark:text-white/25">
-                    No logo uploaded
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <input type="file" ref={logoFileRef} accept="image/*" className="hidden"
-                    onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }}
+                  <input
+                    type="file"
+                    ref={logoFileRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = '';
+                      if (f) await handleLogoUpload(f);
+                    }}
                   />
-                  <button type="button" disabled={logoUploading} onClick={() => logoFileRef.current?.click()}
-                    className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 dark:border-white/8 bg-slate-50 dark:bg-white/4 px-3 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/8 hover:text-slate-800 dark:hover:text-white/80 disabled:opacity-45"
+                  <button
+                    type="button"
+                    disabled={logoUploading}
+                    onClick={() => logoFileRef.current?.click()}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all disabled:opacity-45"
+                    style={{
+                      background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                      border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.10)',
+                      color: dark ? 'rgba(255,255,255,0.60)' : 'rgba(30,41,59,0.65)',
+                    }}
                   >
                     <UploadIcon />
-                    {logoUploading ? 'Uploading…' : logoUrl ? 'Replace logo' : 'Upload logo'}
+                    {logoUploading ? 'Uploading…' : logoUrl ? 'Replace' : 'Upload'}
                   </button>
-                  {logoUploadError ? <span className="text-xs text-rose-400/75">{logoUploadError}</span> : null}
+                  {logoUploadError ? <p className="mt-1 rounded-lg bg-rose-500/10 px-2 py-1.5 text-[11px] font-medium text-rose-400">{logoUploadError}</p> : null}
+                </div>
+
+                {/* Light Mode logo */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(51,65,85,0.55)' }}>Light Mode</p>
+                  <div
+                    className="flex min-h-[100px] items-center justify-center overflow-hidden rounded-xl"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      backgroundImage: 'linear-gradient(45deg,#e8e8e8 25%,transparent 25%),linear-gradient(135deg,#e8e8e8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e8e8e8 75%),linear-gradient(135deg,transparent 75%,#e8e8e8 75%)',
+                      backgroundSize: '10px 10px',
+                      backgroundPosition: '0 0,5px 0,5px -5px,0 5px',
+                      border: '1px solid rgba(0,0,0,0.10)',
+                    }}
+                  >
+                    {logoUrlDark ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrlDark} alt="Light mode logo" className="object-contain p-3" style={{ maxWidth: '100%', maxHeight: '80px' }} />
+                    ) : (
+                      <span className="text-xs" style={{ color: 'rgba(0,0,0,0.22)' }}>No logo</span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    ref={logoDarkFileRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = '';
+                      if (f) await handleLogoDarkUpload(f);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={logoDarkUploading}
+                    onClick={() => logoDarkFileRef.current?.click()}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all disabled:opacity-45"
+                    style={{
+                      background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                      border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.10)',
+                      color: dark ? 'rgba(255,255,255,0.60)' : 'rgba(30,41,59,0.65)',
+                    }}
+                  >
+                    <UploadIcon />
+                    {logoDarkUploading ? 'Uploading…' : logoUrlDark ? 'Replace' : 'Upload'}
+                  </button>
+                  {logoDarkUploadError ? <p className="mt-1 rounded-lg bg-rose-500/10 px-2 py-1.5 text-[11px] font-medium text-rose-400">{logoDarkUploadError}</p> : null}
                 </div>
               </div>
-            </FieldGroup>
+            </div>
             <FieldGroup label={`Logo Size — ${core.LogoSize}px`}>
               <input type="range" min={40} max={200} step={4} value={core.LogoSize}
                 onChange={(e) => setCore((prev) => ({ ...prev, LogoSize: Number(e.target.value) }))}
@@ -1566,8 +1659,10 @@ function SubBackButton({ onClick, dark }: { onClick: () => void; dark?: boolean 
   );
 }
 
+interface PhotoItem { id: string; url: string }
+
 function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey?: string; dark: boolean }) {
-  const [sub, setSub] = useState<'grid' | 'backgrounds'>('grid');
+  const [sub, setSub] = useState<'grid' | 'backgrounds' | 'photos'>('grid');
   const [bgIndex, setBgIndex] = useState<number>(() => {
     const i = BG_KEYS.indexOf((initialBgKey ?? '') as BgKey);
     return i >= 0 ? i : 0;
@@ -1577,6 +1672,89 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const [themeError, setThemeError] = useState<string | null>(null);
   const [resetSaving, setResetSaving] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+
+  // Photos state
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [photosLoaded, setPhotosLoaded] = useState(false);
+  const [photosLoading, setPhotosLoading] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoFileRef = useRef<HTMLInputElement>(null);
+
+  // Touch swipe state for photo carousel
+  const [swipeDragStart, setSwipeDragStart] = useState<number | null>(null);
+  const [swipeDragOffset, setSwipeDragOffset] = useState(0);
+
+  async function loadPhotos() {
+    setPhotosLoading(true);
+    try {
+      const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/photos`);
+      const data = (await res.json().catch(() => null)) as { photos?: PhotoItem[] } | null;
+      if (res.ok && data?.photos) {
+        setPhotos(data.photos);
+        setPhotoIdx(0);
+      }
+    } catch { /* ignore */ }
+    finally { setPhotosLoading(false); setPhotosLoaded(true); }
+  }
+
+  useEffect(() => {
+    if (sub === 'photos' && !photosLoaded) void loadPhotos();
+  }, [sub]);
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    e.target.value = '';
+    setUploadingPhoto(true);
+    setPhotoError(null);
+    try {
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/photos`, {
+          method: 'POST',
+          body: form,
+        });
+        const data = (await res.json().catch(() => null)) as { photo?: PhotoItem; error?: string } | null;
+        if (!res.ok) throw new Error(data?.error ?? 'Upload failed');
+        if (data?.photo) {
+          setPhotos((prev) => {
+            const next = [...prev, data.photo!];
+            setPhotoIdx(next.length - 1);
+            return next;
+          });
+        }
+      }
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoDelete(id: string) {
+    setDeletingPhotoId(id);
+    try {
+      const res = await fetch(
+        `/api/manager/properties/${encodeURIComponent(slug)}/photos/${encodeURIComponent(id)}`,
+        { method: 'DELETE' }
+      );
+      if (res.ok) {
+        setPhotos((prev) => {
+          const next = prev.filter((p) => p.id !== id);
+          setPhotoIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
+          return next;
+        });
+      }
+    } catch { /* ignore */ }
+    finally { setDeletingPhotoId(null); }
+  }
+
+  function swipeNext() { setPhotoIdx((i) => Math.min(i + 1, photos.length - 1)); }
+  function swipePrev() { setPhotoIdx((i) => Math.max(i - 1, 0)); }
 
   const currentBg = BG_KEYS[bgIndex];
   const palette = BG_PALETTES[currentBg];
@@ -1614,6 +1792,165 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
     });
     if (res.ok) { setBgIndex(0); setResetDone(true); setTimeout(() => setResetDone(false), 2500); }
     setResetSaving(false);
+  }
+
+  if (sub === 'photos') {
+    const current = photos[photoIdx];
+    return (
+      <div className="flex flex-col items-center px-4 pt-6 pb-32">
+        <SubBackButton onClick={() => setSub('grid')} dark={dark} />
+        <h2 className="mb-6 w-full text-base font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>
+          Property Photos
+        </h2>
+
+        {photosLoading ? (
+          <div className="flex items-center justify-center pt-10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+          </div>
+        ) : photos.length === 0 ? (
+          <div className="flex w-full flex-col items-center gap-4 pt-6">
+            <div
+              className="flex h-48 w-full items-center justify-center rounded-2xl border-2 border-dashed"
+              style={{ borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)' }}
+            >
+              <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)' }}>
+                No photos yet
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full space-y-4">
+            {/* Carousel */}
+            <div
+              className="relative w-full overflow-hidden rounded-2xl"
+              style={{ height: 280, touchAction: 'pan-y' }}
+              onTouchStart={(e) => setSwipeDragStart(e.touches[0].clientX)}
+              onTouchMove={(e) => {
+                if (swipeDragStart === null) return;
+                setSwipeDragOffset(e.touches[0].clientX - swipeDragStart);
+              }}
+              onTouchEnd={() => {
+                if (Math.abs(swipeDragOffset) > 48) {
+                  if (swipeDragOffset < 0) swipeNext(); else swipePrev();
+                }
+                setSwipeDragStart(null);
+                setSwipeDragOffset(0);
+              }}
+            >
+              {/* Photo strip */}
+              <div
+                className="flex h-full"
+                style={{
+                  width: `${photos.length * 100}%`,
+                  transform: `translateX(calc(-${(photoIdx / photos.length) * 100}% + ${swipeDragOffset / photos.length}px))`,
+                  transition: swipeDragStart !== null ? 'none' : 'transform 350ms cubic-bezier(0.22,1,0.36,1)',
+                }}
+              >
+                {photos.map((p) => (
+                  <div
+                    key={p.id}
+                    className="h-full bg-cover bg-center"
+                    style={{ width: `${100 / photos.length}%`, backgroundImage: `url(${p.url})` }}
+                  />
+                ))}
+              </div>
+
+              {/* Prev / Next arrows */}
+              {photoIdx > 0 && (
+                <button
+                  type="button"
+                  onClick={swipePrev}
+                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border transition"
+                  style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)' }}
+                  aria-label="Previous photo"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+              )}
+              {photoIdx < photos.length - 1 && (
+                <button
+                  type="button"
+                  onClick={swipeNext}
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border transition"
+                  style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(8px)' }}
+                  aria-label="Next photo"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+              )}
+
+              {/* Counter badge */}
+              <div
+                className="absolute bottom-3 right-3 rounded-lg px-2 py-0.5 text-xs font-semibold text-white"
+                style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}
+              >
+                {photoIdx + 1} / {photos.length}
+              </div>
+            </div>
+
+            {/* Dot indicators */}
+            {photos.length > 1 && (
+              <div className="flex items-center justify-center gap-1.5">
+                {photos.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setPhotoIdx(idx)}
+                    className="h-1.5 rounded-full transition-all duration-200"
+                    style={{
+                      width: idx === photoIdx ? '20px' : '6px',
+                      backgroundColor: idx === photoIdx
+                        ? SANDY
+                        : (dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.15)'),
+                    }}
+                    aria-label={`Photo ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Delete current photo */}
+            {current && (
+              <button
+                type="button"
+                onClick={() => void handlePhotoDelete(current.id)}
+                disabled={deletingPhotoId === current.id}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all disabled:opacity-40"
+                style={{ borderColor: 'rgba(239,68,68,0.28)', background: 'rgba(239,68,68,0.07)', color: dark ? '#f87171' : '#dc2626' }}
+              >
+                {deletingPhotoId === current.id ? 'Deleting…' : 'Delete This Photo'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {photoError && <p className="mt-3 text-xs text-red-400">{photoError}</p>}
+
+        {/* Upload */}
+        <input
+          ref={photoFileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => void handlePhotoUpload(e)}
+        />
+        <button
+          type="button"
+          onClick={() => photoFileRef.current?.click()}
+          disabled={uploadingPhoto}
+          className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+          style={dark
+            ? { borderColor: `rgba(${SANDY_RGB},0.30)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }
+            : { border: '1px solid rgba(0,0,0,0.12)', background: 'rgba(15,23,42,0.88)', color: '#fff' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {uploadingPhoto ? 'Uploading…' : 'Upload Photos'}
+        </button>
+      </div>
+    );
   }
 
   if (sub === 'backgrounds') {
@@ -1714,7 +2051,30 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const swatchBorder = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
 
   return (
-    <div className="px-4 pt-6 pb-32">
+    <div className="px-4 pt-6 pb-32 space-y-3">
+      <button
+        type="button" onClick={() => setSub('photos')}
+        className="flex w-full items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200"
+        style={settingCard}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style={settingIconStyle}>
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.6" />
+            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1.4" />
+            <path d="M21 15l-5-5L5 21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold" style={{ color: settingTitle }}>Property Photos</p>
+          <p className="mt-0.5 text-xs" style={{ color: settingSub }}>
+            {photosLoaded && photos.length > 0 ? `${photos.length} photo${photos.length !== 1 ? 's' : ''} · visible to guests` : 'Upload photos for guests to browse'}
+          </p>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(30,41,59,0.30)' }}>
+          <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       <button
         type="button" onClick={() => setSub('backgrounds')}
         className="flex w-full items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200"
@@ -1936,15 +2296,17 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                       >
                         Edit
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDeleteId(cat.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border transition"
-                        style={{ borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)', color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }}
-                        aria-label="Delete category"
-                      >
-                        <TrashIcon />
-                      </button>
+                      {!cat.is_builtin && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(cat.id)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border transition"
+                          style={{ borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)', color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }}
+                          aria-label="Delete category"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -2528,6 +2890,7 @@ export default function ManagerPropertyEditorClient({
   });
 
   const [logoUrl, setLogoUrl] = useState<string | undefined>(property.LogoUrl);
+  const [logoUrlDark, setLogoUrlDark] = useState<string | undefined>(property.LogoUrlDark);
   const [windows, setWindows] = useState<WindowDraft[]>(property.windows ?? []);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -2669,6 +3032,7 @@ export default function ManagerPropertyEditorClient({
           <PropertyInfoView
             slug={slug} core={core} setCore={setCore}
             logoUrl={logoUrl} setLogoUrl={setLogoUrl}
+            logoUrlDark={logoUrlDark} setLogoUrlDark={setLogoUrlDark}
             saving={saving} saved={saved} onSave={handleSave} saveError={saveError}
             dark={dark}
           />

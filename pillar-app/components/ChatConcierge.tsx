@@ -658,39 +658,43 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
           className={
             placement === 'floating'
               ? 'fixed bottom-5 right-5 z-9999 inline-flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 focus:outline-none'
-              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border px-6 py-5 text-left transition-all duration-300 focus:outline-none ' + (triggerClassName ?? '')
+              : 'group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-3xl px-6 py-5 text-left transition-all duration-300 focus:outline-none ' + (triggerClassName ?? '')
           }
           aria-label="Open concierge"
-          style={{
+          style={placement === 'floating' ? {
             borderColor: 'var(--accent-18)',
             background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+          } : {
+            background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+            boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
           }}
         >
           {placement === 'floating' ? (
             <SlidingTriggerIcon />
           ) : (
             <>
-              {/* Shine line */}
-              <div
-                className="absolute inset-x-0 top-0 h-px"
-                style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }}
-              />
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
-                  style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}
+                  className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl"
+                  style={{
+                    background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
+                    color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                  }}
                 >
                   <SlidingTriggerIcon />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold tracking-wide text-white">Pillar Concierge</div>
-                  <div className="mt-0.5 text-xs" style={{ color: 'var(--accent-50)' }}>
+                  <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Pillar Concierge</div>
+                  <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>
                     Ask about the home or local area
                   </div>
                 </div>
               </div>
-              <span style={{ color: `rgba(${SANDY_RGB},0.45)` }}>
-                <ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              <span style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }}>
+                <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" />
               </span>
             </>
           )}

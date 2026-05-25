@@ -237,39 +237,39 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
 
   const tel = phone.replace(/[^\d+]/g, '');
 
-  const panelBg = dark ? 'rgba(12,12,12,0.97)' : 'rgba(255,255,255,0.92)';
-  const inputBg = dark ? 'rgba(14,14,14,0.80)' : 'rgba(0,0,0,0.06)';
-  const dropdownBg = dark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)';
-  const borderCol = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)';
-  const labelCol = dark ? `rgba(${SANDY_RGB},0.55)` : `rgba(${SANDY_RGB[0]},100,30,0.70)`;
-  const textCol = dark ? 'rgba(255,255,255,0.90)' : 'rgba(20,15,5,0.90)';
-  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : 'rgba(20,15,5,0.40)';
-  const dividerCol = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
-  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  const overlayBg = dark ? 'rgba(0,0,0,0.80)' : 'rgba(0,0,0,0.45)';
-  const sandyLabel = `rgba(${SANDY_RGB},0.55)`;
+  const panelBg = dark ? 'rgba(10,10,10,0.97)' : 'rgba(255,255,255,0.97)';
+  const inputBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const dropdownBg = dark ? 'rgba(14,14,14,0.99)' : 'rgba(255,255,255,0.99)';
+  const borderCol = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const labelCol = dark ? `rgba(${SANDY_RGB},0.55)` : 'rgba(100,80,40,0.60)';
+  const textCol = dark ? 'rgba(255,255,255,0.90)' : '#1e293b';
+  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)';
+  const dividerCol = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const overlayBg = dark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)';
+  const sandyLabel = labelCol;
 
   return (
     <div className="fixed inset-0 z-60 flex items-end justify-center px-6 pb-6">
       <button type="button" onClick={onClose} className="absolute inset-0 backdrop-blur-sm" style={{ background: overlayBg }} aria-label="Close" />
 
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
         style={{ background: panelBg, border: `1px solid ${borderCol}` }}
       >
-        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` }} />
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.25), transparent)` }} />
 
         <div className="max-h-[84vh] overflow-y-auto px-6 pb-7 pt-6">
           {/* Header */}
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-light" style={{ color: textCol }}>Need Help?</h2>
+              <h2 className="lux-title text-2xl" style={{ color: textCol }}>Need Help?</h2>
               <p className="mt-1 text-sm" style={{ color: mutedCol }}>Tell us what needs attention.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-xl transition-all duration-200"
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-2xl transition-all duration-200"
               style={{ background: closeBtnBg, border: `1px solid ${borderCol}`, color: mutedCol }}
               aria-label="Close"
             >
@@ -342,7 +342,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
             {sent ? <div className="text-sm text-emerald-500">Sent. Thank you.</div> : null}
             {submitError ? <div className="text-sm text-red-400">{submitError}</div> : null}
 
-            <GradientButton
+            <button
               type="button"
               onClick={() => {
                 if (!category) { setSubmitError('Please select a category.'); return; }
@@ -365,10 +365,16 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
                   .finally(() => setSubmitting(false));
               }}
               disabled={submitting}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
+              style={{
+                background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+                border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.08)',
+                color: textCol,
+              }}
             >
               <PaperPlaneIcon className="h-4 w-4" />
               {submitting ? 'Sending…' : 'Send'}
-            </GradientButton>
+            </button>
           </div>
 
           {/* Late Checkout */}
@@ -376,14 +382,15 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
             <div className="h-px" style={{ backgroundColor: dividerCol }} />
             <div className="mt-5">
               {lateCheckoutSent ? (
-                <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 px-4 py-3.5 text-sm leading-relaxed text-amber-600">
-                  Your request has been submitted! We will contact you shortly with an update.
+                <div className="rounded-2xl px-4 py-3.5 text-sm leading-relaxed" style={{ background: inputBg, border: `1px solid ${borderCol}`, color: mutedCol }}>
+                  Your request has been submitted. We will contact you shortly with an update.
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => { setLateCheckoutSent(true); }}
-                  className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 py-3.5 text-sm font-semibold tracking-wide text-amber-500 transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-400/16"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200"
+                  style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 >
                   Request Late Checkout
                 </button>
@@ -465,6 +472,70 @@ function AmenityTile({
 
 
 
+
+function AmenitySquare({
+  id,
+  iconKey,
+  title,
+  selected,
+  onToggle,
+  dark = true,
+}: {
+  id: string;
+  iconKey?: string;
+  title: string;
+  selected: boolean;
+  onToggle: () => void;
+  dark?: boolean;
+}) {
+  void id;
+
+  const bg = dark
+    ? selected ? 'rgba(255,255,255,0.18)' : 'rgba(10,10,10,0.82)'
+    : selected ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.82)';
+
+  const border = dark
+    ? `1px solid ${selected ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'}`
+    : `1px solid ${selected ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.07)'}`;
+
+  const shadow = dark
+    ? selected ? '0 4px 24px rgba(0,0,0,0.50)' : '0 4px 16px rgba(0,0,0,0.40)'
+    : selected ? '0 4px 20px rgba(0,0,0,0.12)' : '0 4px 12px rgba(0,0,0,0.07)';
+
+  const iconColor = dark
+    ? selected ? 'rgba(245,237,213,0.92)' : 'rgba(255,255,255,0.75)'
+    : selected ? 'rgba(100,80,40,0.90)' : 'rgba(30,41,59,0.65)';
+
+  const labelColor = dark
+    ? selected ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.72)'
+    : selected ? '#1e293b' : 'rgba(30,41,59,0.65)';
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex flex-col items-center justify-center gap-2.5 rounded-2xl transition-all duration-200 active:scale-95"
+      style={{
+        width: '103px',
+        height: '113px',
+        flexShrink: 0,
+        scrollSnapAlign: 'start',
+        background: bg,
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        border,
+        boxShadow: shadow,
+      }}
+    >
+      <div style={{ color: iconColor }}>
+        <AmenityIconSvg iconKey={iconKey} className="h-8 w-8" />
+      </div>
+      <span className="w-full px-2 text-center text-[12px] font-medium leading-tight" style={{ color: labelColor }}>
+        {title}
+      </span>
+    </button>
+  );
+}
 
 /* ─── Room ordering ───────────────────────────────────────────── */
 
@@ -556,6 +627,14 @@ export default function PropertyExperience({
   const [amenityAnimating, setAmenityAnimating] = useState(false);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [carouselDragStart, setCarouselDragStart] = useState<number | null>(null);
+  const [carouselDragOffset, setCarouselDragOffset] = useState(0);
+  const [carouselDragged, setCarouselDragged] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const photos = property.photos ?? [];
 
   const backgroundUrl = useMemo(
     () => property.HeroImage || '/images/heroimage.jpg',
@@ -577,6 +656,51 @@ export default function PropertyExperience({
   function closeAmenity() {
     setAmenityAnimating(false);
     window.setTimeout(() => setOpenAmenityId(null), 270);
+  }
+
+  async function sharePhotoWithLogo(url: string) {
+    setSharing(true);
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const photo = new Image();
+      photo.crossOrigin = 'anonymous';
+      await new Promise<void>((resolve, reject) => {
+        photo.onload = () => resolve();
+        photo.onerror = () => reject(new Error('photo load failed'));
+        photo.src = url;
+      });
+
+      canvas.width = photo.naturalWidth || 1200;
+      canvas.height = photo.naturalHeight || 800;
+      ctx.drawImage(photo, 0, 0);
+
+      if (property.LogoUrl) {
+        const logo = new Image();
+        logo.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve) => { logo.onload = () => resolve(); logo.onerror = () => resolve(); logo.src = property.LogoUrl!; });
+        const logoH = Math.round(canvas.height * 0.10);
+        const logoW = Math.round((logo.naturalWidth / logo.naturalHeight) * logoH) || logoH;
+        const pad = Math.round(canvas.width * 0.03);
+        ctx.drawImage(logo, pad, canvas.height - logoH - pad, logoW, logoH);
+      }
+
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.92));
+      if (!blob) return;
+      const file = new File([blob], 'experience.jpg', { type: 'image/jpeg' });
+
+      if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: property.PropertyName || 'My Stay', files: [file] });
+      } else {
+        const objUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objUrl; a.download = 'experience.jpg'; a.click();
+        URL.revokeObjectURL(objUrl);
+      }
+    } catch { /* cancelled or CORS — silently ignore */ }
+    finally { setSharing(false); }
   }
 
   const themeVars = {
@@ -603,6 +727,19 @@ export default function PropertyExperience({
     if (!expanded) return;
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   }, [expanded]);
+
+  // Cycle through property photos in the amenities card
+  useEffect(() => {
+    if (photos.length <= 1 || fullView !== 'amenities') return;
+    const id = setInterval(() => {
+      setPhotoIdx((curr) => (curr + 1) % photos.length);
+    }, 6000);
+    return () => clearInterval(id);
+  }, [photos.length, fullView]);
+
+  useEffect(() => {
+    if (fullView !== 'amenities') setPhotoIdx(0);
+  }, [fullView]);
 
   const rootOverflow = expanded ? '' : 'overflow-hidden';
   const showExpandedContent = expanded && !isTransitioning && !isFullViewTransitioning && fullView === 'content';
@@ -634,6 +771,15 @@ export default function PropertyExperience({
         }}
       />
 
+      {/* ── Layer 3: white.png — all expanded light-mode views ── */}
+      <div
+        className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out"
+        style={{
+          backgroundImage: 'url(/images/white.png)',
+          opacity: expanded && !isTransitioning && !dark ? 1 : 0,
+        }}
+      />
+
       {/* ── Logo — visible on content view only, not amenities list ── */}
       {expanded && fullView !== 'amenities' && property.LogoUrl ? (
         <div
@@ -642,7 +788,7 @@ export default function PropertyExperience({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={property.LogoUrl}
+            src={dark ? property.LogoUrl : (property.LogoUrlDark ?? property.LogoUrl)}
             alt="Property logo"
             className="object-contain drop-shadow-lg"
             style={{ width: `${property.LogoSize ?? 100}px`, maxHeight: `${property.LogoSize ?? 100}px` }}
@@ -744,18 +890,18 @@ export default function PropertyExperience({
                   {property.PropertyAddress ? (
                     <p
                       className="text-[11px] font-medium uppercase tracking-[0.3em]"
-                      style={{ color: 'var(--accent)' }}
+                      style={{ color: dark ? 'rgba(245,237,213,0.55)' : 'rgba(100,80,40,0.70)' }}
                     >
                       {property.PropertyAddress}
                     </p>
                   ) : null}
                   <h1
-                    className="text-[2.05rem] font-light leading-tight tracking-[-0.01em]"
-                    style={{ color: 'var(--heading-color)' }}
+                    className="lux-title text-[2.2rem] font-light leading-tight"
+                    style={{ color: dark ? 'rgba(255,255,255,0.92)' : '#1e293b' }}
                   >
                     {property.PropertyName}
                   </h1>
-                  <div className="mt-2.5 h-px w-10" style={{ backgroundImage: 'linear-gradient(to right, var(--accent-50), transparent)' }} />
+                  <div className="mt-2.5 h-px w-10" style={{ background: dark ? 'linear-gradient(to right, rgba(245,237,213,0.50), transparent)' : 'linear-gradient(to right, rgba(100,80,40,0.35), transparent)' }} />
                 </div>
 
                 {/* Home Amenities button */}
@@ -766,20 +912,25 @@ export default function PropertyExperience({
                     window.setTimeout(() => { setFullView('amenities'); }, FULL_VIEW_FADE_MS);
                     window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
                   }}
-                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl border px-6 py-5 text-left transition-all duration-300"
+                  className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-3xl px-6 py-5 text-left transition-all duration-300"
                   style={{
-                    borderColor: 'var(--accent-18)',
-                    background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
+                    background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
                   }}
                 >
-                  <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: 'linear-gradient(to right, transparent, var(--accent-22), transparent)' }} />
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-10)', color: 'var(--accent)', boxShadow: `0 0 0 1.5px rgba(${SANDY_RGB},0.85), 0 0 8px rgba(${SANDY_RGB},0.18)` }}>
+                    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
+                      background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
+                      color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                    }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold tracking-wide text-white">Home Amenities</div>
-                      <div className="mt-0.5 text-xs" style={{ color: 'var(--accent-50)' }}>
+                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Home Amenities</div>
+                      <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>
                         {(() => {
                           const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
                           const preview = all.slice(0, 2);
@@ -788,7 +939,7 @@ export default function PropertyExperience({
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: `rgba(${SANDY_RGB},0.45)` }} />
+                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }} />
                 </button>
 
                 {/* Pillar Concierge inline button */}
@@ -796,15 +947,26 @@ export default function PropertyExperience({
 
                 {/* Manager layout windows */}
                 {managerLayout.length ? (
-                  <GlassCard>
+                  <div className="w-full rounded-3xl p-5" style={{
+                    background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                  }}>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between gap-3">
-                        <SectionTitle>Amenities</SectionTitle>
+                        <p className="lux-title text-[1.1rem]" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Amenities</p>
                         {editableCustomWindows ? (
                           <button
                             type="button"
                             onClick={onAddWindow}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-semibold text-white/70 transition-all duration-200 hover:bg-white/10"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-lg font-semibold transition-all duration-200"
+                            style={{
+                              border: dark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.10)',
+                              background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                              color: dark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.50)',
+                            }}
                             aria-label="Add window"
                           >
                             +
@@ -821,51 +983,52 @@ export default function PropertyExperience({
                           const renderValue = () => {
                             if (typeof value === 'string') {
                               return value.trim()
-                                ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">{value}</p>
-                                : <p className="text-sm text-white/35">(empty)</p>;
+                                ? <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.72)' : 'rgba(30,41,59,0.75)' }}>{value}</p>
+                                : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(empty)</p>;
                             }
                             if (typeof value === 'number' || typeof value === 'boolean') {
-                              return <p className="text-sm text-white/75">{String(value)}</p>;
+                              return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.72)' : 'rgba(30,41,59,0.75)' }}>{String(value)}</p>;
                             }
                             if (isAttachmentArray(value)) {
                               const first = value[0] as { url?: unknown };
                               const url = typeof first?.url === 'string' ? first.url : '';
-                              if (!url) return <p className="text-sm text-white/35">(no attachment)</p>;
+                              if (!url) return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(no attachment)</p>;
                               const kind = guessAttachmentKind(url);
                               if (kind === 'video') return (
-                                <div className="overflow-hidden rounded-xl border border-white/[0.07]">
+                                <div className="overflow-hidden rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}>
                                   <video controls className="w-full" preload="metadata"><source src={url} />Your browser does not support the video tag.</video>
                                 </div>
                               );
                               if (kind === 'image') return (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={url} alt={key} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
+                                <img src={url} alt={key} className="w-full rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }} loading="lazy" />
                               );
                               return (
-                                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>
+                                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: dark ? SANDY : 'rgba(100,80,40,0.85)', textDecorationColor: dark ? `rgba(${SANDY_RGB},0.40)` : 'rgba(100,80,40,0.30)' }}>
                                   Open attachment
                                 </a>
                               );
                             }
-                            return <p className="text-sm text-white/35">(no content)</p>;
+                            return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(no content)</p>;
                           };
 
                           return (
                             <div
                               key={`${key}-${idx}`}
-                              className={editableCustomWindows ? 'rounded-xl border border-white/6 p-3' : 'space-y-2'}
+                              className={editableCustomWindows ? 'rounded-xl p-3' : 'space-y-2'}
+                              style={editableCustomWindows ? { border: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)' } : undefined}
                               draggable={editableCustomWindows}
                               onDragStart={(e) => { if (!editableCustomWindows) return; e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move'; }}
                               onDragOver={(e) => { if (!editableCustomWindows) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                               onDrop={(e) => { if (!editableCustomWindows) return; e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isFinite(from) && onReorderWindows) onReorderWindows(from, idx); }}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>{key}</div>
+                                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: dark ? 'rgba(245,237,213,0.42)' : 'rgba(100,80,40,0.55)' }}>{key}</div>
                                 {editableCustomWindows ? (
                                   <div className="flex items-center gap-2">
-                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-black/55/50 text-white/55 transition-colors duration-200 hover:bg-black/55" aria-label="Move up">↑</button>
-                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.07] bg-black/55/50 text-white/55 transition-colors duration-200 hover:bg-black/55" aria-label="Move down">↓</button>
-                                    <button type="button" onClick={() => onRemoveWindow?.(idx)} className="text-xs font-semibold text-rose-300/50 underline decoration-rose-300/20 underline-offset-4 transition-all duration-200 hover:text-rose-300/75 hover:decoration-rose-300/45">Remove</button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-200" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)', color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.40)' }} aria-label="Move up">↑</button>
+                                    <button type="button" onClick={() => onReorderWindows?.(idx, Math.min(managerLayout.length - 1, idx + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-200" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)', color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.40)' }} aria-label="Move down">↓</button>
+                                    <button type="button" onClick={() => onRemoveWindow?.(idx)} className="text-xs font-semibold underline underline-offset-4 transition-all duration-200" style={{ color: 'rgba(239,68,68,0.55)', textDecorationColor: 'rgba(239,68,68,0.25)' }}>Remove</button>
                                   </div>
                                 ) : null}
                               </div>
@@ -875,7 +1038,7 @@ export default function PropertyExperience({
                         })}
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                 ) : null}
 
                 {/* Need Help button */}
@@ -883,14 +1046,30 @@ export default function PropertyExperience({
                   <button
                     type="button"
                     onClick={() => setNeedHelpOpen(true)}
-                    className="w-full rounded-2xl border py-3.5 text-sm font-semibold tracking-widest transition-all duration-300"
+                    className="group flex w-full items-center justify-between gap-4 rounded-3xl px-6 py-5 text-left transition-all duration-300"
                     style={{
-                      background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
-                      color: '#3d2a0a',
-                      boxShadow: `0 0 20px rgba(${SANDY_RGB},0.25)`,
+                      background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+                      boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
                     }}
                   >
-                    Need Help?
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
+                        background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
+                        color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                      }}>
+                        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Need Help?</div>
+                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>Contact your property manager</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }} />
                   </button>
                 ) : null}
 
@@ -900,7 +1079,7 @@ export default function PropertyExperience({
                     type="button"
                     onClick={() => setDark((d) => !d)}
                     className="transition-opacity duration-200 hover:opacity-70"
-                    style={{ color: 'rgba(255,255,255,0.55)' }}
+                    style={{ color: dark ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.40)' }}
                     title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
                     {dark ? <SunIcon /> : <MoonIcon />}
@@ -934,78 +1113,177 @@ export default function PropertyExperience({
                   : 'opacity-100')
               }
             >
-              <div className="relative mx-auto flex h-screen max-w-md flex-col px-6">
-                <div className="flex min-h-0 flex-1 flex-col overflow-auto pb-12 pt-12">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpenAmenityId(null);
-                        setIsFullViewTransitioning(true);
-                        window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
-                        window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
-                      }}
-                      className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-xl border transition-all duration-200"
-                      style={{ borderColor: 'var(--accent-18)', background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))', color: '#ffffff' }}
-                      aria-label="Back"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <div className="lux-title flex-1 text-center text-xl whitespace-nowrap" style={{ color: 'var(--heading-color)' }}>Home Amenities</div>
-                    <div className="h-10 w-10 flex-none" />
-                  </div>
+              <div className="relative mx-auto flex h-full max-w-md flex-col overflow-hidden">
+                {/* Header */}
+                <div className="shrink-0 flex items-center gap-3 px-4 pt-12 pb-3 z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpenAmenityId(null);
+                      setIsFullViewTransitioning(true);
+                      window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
+                      window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
+                    }}
+                    className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-2xl transition-all duration-200"
+                    style={{
+                      background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+                      color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b',
+                    }}
+                    aria-label="Back"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <div className="lux-title flex-1 text-center text-3xl tracking-[0.04em]" style={{ color: dark ? '#ffffff' : '#1e293b' }}>Home Amenities</div>
+                  <div className="h-9 w-9 flex-none" />
+                </div>
 
-                  {/* Amenity grid */}
-                  {(() => {
-                    const allWindows = property.windows ?? [];
-                    const sortedRooms = [...(property.rooms ?? [])].sort((a, b) => roomSortOrder(a) - roomSortOrder(b));
-                    return (
-                  <div className="mt-5 pl-2 pr-6 pb-4">
-                    {/* Built-in tiles: WiFi + Garage */}
-                    <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', paddingTop: 16, marginTop: -16, paddingBottom: 28, marginBottom: -28, paddingLeft: 16, marginLeft: -16, paddingRight: 28 }}>
-                      <AmenityTile
-                        id="wifi"
-                        iconKey="wifi"
-                        title="WiFi"
-                        selected={openAmenityId === 'wifi'}
-                        onToggle={() => openAmenity('wifi')}
-                        dark={dark}
-                      />
-                      <AmenityTile
-                        id="garage"
-                        iconKey="key"
-                        title="Garage Code"
-                        selected={openAmenityId === 'garage'}
-                        onToggle={() => openAmenity('garage')}
-                        dark={dark}
-                      />
-                    </div>
-
-                    {/* Room sections — one per room that has at least one assigned window */}
-                    {sortedRooms.map((room) => {
-                      const roomWindows = allWindows.filter((w) => w.room === room);
-                      if (roomWindows.length === 0) return null;
-                      return (
-                        <div key={room} className="mt-5">
-                          <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent-50)' }}>{room}</p>
-                          <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', paddingTop: 16, marginTop: -16, paddingBottom: 28, marginBottom: -28, paddingLeft: 16, marginLeft: -16, paddingRight: 28 }}>
-                            {roomWindows.map((w) => (
-                              <AmenityTile
-                                key={w.id}
-                                id={w.id}
-                                iconKey={w.icon}
-                                title={w.title}
-                                selected={openAmenityId === w.id}
-                                onToggle={() => openAmenity(w.id)}
-                                dark={dark}
+                {/* Scrollable content — photo card + amenities card */}
+                <div
+                  className="flex-1 min-h-0 overflow-y-auto px-4 pb-8 space-y-3"
+                  style={{ scrollbarWidth: 'none', overscrollBehavior: 'contain' }}
+                >
+                  {/* Photo carousel card + share */}
+                  {photos.length > 0 && (
+                    <div className="shrink-0 space-y-2">
+                      {/* Swipeable photo strip */}
+                      <div
+                        className="relative w-full overflow-hidden rounded-3xl"
+                        style={{ height: 210, touchAction: 'pan-y', userSelect: 'none' }}
+                        onTouchStart={(e) => { setCarouselDragStart(e.touches[0].clientX); setCarouselDragged(false); }}
+                        onTouchMove={(e) => {
+                          if (carouselDragStart === null) return;
+                          const off = e.touches[0].clientX - carouselDragStart;
+                          setCarouselDragOffset(off);
+                          if (Math.abs(off) > 8) setCarouselDragged(true);
+                        }}
+                        onTouchEnd={() => {
+                          if (Math.abs(carouselDragOffset) > 50) {
+                            if (carouselDragOffset < 0) setPhotoIdx((i) => Math.min(i + 1, photos.length - 1));
+                            else setPhotoIdx((i) => Math.max(i - 1, 0));
+                          }
+                          setCarouselDragStart(null); setCarouselDragOffset(0);
+                        }}
+                        onMouseDown={(e) => { setCarouselDragStart(e.clientX); setCarouselDragged(false); }}
+                        onMouseMove={(e) => {
+                          if (carouselDragStart === null) return;
+                          const off = e.clientX - carouselDragStart;
+                          setCarouselDragOffset(off);
+                          if (Math.abs(off) > 8) setCarouselDragged(true);
+                        }}
+                        onMouseUp={() => {
+                          if (Math.abs(carouselDragOffset) > 50) {
+                            if (carouselDragOffset < 0) setPhotoIdx((i) => Math.min(i + 1, photos.length - 1));
+                            else setPhotoIdx((i) => Math.max(i - 1, 0));
+                          }
+                          setCarouselDragStart(null); setCarouselDragOffset(0);
+                        }}
+                        onMouseLeave={() => { if (carouselDragStart !== null) { setCarouselDragStart(null); setCarouselDragOffset(0); } }}
+                      >
+                        <div
+                          className="flex h-full"
+                          style={{
+                            width: `${photos.length * 100}%`,
+                            transform: `translateX(calc(-${(photoIdx / photos.length) * 100}% + ${carouselDragOffset / photos.length}px))`,
+                            transition: carouselDragStart !== null ? 'none' : 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
+                          }}
+                        >
+                          {photos.map((url, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className="h-full flex-none bg-cover bg-center"
+                              style={{ width: `${100 / photos.length}%`, backgroundImage: `url(${url})` }}
+                              onClick={() => { if (!carouselDragged) { setLightboxIdx(idx); setLightboxOpen(true); } }}
+                              aria-label={`View photo ${idx + 1}`}
+                            />
+                          ))}
+                        </div>
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.42), transparent)' }} />
+                        {photos.length > 1 && (
+                          <div className="pointer-events-none absolute bottom-3 flex w-full items-center justify-center gap-1.5">
+                            {photos.map((_, i) => (
+                              <div
+                                key={i}
+                                className="rounded-full transition-all duration-500"
+                                style={{ width: i === photoIdx ? '18px' : '5px', height: '5px', background: i === photoIdx ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.42)' }}
                               />
                             ))}
                           </div>
-                        </div>
-                      );
-                    })}
+                        )}
+                      </div>
 
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Amenities card */}
+                  {(() => {
+                    const rowStyle: React.CSSProperties = {
+                      display: 'flex',
+                      gap: 10,
+                      overflowX: 'auto',
+                      scrollSnapType: 'x mandatory',
+                      scrollbarWidth: 'none',
+                      paddingTop: 10, marginTop: -10,
+                      paddingBottom: 16, marginBottom: -16,
+                      paddingLeft: 4, marginLeft: -4,
+                      paddingRight: 16,
+                    };
+                    const allWindows = property.windows ?? [];
+                    const propertyRooms = property.rooms ?? [];
+                    const sortedRooms = [...propertyRooms].sort((a, b) => roomSortOrder(a) - roomSortOrder(b));
+                    const unassigned = allWindows.filter((w) => !w.room || !propertyRooms.includes(w.room));
+                    const titleColor = dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.80)';
+                    const divColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+                    return (
+                      <div
+                        className="w-full rounded-3xl"
+                        style={{
+                          background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+                          boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                        }}
+                      >
+                        <div className="px-5 pt-6 pb-8 space-y-6">
+
+                          {/* General — WiFi + Garage + unassigned windows */}
+                          <div>
+                            <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>General</p>
+                            <div style={rowStyle}>
+                              <AmenitySquare id="wifi" iconKey="wifi" title="WiFi" selected={openAmenityId === 'wifi'} onToggle={() => openAmenity('wifi')} dark={dark} />
+                              {property.GarageCode ? (
+                                <AmenitySquare id="garage" iconKey="key" title="Garage Code" selected={openAmenityId === 'garage'} onToggle={() => openAmenity('garage')} dark={dark} />
+                              ) : null}
+                              {unassigned.map((w) => (
+                                <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} />
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Room sections */}
+                          {sortedRooms.map((room) => {
+                            const roomWindows = allWindows.filter((w) => w.room === room);
+                            if (!roomWindows.length) return null;
+                            return (
+                              <div key={room}>
+                                <div className="h-px mb-6" style={{ background: divColor }} />
+                                <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>{room}</p>
+                                <div style={rowStyle}>
+                                  {roomWindows.map((w) => (
+                                    <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} />
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                        </div>
+                      </div>
                     );
                   })()}
                 </div>
@@ -1046,10 +1324,12 @@ export default function PropertyExperience({
                 <div
                   className="relative flex w-full max-w-md flex-col overflow-hidden"
                   style={{
-                    background: 'rgba(14,14,14,0.97)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '20px',
-                    boxShadow: '0 24px 80px rgba(0,0,0,0.90)',
+                    background: dark ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
+                    borderRadius: '24px',
+                    boxShadow: dark ? '0 24px 80px rgba(0,0,0,0.90)' : '0 12px 48px rgba(0,0,0,0.14)',
                     maxHeight: '72vh',
                     opacity: amenityAnimating ? 1 : 0,
                     transform: amenityAnimating ? 'scale(1)' : 'scale(0.94)',
@@ -1061,16 +1341,17 @@ export default function PropertyExperience({
                   <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
 
                   {/* Header */}
-                  <div className="flex flex-none items-center gap-3 border-b border-white/[0.07] px-5 py-4">
+                  <div className="flex flex-none items-center gap-3 px-5 py-4" style={{ borderBottom: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)' }}>
                     <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full" style={{ backgroundColor: overlayIconColor, color: '#ffffff' }}>
                       <AmenityIconSvg iconKey={overlayIconKey} className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold leading-snug text-white/90">{overlayTitle}</p>
-                      {aw?.room && <p className="text-xs leading-snug" style={{ color: 'var(--body-color)', opacity: 0.60 }}>{aw.room}</p>}
+                      <p className="text-sm font-semibold leading-snug" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>{overlayTitle}</p>
+                      {aw?.room && <p className="text-xs leading-snug" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.45)' }}>{aw.room}</p>}
                     </div>
                     <button type="button" onClick={closeAmenity}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/8 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white/80"
+                      className="flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200"
+                      style={{ border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)', background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: dark ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.40)' }}
                       aria-label="Close">
                       <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
                         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -1083,13 +1364,13 @@ export default function PropertyExperience({
                     {openAmenityId === 'wifi' ? (
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Network</p>
-                          <p className="text-sm" style={{ color: 'var(--body-color)' }}>{property.WiFiName}</p>
+                          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Network</p>
+                          <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.WiFiName}</p>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Password</p>
-                            <p className="font-mono text-sm" style={{ color: 'var(--body-color)' }}>{property.WiFiPassword}</p>
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Password</p>
+                            <p className="font-mono text-sm" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.WiFiPassword}</p>
                           </div>
                           <CopyPasswordButton password={property.WiFiPassword} />
                         </div>
@@ -1097,10 +1378,10 @@ export default function PropertyExperience({
                     ) : openAmenityId === 'garage' ? (
                       property.GarageCode
                         ? <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: 'var(--accent-45)' }}>Code</p>
-                            <p className="font-mono text-sm whitespace-pre-wrap" style={{ color: 'var(--body-color)' }}>{property.GarageCode}</p>
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Code</p>
+                            <p className="font-mono text-sm whitespace-pre-wrap" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.GarageCode}</p>
                           </div>
-                        : <p className="text-sm" style={{ color: 'var(--body-color)', opacity: 0.45 }}>Garage code not provided.</p>
+                        : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)' }}>Garage code not provided.</p>
                     ) : aw ? renderWindowContent(aw) : null}
                   </div>
 
@@ -1116,6 +1397,111 @@ export default function PropertyExperience({
             dark={dark}
             slug={slug}
           />
+
+          {/* Photo lightbox */}
+          {lightboxOpen && photos.length > 0 && (
+            <div
+              className="fixed inset-0 z-70 flex flex-col items-center justify-center gap-4 px-4"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <div className="absolute inset-0 bg-black/92 backdrop-blur-lg" />
+              <div
+                className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.95)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photos[lightboxIdx]}
+                  alt={`Photo ${lightboxIdx + 1}`}
+                  className="w-full object-cover"
+                  style={{ maxHeight: '72vh', objectFit: 'cover' }}
+                  draggable={false}
+                />
+
+                {/* Logo watermark */}
+                {property.LogoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={property.LogoUrl}
+                    alt="Property logo"
+                    className="pointer-events-none absolute bottom-4 left-4 object-contain drop-shadow-lg"
+                    style={{ height: '36px', maxWidth: '90px' }}
+                    draggable={false}
+                  />
+                )}
+
+                {/* Top bar: counter + close */}
+                <div
+                  className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3 pb-8"
+                  style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)' }}
+                >
+                  <span className="text-xs font-semibold text-white/55">{lightboxIdx + 1} / {photos.length}</span>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-black/45 text-white/85 backdrop-blur-sm transition hover:bg-black/65"
+                    aria-label="Close"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Prev arrow */}
+                {lightboxIdx > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setLightboxIdx((i) => i - 1)}
+                    className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-white/15 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                )}
+
+                {/* Next arrow */}
+                {lightboxIdx < photos.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setLightboxIdx((i) => i + 1)}
+                    className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-white/15 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                )}
+
+              </div>
+
+              {/* Share section — below the photo window */}
+              <div
+                className="relative z-10 flex w-full max-w-md items-center justify-between rounded-2xl px-5 py-3.5"
+                onClick={(e) => e.stopPropagation()}
+                style={{ background: 'rgba(20,20,20,0.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.09)' }}
+              >
+                <p className="text-sm font-medium text-white/70">Share your Experience with Others!</p>
+                <button
+                  type="button"
+                  onClick={() => void sharePhotoWithLogo(photos[lightboxIdx])}
+                  disabled={sharing}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white/85 transition-all duration-200 active:scale-90 disabled:opacity-40"
+                  aria-label="Share photo"
+                >
+                  {sharing ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                      <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.7" />
+                      <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+                      <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="1.7" />
+                      <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       ) : null}
     </div>

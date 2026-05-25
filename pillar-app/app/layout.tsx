@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Montserrat, Playfair_Display } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,11 +19,12 @@ const montserrat = Montserrat({
   weight: ["100", "200", "300", "400", "500", "600"],
 });
 
-// Luxury title serif.
-const playfair = Playfair_Display({
+// Luxury title serif — Cormorant Garamond: ultra-high contrast hairline strokes, editorial elegance.
+const cormorant = Cormorant_Garamond({
   variable: "--font-lux-title",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${playfair.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${cormorant.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
