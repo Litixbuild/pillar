@@ -385,7 +385,6 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
             <CopyButton value={data.managerPhone} />
           </div>
         ) : null}
-        {data.houseRules ? <div className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-muted)' }}><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>House Rules:</span> {data.houseRules}</div> : null}
       </div>
     );
   }

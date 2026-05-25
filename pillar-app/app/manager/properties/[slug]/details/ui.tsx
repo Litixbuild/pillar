@@ -679,7 +679,6 @@ export default function ManagerPropertyDetailsClient({
     address: property.PropertyAddress || '',
     zip: property.PropertyZipCode || '',
     bio: property.DetailedHouseBio || '',
-    rules: property.HouseRules || '',
     wifiName: property.WiFiName || '',
     wifiPassword: property.WiFiPassword || '',
     garageCode: (property.GarageCode || '').trim(),
@@ -710,7 +709,6 @@ export default function ManagerPropertyDetailsClient({
             PropertyAddress: draft.address,
             PropertyZipCode: draft.zip,
             DetailedHouseBio: draft.bio,
-            HouseRules: draft.rules,
             WiFiName: draft.wifiName,
             WiFiPassword: draft.wifiPassword,
             GarageCode: draft.garageCode,
@@ -819,16 +817,6 @@ export default function ManagerPropertyDetailsClient({
                 rows={7}
                 placeholder="Short, elegant intro for guests"
                 onChange={(v) => setDraft((d) => ({ ...d, bio: v }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <FieldLabel>House rules</FieldLabel>
-              <TextArea
-                value={draft.rules}
-                disabled={isSaving}
-                rows={5}
-                placeholder="No smoking. Quiet hours after 10pm."
-                onChange={(v) => setDraft((d) => ({ ...d, rules: v }))}
               />
             </div>
           </div>

@@ -1173,7 +1173,7 @@ export async function POST(req: Request) {
       }
       if (looksLikePropertyProfileQuestion(message)) {
         return Response.json(
-          { kind: "property", address: property.PropertyAddress || "", zip: property.PropertyZipCode || "", houseRules: property.HouseRules || "", managerPhone: property.ManagerPhone || "", wifiName: property.WiFiName || "", model: "fast-property" } satisfies ChatOkResponse,
+          { kind: "property", address: property.PropertyAddress || "", zip: property.PropertyZipCode || "", houseRules: "", managerPhone: property.ManagerPhone || "", wifiName: property.WiFiName || "", model: "fast-property" } satisfies ChatOkResponse,
           { status: 200 }
         );
       }
@@ -1485,7 +1485,6 @@ export async function POST(req: Request) {
       "## Property data",
       `WiFi: ${property.WiFiName || "(not set)"}  |  Password: ${property.WiFiPassword || "(not set)"}`,
       `Address: ${property.PropertyAddress || "(not set)"}  |  ZIP: ${property.PropertyZipCode || "(not set)"}`,
-      property.HouseRules ? `House rules: ${property.HouseRules}` : null,
       property.DetailedHouseBio ? `About the property: ${property.DetailedHouseBio}` : null,
       "",
       placesText ? "## Live local data (Google Places — use these as your source)" : null,

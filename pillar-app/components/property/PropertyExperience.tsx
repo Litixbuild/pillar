@@ -1073,8 +1073,7 @@ export default function PropertyExperience({
                   </button>
                 ) : null}
 
-                {/* Dark / light mode toggle */}
-                <div className="flex justify-center">
+                <div className="flex justify-center mt-6">
                   <button
                     type="button"
                     onClick={() => setDark((d) => !d)}
@@ -1085,24 +1084,9 @@ export default function PropertyExperience({
                     {dark ? <SunIcon /> : <MoonIcon />}
                   </button>
                 </div>
-
-                <div className="h-6" />
               </div>
             </div>
 
-            {/* House Rules — fixed footer */}
-            {property.HouseRules && showExpandedContent ? (
-              <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md px-6 pb-5 pt-8"
-                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)' }}
-              >
-                <div className="text-center">
-                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">House Rules</p>
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/42">
-                    {property.HouseRules}
-                  </p>
-                </div>
-              </div>
-            ) : null}
 
             {/* Amenities full view */}
             <div
@@ -1298,7 +1282,7 @@ export default function PropertyExperience({
               : null;
             const overlayIconKey = openAmenityId === 'wifi' ? 'wifi' : openAmenityId === 'garage' ? 'key' : aw?.icon;
             const overlayTitle = openAmenityId === 'wifi' ? 'WiFi' : openAmenityId === 'garage' ? 'Garage Code' : (aw?.title ?? '');
-            const overlayIconColor = getIconColor(overlayIconKey);
+            const overlayIconColor = dark ? 'rgba(255,255,255,0.75)' : 'rgba(30,41,59,0.65)';
             return (
               <div
                 className="fixed inset-0 z-60 flex justify-center"
@@ -1342,8 +1326,8 @@ export default function PropertyExperience({
 
                   {/* Header */}
                   <div className="flex flex-none items-center gap-3 px-5 py-4" style={{ borderBottom: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.06)' }}>
-                    <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full" style={{ backgroundColor: overlayIconColor, color: '#ffffff' }}>
-                      <AmenityIconSvg iconKey={overlayIconKey} className="h-4 w-4" />
+                    <div className="flex-none" style={{ color: overlayIconColor }}>
+                      <AmenityIconSvg iconKey={overlayIconKey} className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold leading-snug" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>{overlayTitle}</p>

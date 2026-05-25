@@ -54,19 +54,17 @@ function rowToCategoryWithContacts(row: Row): WorkOrderCategoryWithContacts {
 
 export async function ensureBuiltinCategories(slug: string): Promise<void> {
   const supabase = createServiceClient();
-  const { data } = await supabase
+  // Only seed builtins when the property has no categories at all — this lets
+  // managers delete categories (including builtins) without them coming back.
+  const { count } = await supabase
     .from('work_order_categories')
-    .select('name')
-    .eq('property_slug', slug)
-    .eq('is_builtin', true);
+    .select('id', { count: 'exact', head: true })
+    .eq('property_slug', slug);
 
-  const existing = new Set((data as Row[] | null)?.map((r) => String(r.name)) ?? []);
-
-  const missing = BUILTIN_CATEGORIES.filter((c) => !existing.has(c.name));
-  if (!missing.length) return;
+  if ((count ?? 0) > 0) return;
 
   await supabase.from('work_order_categories').insert(
-    missing.map((c) => ({
+    BUILTIN_CATEGORIES.map((c) => ({
       property_slug: slug,
       name: c.name,
       is_builtin: true,
@@ -159,8 +157,7 @@ export async function deleteWorkOrderCategory(id: string, slug: string): Promise
     .from('work_order_categories')
     .delete()
     .eq('id', id)
-    .eq('property_slug', slug)
-    .eq('is_builtin', false);
+    .eq('property_slug', slug);
   if (error) throw new Error(error.message);
 }
 

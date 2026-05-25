@@ -31,7 +31,7 @@ export interface Property {
   WiFiName: string;
   WiFiPassword: string;
   GarageCode?: string;
-  HouseRules: string;
+  HouseRules?: string;
   ManagerPhone: string;
   ManagerName?: string;
   ManagerEmail?: string;

@@ -21,7 +21,6 @@ interface CoreFields {
   PropertyAddress: string;
   PropertyZipCode: string;
   DetailedHouseBio: string;
-  HouseRules: string;
   WiFiName: string;
   WiFiPassword: string;
   GarageCode: string;
@@ -438,7 +437,7 @@ const TILES: Tile[] = [
 function calcCompletion(core: CoreFields, windows: WindowDraft[], woCats: WOCategory[] | undefined): number {
   const fields = [
     core.PropertyName, core.PropertyAddress, core.DetailedHouseBio,
-    core.HouseRules, core.WiFiName, core.WiFiPassword, core.GarageCode, core.ManagerPhone,
+    core.WiFiName, core.WiFiPassword, core.GarageCode, core.ManagerPhone,
   ];
   const propPct = (fields.filter((f) => f.trim()).length / fields.length) * 100;
   const amenPct = windows.length === 0 ? 0 : Math.min(100, (windows.length / 3) * 100);
@@ -453,7 +452,6 @@ function getMissingItems(core: CoreFields, windows: WindowDraft[], woCats: WOCat
   if (!core.PropertyName.trim()) missing.push('Property name');
   if (!core.PropertyAddress.trim()) missing.push('Property address');
   if (!core.DetailedHouseBio.trim()) missing.push('Property description');
-  if (!core.HouseRules.trim()) missing.push('House rules');
   if (!core.WiFiName.trim()) missing.push('Wi-Fi name');
   if (!core.WiFiPassword.trim()) missing.push('Wi-Fi password');
   if (!core.ManagerPhone.trim()) missing.push('Manager phone number');
@@ -835,9 +833,6 @@ function PropertyInfoView({
           <div className="space-y-4 p-5">
             <FieldGroup label="House Bio">
               <TextArea value={core.DetailedHouseBio} onChange={(v) => setField('DetailedHouseBio', v)} placeholder="Describe the property for guests…" rows={4} />
-            </FieldGroup>
-            <FieldGroup label="House Rules">
-              <TextArea value={core.HouseRules} onChange={(v) => setField('HouseRules', v)} placeholder="No smoking, check out by 11am…" rows={3} />
             </FieldGroup>
           </div>
         </div>
@@ -2296,17 +2291,15 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                       >
                         Edit
                       </button>
-                      {!cat.is_builtin && (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteId(cat.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border transition"
-                          style={{ borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)', color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }}
-                          aria-label="Delete category"
-                        >
-                          <TrashIcon />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(cat.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border transition"
+                        style={{ borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)', color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }}
+                        aria-label="Delete category"
+                      >
+                        <TrashIcon />
+                      </button>
                     </>
                   )}
                 </div>
@@ -2471,7 +2464,6 @@ const HOWTO_STEPS: Record<string, { title: string; desc: string }[]> = {
     { title: 'Open Property Info', desc: 'Tap the orange Property Info tile on your dashboard to enter the editor.' },
     { title: 'Fill in the basics', desc: 'Enter your property name and address. These appear in your guest guide header.' },
     { title: 'Write your welcome message', desc: 'Add a House Bio — a warm introduction guests see when they first open the guide.' },
-    { title: 'Set House Rules', desc: 'List the key rules you want guests to follow. Keep them clear and short.' },
     { title: 'Add Wi-Fi & access codes', desc: 'Enter your Wi-Fi name, password, and any garage or door codes so guests can find them instantly.' },
     { title: 'Save your changes', desc: 'Tap Save at the bottom of the form. Changes go live immediately in the guest guide.' },
   ],
@@ -2881,7 +2873,6 @@ export default function ManagerPropertyEditorClient({
     PropertyAddress: property.PropertyAddress === 'Not provided' ? '' : (property.PropertyAddress ?? ''),
     PropertyZipCode: property.PropertyZipCode === 'Not provided' ? '' : (property.PropertyZipCode ?? ''),
     DetailedHouseBio: property.DetailedHouseBio === 'Not provided' ? '' : (property.DetailedHouseBio ?? ''),
-    HouseRules: property.HouseRules ?? '',
     WiFiName: property.WiFiName ?? '',
     WiFiPassword: property.WiFiPassword ?? '',
     GarageCode: property.GarageCode ?? '',
