@@ -1,23 +1,7 @@
 import { cookies } from "next/headers";
+import { randomUUID } from "crypto";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
 import { createProperty, slugExists } from "@/lib/properties";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 48);
-}
-
-function randomSuffix(): string {
-  return Math.floor(Math.random() * 0xffff).toString(16).padStart(4, "0");
-}
 
 export async function POST(req: Request) {
   const jar = await cookies();
@@ -35,13 +19,11 @@ export async function POST(req: Request) {
     return Response.json({ error: "Property name is required" }, { status: 400 });
   }
 
-  const base = toSlug(name) || "property";
-
-  // Generate a unique slug, retrying if there's a collision
-  let slug = `${base}-${randomSuffix()}`;
-  for (let i = 0; i < 5; i++) {
+  // UUID makes the URL unguessable — collision is astronomically unlikely but we still check
+  let slug = randomUUID();
+  for (let i = 0; i < 3; i++) {
     if (!(await slugExists(slug))) break;
-    slug = `${base}-${randomSuffix()}`;
+    slug = randomUUID();
   }
 
   await createProperty(session.userId, name, slug);
