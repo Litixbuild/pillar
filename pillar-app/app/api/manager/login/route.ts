@@ -21,7 +21,11 @@ export async function POST(req: Request) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
-    return Response.json({ error: error?.message ?? "Invalid credentials" }, { status: 401 });
+    const msg = error?.message ?? "Invalid credentials";
+    if (msg.toLowerCase().includes("email not confirmed")) {
+      return Response.json({ error: "Please verify your email before signing in. Check your inbox for a confirmation link." }, { status: 401 });
+    }
+    return Response.json({ error: "Invalid email or password" }, { status: 401 });
   }
 
   const { data: profile } = await supabase

@@ -28,6 +28,8 @@ function MoonIcon() {
 
 export default function ManagerLoginPage() {
   const [dark, setDark] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("pillar-theme");
@@ -115,11 +117,20 @@ export default function ManagerLoginPage() {
           <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
         </div>
 
+        {/* Error */}
+        {error ? (
+          <div className="mb-4 w-full rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300/80">
+            {error}
+          </div>
+        ) : null}
+
         {/* Form */}
         <form
           className="w-full space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
+            setError(null);
+            setLoading(true);
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
             const email = String(fd.get("email") || "");
@@ -131,7 +142,8 @@ export default function ManagerLoginPage() {
             });
             if (!res.ok) {
               const data = (await res.json().catch(() => ({}))) as { error?: string };
-              alert(data.error || "Login failed");
+              setError(data.error || "Login failed. Please try again.");
+              setLoading(false);
               return;
             }
             window.location.href = "/manager";
@@ -149,10 +161,11 @@ export default function ManagerLoginPage() {
 
           <button
             type="submit"
-            className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
+            disabled={loading}
+            className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
             style={submitStyle}
           >
-            Sign In
+            {loading ? "Signing in…" : "Sign In"}
           </button>
 
           <div className="pt-1 flex flex-col items-center gap-3 text-center">

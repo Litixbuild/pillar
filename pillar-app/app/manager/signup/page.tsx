@@ -30,6 +30,7 @@ export default function ManagerSignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [dark, setDark] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("pillar-theme");
@@ -103,6 +104,34 @@ export default function ManagerSignupPage() {
           priority
         />
 
+        {/* Email verification screen */}
+        {verificationEmail ? (
+          <div className="w-full text-center">
+            <div className="mb-5">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/10">
+                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-white/80" aria-hidden="true">
+                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-light tracking-tight text-white">Check your inbox</h2>
+              <p className="mt-2 text-sm text-white/55">
+                We sent a verification link to
+              </p>
+              <p className="mt-1 text-sm font-medium text-white/80">{verificationEmail}</p>
+              <p className="mt-3 text-xs text-white/40">
+                Click the link in the email to verify your account, then come back and sign in.
+              </p>
+            </div>
+            <Link
+              href="/manager/login"
+              className="inline-flex h-10 w-full items-center justify-center rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
+              style={submitStyle}
+            >
+              Go to Sign In
+            </Link>
+          </div>
+        ) : (
+          <>
         {/* Heading */}
         <div className="mb-5 text-center">
           <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
@@ -141,7 +170,8 @@ export default function ManagerSignupPage() {
               setLoading(false);
               return;
             }
-            window.location.href = "/manager";
+            setVerificationEmail(email);
+            setLoading(false);
           }}
         >
           <div className="space-y-1.5">
@@ -183,6 +213,8 @@ export default function ManagerSignupPage() {
             </Link>
           </div>
         </form>
+          </>
+        )}
       </div>
     </div>
   );

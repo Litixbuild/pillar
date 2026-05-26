@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
 import { createClient, createServiceClient } from "@/lib/supabase";
-import { getManagerCookieName, signManagerSession } from "@/lib/managerAuth";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pmpillar.com";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,14 @@ export async function POST(req: Request) {
   if (password !== confirmPassword) return Response.json({ error: "Passwords do not match" }, { status: 400 });
 
   const supabase = createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${APP_URL}/manager/login`,
+      data: { full_name: name },
+    },
+  });
 
   if (error || !data.user) {
     return Response.json({ error: error?.message ?? "Signup failed" }, { status: 400 });
@@ -39,34 +46,9 @@ export async function POST(req: Request) {
     is_subscribed: false,
   });
 
-  if (profileError) {
+  if (profileError && !profileError.message.includes("duplicate")) {
     return Response.json({ error: "Account created but profile setup failed. Please contact support." }, { status: 500 });
   }
 
-  let token = "";
-  try {
-    token = signManagerSession({
-      email,
-      name,
-      userId: data.user.id,
-      iat: Date.now(),
-    });
-  } catch (e) {
-    return Response.json(
-      { error: e instanceof Error ? e.message : "Missing MANAGER_SESSION_SECRET." },
-      { status: 500 }
-    );
-  }
-
-  const jar = await cookies();
-  jar.set({
-    name: getManagerCookieName(),
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
-
-  return Response.json({ ok: true }, { status: 200 });
+  return Response.json({ ok: true, requiresEmailVerification: true }, { status: 200 });
 }
