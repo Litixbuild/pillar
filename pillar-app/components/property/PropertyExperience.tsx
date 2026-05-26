@@ -872,7 +872,7 @@ export default function PropertyExperience({
             {/* Content view */}
             <div
               className={
-                'relative mx-auto flex h-screen max-w-md flex-col overflow-hidden px-6 transition-opacity duration-450 ease-in-out ' +
+                'relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden px-6 transition-opacity duration-450 ease-in-out ' +
                 (isTransitioning || isFullViewTransitioning || fullView !== 'content'
                   ? 'opacity-0 pointer-events-none'
                   : 'opacity-100')
@@ -880,9 +880,10 @@ export default function PropertyExperience({
               style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
             >
               <div
-                className="flex min-h-0 flex-1 flex-col space-y-4 overflow-auto pb-10"
+                className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden"
                 style={{
-                  paddingTop: editableCustomWindows ? '110px' : 'clamp(200px, 48vh, 320px)',
+                  paddingTop: editableCustomWindows ? '110px' : 'clamp(140px, 36vh, 260px)',
+                  paddingBottom: 'max(32px, calc(16px + env(safe-area-inset-bottom)))',
                 }}
               >
                 {/* Property name */}
@@ -1073,7 +1074,7 @@ export default function PropertyExperience({
                   </button>
                 ) : null}
 
-                <div className="flex justify-center mt-6">
+                <div className="flex justify-center">
                   <button
                     type="button"
                     onClick={() => setDark((d) => !d)}
