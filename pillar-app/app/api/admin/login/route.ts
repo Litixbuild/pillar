@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/admin",
+    path: "/",
   });
 
   return Response.json({ ok: true }, { status: 200 });

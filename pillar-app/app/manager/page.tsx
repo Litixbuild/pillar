@@ -19,15 +19,24 @@ export default async function ManagerDashboardPage() {
   const supabase = createServiceClient();
   const [properties, profileResult] = await Promise.all([
     getPropertiesByManagerId(session.userId),
-    supabase.from("profiles").select("is_subscribed").eq("id", session.userId).single(),
+    supabase
+      .from("profiles")
+      .select("is_subscribed, stripe_subscription_status, stripe_customer_id")
+      .eq("id", session.userId)
+      .single(),
   ]);
-  const isSubscribed = profileResult.data?.is_subscribed === true;
+  const profile = profileResult.data;
+  const isSubscribed = profile?.is_subscribed === true;
+  const subscriptionStatus = (profile?.stripe_subscription_status as string | null) ?? null;
+  const hasStripeCustomer = !!profile?.stripe_customer_id;
   const managerName = (session.name || "").trim() || "Manager";
 
   return (
     <ManagerDashboardClient
       properties={properties}
       isSubscribed={isSubscribed}
+      subscriptionStatus={subscriptionStatus}
+      hasStripeCustomer={hasStripeCustomer}
       managerName={managerName}
     />
   );

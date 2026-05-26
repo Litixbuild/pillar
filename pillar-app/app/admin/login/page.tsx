@@ -1,69 +1,83 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminLoginPage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") || "");
+    const password = String(fd.get("password") || "");
+
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(data.error || "Invalid credentials");
+      setLoading(false);
+      return;
+    }
+
+    window.location.href = "/admin";
+  }
+
   return (
     <div
-      className="relative flex flex-col items-center justify-center overflow-hidden px-5"
-      style={{ height: "100dvh", backgroundImage: "url(/images/background.png)", backgroundSize: "cover", backgroundPosition: "center" }}
+      className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-5 py-10"
+      style={{
+        backgroundImage: "url(/images/background.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       {/* Dark overlay */}
-      <div className="absolute inset-0" style={{ background: "rgba(6,13,20,0.72)" }} />
+      <div className="absolute inset-0" style={{ background: "rgba(5,11,18,0.78)" }} />
 
-      {/* Subtle red glow to visually distinguish admin from manager login */}
+      {/* Red accent glow */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(ellipse 90% 45% at 50% -5%, rgba(239,68,68,0.10) 0%, transparent 68%)" }}
+        style={{ background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(239,68,68,0.12) 0%, transparent 65%)" }}
       />
 
-      <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
+      <div className="relative z-10 flex w-full max-w-90 flex-col items-center">
+        {/* Logo */}
         <Image
           src="/images/pillarlogowhite.png"
           alt="Pillar"
           width={300}
           height={200}
-          className="mb-6 h-auto w-44 opacity-80 sm:mb-8"
+          className="mb-8 h-auto w-40 opacity-75"
           priority
         />
 
-        <div className="mb-7 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-red-400/60">
+        {/* Heading */}
+        <div className="mb-8 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-red-400/55">
             Admin Access
           </p>
-          <h1 className="mt-2 text-xl font-light tracking-tight text-white sm:text-2xl">
+          <h1 className="mt-2 font-serif text-3xl font-light text-white">
             Pillar Admin
           </h1>
-          <div className="mx-auto mt-3 h-px w-8 bg-linear-to-r from-red-400/40 to-transparent" />
+          <div className="mx-auto mt-4 h-px w-10 bg-linear-to-r from-transparent via-red-400/35 to-transparent" />
         </div>
 
-        <form
-          className="w-full space-y-4"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.currentTarget as HTMLFormElement);
-            const email = String(fd.get("email") || "");
-            const password = String(fd.get("password") || "");
-
-            const res = await fetch("/api/admin/login", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ email, password }),
-            });
-
-            if (!res.ok) {
-              const data = (await res.json().catch(() => ({}))) as { error?: string };
-              alert(data.error || "Login failed");
-              return;
-            }
-
-            window.location.href = "/admin";
-          }}
-        >
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-red-400/55">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="w-full space-y-4">
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-red-400/50">
               Email
             </p>
             <input
@@ -72,12 +86,12 @@ export default function AdminLoginPage() {
               autoComplete="username"
               required
               placeholder="admin@domain.com"
-              className="h-11 w-full rounded-xl border border-white/8 bg-[#0f1e2d]/70 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/22 focus:border-red-500/35 focus:ring-1 focus:ring-red-500/18"
+              className="h-12 w-full rounded-xl border border-white/8 bg-white/6 px-4 text-base text-white outline-none transition-all placeholder:text-white/20 focus:border-red-500/40 focus:bg-white/8 focus:ring-1 focus:ring-red-500/15"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-red-400/55">
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-red-400/50">
               Password
             </p>
             <input
@@ -86,15 +100,22 @@ export default function AdminLoginPage() {
               autoComplete="current-password"
               required
               placeholder="••••••••"
-              className="h-11 w-full rounded-xl border border-white/8 bg-[#0f1e2d]/70 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/22 focus:border-red-500/35 focus:ring-1 focus:ring-red-500/18"
+              className="h-12 w-full rounded-xl border border-white/8 bg-white/6 px-4 text-base text-white outline-none transition-all placeholder:text-white/20 focus:border-red-500/40 focus:bg-white/8 focus:ring-1 focus:ring-red-500/15"
             />
           </div>
 
+          {error && (
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300/90">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="mt-1 h-11 w-full rounded-xl bg-linear-to-r from-red-600 to-red-400 text-sm font-semibold text-white shadow-[0_0_20px_rgba(239,68,68,0.18)] transition-all duration-300 hover:shadow-[0_0_32px_rgba(239,68,68,0.35)] active:scale-[0.98]"
+            disabled={loading}
+            className="mt-2 h-12 w-full rounded-xl bg-linear-to-r from-red-600 to-red-500 text-sm font-semibold tracking-wide text-white shadow-[0_0_24px_rgba(239,68,68,0.20)] transition-all duration-300 hover:shadow-[0_0_36px_rgba(239,68,68,0.35)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign In
+            {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
       </div>

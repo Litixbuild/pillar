@@ -36,10 +36,14 @@ function MoonIcon() {
 export default function ManagerDashboardClient({
   properties,
   isSubscribed,
+  subscriptionStatus,
+  hasStripeCustomer,
   managerName,
 }: {
   properties: Property[];
   isSubscribed: boolean;
+  subscriptionStatus: string | null;
+  hasStripeCustomer: boolean;
   managerName: string;
 }) {
   const [dark, setDark] = useState(false);
@@ -51,6 +55,7 @@ export default function ManagerDashboardClient({
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('pillar-theme');
@@ -102,6 +107,28 @@ export default function ManagerDashboardClient({
     }
     const { slug } = (await res.json()) as { slug: string };
     window.location.href = `/manager/properties/${encodeURIComponent(slug)}/edit`;
+  }
+
+  async function handleStartCheckout() {
+    setBillingLoading(true);
+    const res = await fetch('/api/manager/billing/create-checkout', { method: 'POST' });
+    if (res.ok) {
+      const { url } = (await res.json()) as { url: string };
+      window.location.href = url;
+    } else {
+      setBillingLoading(false);
+    }
+  }
+
+  async function handleOpenPortal() {
+    setBillingLoading(true);
+    const res = await fetch('/api/manager/billing/portal', { method: 'POST' });
+    if (res.ok) {
+      const { url } = (await res.json()) as { url: string };
+      window.location.href = url;
+    } else {
+      setBillingLoading(false);
+    }
   }
 
   /* ── Theme helpers ── */
@@ -274,18 +301,84 @@ export default function ManagerDashboardClient({
 
           {/* Billing card */}
           <div className="overflow-hidden rounded-2xl" style={card}>
-            <div className="px-6 py-4" style={cardHeader}>
+            <div className="flex items-center justify-between px-6 py-4" style={cardHeader}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
                 Billing
               </p>
+              {isSubscribed && (
+                <span className="rounded-full border px-2.5 py-0.5 text-[10px] font-semibold" style={{ background: 'rgba(34,197,94,0.10)', borderColor: 'rgba(34,197,94,0.25)', color: 'rgb(34,197,94)' }}>
+                  Active
+                </span>
+              )}
+              {subscriptionStatus === 'past_due' && (
+                <span className="rounded-full border px-2.5 py-0.5 text-[10px] font-semibold" style={{ background: 'rgba(251,146,60,0.12)', borderColor: 'rgba(251,146,60,0.30)', color: 'rgb(251,146,60)' }}>
+                  Past due
+                </span>
+              )}
+              {subscriptionStatus === 'canceled' && (
+                <span className="rounded-full border px-2.5 py-0.5 text-[10px] font-semibold" style={{ background: 'rgba(248,113,113,0.10)', borderColor: 'rgba(248,113,113,0.25)', color: 'rgb(248,113,113)' }}>
+                  Canceled
+                </span>
+              )}
             </div>
             <div className="p-6">
-              <p className="text-sm" style={{ color: mutedColor }}>
-                Stripe integration coming soon. Once connected, subscription checkout and invoices will appear here.
-              </p>
-              <p className="mt-2 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.22)' : 'rgba(30,41,59,0.35)' }}>
-                No payments are being collected yet.
-              </p>
+              {isSubscribed ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
+                      Pillar Subscription
+                    </p>
+                    <p className="mt-0.5 text-xs" style={{ color: mutedColor }}>
+                      Subscription is active
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenPortal()}
+                    disabled={billingLoading}
+                    className="inline-flex h-9 items-center rounded-xl border px-4 text-xs font-semibold transition-all duration-200 disabled:opacity-40"
+                    style={dark
+                      ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)' }
+                      : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.04)', color: '#1e293b' }}
+                  >
+                    {billingLoading ? 'Opening…' : 'Manage billing →'}
+                  </button>
+                </div>
+              ) : subscriptionStatus === 'past_due' ? (
+                <div className="space-y-3">
+                  <p className="text-sm" style={{ color: mutedColor }}>
+                    Your last payment failed. Update your payment method to restore access.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenPortal()}
+                    disabled={billingLoading}
+                    className="inline-flex h-9 items-center rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 text-xs font-semibold text-orange-400 transition-all duration-200 hover:bg-orange-500/20 disabled:opacity-40"
+                  >
+                    {billingLoading ? 'Opening…' : 'Update payment method →'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
+                      Start your subscription
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: mutedColor }}>
+                      Subscribe to unlock property management and all Pillar features.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleStartCheckout()}
+                    disabled={billingLoading}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border px-5 text-sm font-semibold transition-all duration-300 disabled:opacity-40"
+                    style={addBtnStyle}
+                  >
+                    {billingLoading ? 'Loading…' : 'Subscribe now →'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
