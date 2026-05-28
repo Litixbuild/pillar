@@ -278,12 +278,12 @@ export default function ManagerDashboardClient({
                       type="button"
                       disabled={slotLoading}
                       onClick={() => void handleAddSlot()}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-all duration-300 disabled:opacity-50"
                       style={dark
-                        ? { borderColor: 'rgba(251,146,60,0.35)', background: 'rgba(251,146,60,0.10)', color: 'rgb(251,146,60)' }
-                        : { borderColor: 'rgba(234,88,12,0.30)', background: 'rgba(234,88,12,0.08)', color: 'rgb(194,65,12)' }}
+                        ? { borderColor: 'rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.60)' }
+                        : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)', color: 'rgba(30,41,59,0.65)' }}
                     >
-                      <span className="text-base leading-none">+</span>
+                      <span className="text-sm leading-none">+</span>
                       {slotLoading ? 'Upgrading…' : 'Add Property Slot — $9.99/mo'}
                     </button>
                     <p className="text-[11px]" style={{ color: mutedColor }}>

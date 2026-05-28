@@ -887,7 +887,12 @@ export default function PropertyExperience({
     if (fullView !== 'amenities') setPhotoIdx(0);
   }, [fullView]);
 
-  const rootOverflow = expanded ? '' : 'overflow-hidden';
+  useEffect(() => {
+    document.body.style.overflow = expanded ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [expanded]);
+
+  const rootOverflow = 'overflow-hidden';
   const showExpandedContent = expanded && !isTransitioning && !isFullViewTransitioning && fullView === 'content';
 
   return (
@@ -1028,7 +1033,7 @@ export default function PropertyExperience({
               <div
                 className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden"
                 style={{
-                  paddingTop: editableCustomWindows ? '110px' : 'clamp(140px, 36vh, 260px)',
+                  paddingTop: editableCustomWindows ? '110px' : 'clamp(165px, 42vh, 290px)',
                   paddingBottom: 'max(32px, calc(16px + env(safe-area-inset-bottom)))',
                 }}
               >
