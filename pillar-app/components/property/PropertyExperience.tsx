@@ -113,6 +113,132 @@ const ICON_COLOR_PALETTE = [
   '#B84A8A','#2E8FAF','#C97030','#6A9C2A','#5A5AAF',
 ];
 
+/* ─── Light-mode theme palettes ──────────────────────────────── */
+
+interface LightTheme {
+  accentRGB: string;
+  headingColor: string;
+  addressText: string;
+  dividerFrom: string;
+  buttonBg: string;
+  buttonBorder: string;
+  buttonShadow: string;
+  iconBg: string;
+  iconColor: string;
+  titleText: string;
+  subtitleText: string;
+  chevronColor: string;
+  toggleColor: string;
+  whiteOverlayOpacity: number;
+}
+
+const DEFAULT_LIGHT: LightTheme = {
+  accentRGB: '100,80,40',
+  headingColor: '#1e293b',
+  addressText: 'rgba(100,80,40,0.70)',
+  dividerFrom: 'rgba(100,80,40,0.35)',
+  buttonBg: 'rgba(255,255,255,0.82)',
+  buttonBorder: 'rgba(0,0,0,0.07)',
+  buttonShadow: '0 4px 20px rgba(0,0,0,0.08)',
+  iconBg: 'rgba(100,80,40,0.08)',
+  iconColor: 'rgba(100,80,40,0.75)',
+  titleText: '#1e293b',
+  subtitleText: 'rgba(100,80,40,0.55)',
+  chevronColor: 'rgba(100,80,40,0.35)',
+  toggleColor: 'rgba(30,41,59,0.40)',
+  whiteOverlayOpacity: 1,
+};
+
+const LIGHT_THEMES: Record<string, LightTheme> = {
+  // Azure — sky blue watercolor
+  bg1: {
+    accentRGB: '20,76,140',
+    headingColor: '#0f2d5c',
+    addressText: 'rgba(20,76,140,0.62)',
+    dividerFrom: 'rgba(20,76,140,0.28)',
+    buttonBg: 'rgba(235,244,255,0.88)',
+    buttonBorder: 'rgba(20,76,140,0.14)',
+    buttonShadow: '0 4px 20px rgba(20,76,140,0.09)',
+    iconBg: 'rgba(20,76,140,0.10)',
+    iconColor: '#144c8c',
+    titleText: '#0f2d5c',
+    subtitleText: 'rgba(20,76,140,0.62)',
+    chevronColor: 'rgba(20,76,140,0.42)',
+    toggleColor: 'rgba(20,76,140,0.45)',
+    whiteOverlayOpacity: 0.55,
+  },
+  // Sage — sage green watercolor
+  bg2: {
+    accentRGB: '30,90,55',
+    headingColor: '#0f2e1c',
+    addressText: 'rgba(30,90,55,0.62)',
+    dividerFrom: 'rgba(30,90,55,0.28)',
+    buttonBg: 'rgba(235,248,240,0.88)',
+    buttonBorder: 'rgba(30,90,55,0.14)',
+    buttonShadow: '0 4px 20px rgba(30,90,55,0.09)',
+    iconBg: 'rgba(30,90,55,0.10)',
+    iconColor: '#1e5a37',
+    titleText: '#0f2e1c',
+    subtitleText: 'rgba(30,90,55,0.62)',
+    chevronColor: 'rgba(30,90,55,0.42)',
+    toggleColor: 'rgba(30,90,55,0.45)',
+    whiteOverlayOpacity: 0.55,
+  },
+  // Ember — warm orange watercolor
+  bg4: {
+    accentRGB: '150,65,16',
+    headingColor: '#3d1a05',
+    addressText: 'rgba(150,65,16,0.62)',
+    dividerFrom: 'rgba(150,65,16,0.28)',
+    buttonBg: 'rgba(255,247,237,0.88)',
+    buttonBorder: 'rgba(150,65,16,0.14)',
+    buttonShadow: '0 4px 20px rgba(150,65,16,0.09)',
+    iconBg: 'rgba(150,65,16,0.10)',
+    iconColor: '#964110',
+    titleText: '#3d1a05',
+    subtitleText: 'rgba(150,65,16,0.62)',
+    chevronColor: 'rgba(150,65,16,0.42)',
+    toggleColor: 'rgba(150,65,16,0.45)',
+    whiteOverlayOpacity: 0.60,
+  },
+  // Blush — soft pink watercolor
+  bg5: {
+    accentRGB: '155,40,85',
+    headingColor: '#3d0d24',
+    addressText: 'rgba(155,40,85,0.62)',
+    dividerFrom: 'rgba(155,40,85,0.28)',
+    buttonBg: 'rgba(255,241,247,0.88)',
+    buttonBorder: 'rgba(155,40,85,0.14)',
+    buttonShadow: '0 4px 20px rgba(155,40,85,0.09)',
+    iconBg: 'rgba(155,40,85,0.10)',
+    iconColor: '#9b2855',
+    titleText: '#3d0d24',
+    subtitleText: 'rgba(155,40,85,0.62)',
+    chevronColor: 'rgba(155,40,85,0.42)',
+    toggleColor: 'rgba(155,40,85,0.45)',
+    whiteOverlayOpacity: 0.55,
+  },
+  // Sandstone — warm beige watercolor
+  bg6: {
+    accentRGB: '110,75,30',
+    headingColor: '#2d1a08',
+    addressText: 'rgba(110,75,30,0.65)',
+    dividerFrom: 'rgba(110,75,30,0.30)',
+    buttonBg: 'rgba(255,250,241,0.88)',
+    buttonBorder: 'rgba(110,75,30,0.14)',
+    buttonShadow: '0 4px 20px rgba(110,75,30,0.09)',
+    iconBg: 'rgba(110,75,30,0.10)',
+    iconColor: '#6e4b1e',
+    titleText: '#2d1a08',
+    subtitleText: 'rgba(110,75,30,0.65)',
+    chevronColor: 'rgba(110,75,30,0.42)',
+    toggleColor: 'rgba(110,75,30,0.45)',
+    whiteOverlayOpacity: 0.58,
+  },
+};
+
+const THEME_BG_KEYS = new Set(['bg1', 'bg2', 'bg4', 'bg5', 'bg6']);
+
 function getIconColor(iconKey?: string): string {
   if (!iconKey) return '#6B7280';
   if (AMENITY_ICON_COLORS[iconKey]) return AMENITY_ICON_COLORS[iconKey];
@@ -198,7 +324,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-base font-semibold tracking-wide text-white/90" style={{ color: 'var(--heading-color)' }}>{children}</h2>;
 }
 
-function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string }) {
+function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalTheme }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string; lightTheme?: LightTheme }) {
   const [category, setCategory] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [otherMessage, setOtherMessage] = useState('');
@@ -237,17 +363,22 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
 
   const tel = phone.replace(/[^\d+]/g, '');
 
-  const panelBg = dark ? 'rgba(10,10,10,0.97)' : 'rgba(255,255,255,0.97)';
-  const inputBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
-  const dropdownBg = dark ? 'rgba(14,14,14,0.99)' : 'rgba(255,255,255,0.99)';
-  const borderCol = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const labelCol = dark ? `rgba(${SANDY_RGB},0.55)` : 'rgba(100,80,40,0.60)';
-  const textCol = dark ? 'rgba(255,255,255,0.90)' : '#1e293b';
-  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)';
-  const dividerCol = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const isModalThemed = !dark && !!modalTheme;
+  const mRGB = isModalThemed ? modalTheme!.accentRGB : '100,80,40';
+  const panelBg = dark ? 'rgba(10,10,10,0.97)' : (isModalThemed ? modalTheme!.buttonBg.replace(',0.88)', ',0.97)') : 'rgba(255,255,255,0.97)');
+  const inputBg = dark ? 'rgba(255,255,255,0.05)' : (isModalThemed ? `rgba(${mRGB},0.05)` : 'rgba(0,0,0,0.04)');
+  const dropdownBg = dark ? 'rgba(14,14,14,0.99)' : (isModalThemed ? modalTheme!.buttonBg.replace(',0.88)', ',0.99)') : 'rgba(255,255,255,0.99)');
+  const borderCol = dark ? 'rgba(255,255,255,0.08)' : (isModalThemed ? `rgba(${mRGB},0.12)` : 'rgba(0,0,0,0.08)');
+  const labelCol = dark ? `rgba(${SANDY_RGB},0.55)` : (isModalThemed ? `rgba(${mRGB},0.62)` : 'rgba(100,80,40,0.60)');
+  const textCol = dark ? 'rgba(255,255,255,0.90)' : (isModalThemed ? modalTheme!.titleText : '#1e293b');
+  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : (isModalThemed ? `rgba(${mRGB},0.48)` : 'rgba(30,41,59,0.40)');
+  const dividerCol = dark ? 'rgba(255,255,255,0.06)' : (isModalThemed ? `rgba(${mRGB},0.09)` : 'rgba(0,0,0,0.06)');
+  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : (isModalThemed ? `rgba(${mRGB},0.06)` : 'rgba(0,0,0,0.04)');
   const overlayBg = dark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)';
   const sandyLabel = labelCol;
+  const accentGlowRGB = isModalThemed ? mRGB : SANDY_RGB;
+  const checkColor = isModalThemed ? modalTheme!.iconColor : SANDY;
+  const selectedBg = `rgba(${isModalThemed ? mRGB : SANDY_RGB},0.12)`;
 
   return (
     <div className="fixed inset-0 z-60 flex items-end justify-center px-6 pb-6">
@@ -257,7 +388,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
         className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
         style={{ background: panelBg, border: `1px solid ${borderCol}` }}
       >
-        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.25), transparent)` }} />
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${accentGlowRGB},0.25), transparent)` }} />
 
         <div className="max-h-[84vh] overflow-y-auto px-6 pb-7 pt-6">
           {/* Header */}
@@ -303,11 +434,11 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
                         onClick={() => { setCategory(opt.name); setSent(false); setSubmitError(null); setCategoryOpen(false); if (opt.name !== 'Other') setOtherMessage(''); }}
                         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors duration-150"
                         style={category === opt.name
-                          ? { backgroundColor: `rgba(${SANDY_RGB},0.12)`, color: textCol }
+                          ? { backgroundColor: selectedBg, color: textCol }
                           : { color: mutedCol }}
                       >
                         <span>{opt.name}</span>
-                        {category === opt.name ? <span style={{ color: SANDY }}>✓</span> : null}
+                        {category === opt.name ? <span style={{ color: checkColor }}>✓</span> : null}
                       </button>
                     ))}
                   </div>
@@ -367,8 +498,8 @@ function NeedHelpModal({ open, onClose, phone, dark, slug }: { open: boolean; on
               disabled={submitting}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
               style={{
-                background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-                border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.08)',
+                background: dark ? 'rgba(255,255,255,0.08)' : (isModalThemed ? `rgba(${mRGB},0.10)` : 'rgba(0,0,0,0.07)'),
+                border: dark ? '1px solid rgba(255,255,255,0.10)' : (isModalThemed ? `1px solid rgba(${mRGB},0.18)` : '1px solid rgba(0,0,0,0.08)'),
                 color: textCol,
               }}
             >
@@ -480,6 +611,7 @@ function AmenitySquare({
   selected,
   onToggle,
   dark = true,
+  themeAccentRGB,
 }: {
   id: string;
   iconKey?: string;
@@ -487,8 +619,11 @@ function AmenitySquare({
   selected: boolean;
   onToggle: () => void;
   dark?: boolean;
+  themeAccentRGB?: string;
 }) {
   void id;
+
+  const isLightThemed = !dark && !!themeAccentRGB;
 
   const bg = dark
     ? selected ? 'rgba(255,255,255,0.18)' : 'rgba(10,10,10,0.82)'
@@ -496,7 +631,9 @@ function AmenitySquare({
 
   const border = dark
     ? `1px solid ${selected ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'}`
-    : `1px solid ${selected ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.07)'}`;
+    : `1px solid ${selected
+        ? (isLightThemed ? `rgba(${themeAccentRGB},0.32)` : 'rgba(0,0,0,0.12)')
+        : (isLightThemed ? `rgba(${themeAccentRGB},0.12)` : 'rgba(0,0,0,0.07)')}`;
 
   const shadow = dark
     ? selected ? '0 4px 24px rgba(0,0,0,0.50)' : '0 4px 16px rgba(0,0,0,0.40)'
@@ -504,11 +641,15 @@ function AmenitySquare({
 
   const iconColor = dark
     ? selected ? 'rgba(245,237,213,0.92)' : 'rgba(255,255,255,0.75)'
-    : selected ? 'rgba(100,80,40,0.90)' : 'rgba(30,41,59,0.65)';
+    : isLightThemed
+      ? selected ? `rgba(${themeAccentRGB},0.90)` : `rgba(${themeAccentRGB},0.62)`
+      : selected ? 'rgba(100,80,40,0.90)' : 'rgba(30,41,59,0.65)';
 
   const labelColor = dark
     ? selected ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.72)'
-    : selected ? '#1e293b' : 'rgba(30,41,59,0.65)';
+    : isLightThemed
+      ? selected ? `rgba(${themeAccentRGB},0.95)` : `rgba(${themeAccentRGB},0.70)`
+      : selected ? '#1e293b' : 'rgba(30,41,59,0.65)';
 
   return (
     <button
@@ -703,6 +844,11 @@ export default function PropertyExperience({
     finally { setSharing(false); }
   }
 
+  const bgKey = property.BackgroundKey ?? '';
+  const isLightThemed = !dark && THEME_BG_KEYS.has(bgKey);
+  const lightTheme: LightTheme = isLightThemed ? (LIGHT_THEMES[bgKey] ?? DEFAULT_LIGHT) : DEFAULT_LIGHT;
+  const whiteOverlayOpacity = isLightThemed ? lightTheme.whiteOverlayOpacity : 1;
+
   const themeVars = {
     '--accent': SANDY,
     '--accent-10': `rgba(${SANDY_RGB},0.10)`,
@@ -771,12 +917,12 @@ export default function PropertyExperience({
         }}
       />
 
-      {/* ── Layer 3: white.png — all expanded light-mode views ── */}
+      {/* ── Layer 3: white.png — all expanded light-mode views (opacity reduced for themes to let bg color show) ── */}
       <div
         className="pointer-events-none fixed inset-0 bg-cover bg-center transition-opacity duration-700 ease-in-out"
         style={{
           backgroundImage: 'url(/images/white.png)',
-          opacity: expanded && !isTransitioning && !dark ? 1 : 0,
+          opacity: expanded && !isTransitioning && !dark ? whiteOverlayOpacity : 0,
         }}
       />
 
@@ -891,18 +1037,18 @@ export default function PropertyExperience({
                   {property.PropertyAddress ? (
                     <p
                       className="text-[11px] font-medium uppercase tracking-[0.3em]"
-                      style={{ color: dark ? 'rgba(245,237,213,0.55)' : 'rgba(100,80,40,0.70)' }}
+                      style={{ color: dark ? 'rgba(245,237,213,0.55)' : lightTheme.addressText }}
                     >
                       {property.PropertyAddress}
                     </p>
                   ) : null}
                   <h1
                     className="lux-title text-[2.2rem] font-light leading-tight"
-                    style={{ color: dark ? 'rgba(255,255,255,0.92)' : '#1e293b' }}
+                    style={{ color: dark ? 'rgba(255,255,255,0.92)' : lightTheme.headingColor }}
                   >
                     {property.PropertyName}
                   </h1>
-                  <div className="mt-2.5 h-px w-10" style={{ background: dark ? 'linear-gradient(to right, rgba(245,237,213,0.50), transparent)' : 'linear-gradient(to right, rgba(100,80,40,0.35), transparent)' }} />
+                  <div className="mt-2.5 h-px w-10" style={{ background: dark ? 'linear-gradient(to right, rgba(245,237,213,0.50), transparent)' : `linear-gradient(to right, ${lightTheme.dividerFrom}, transparent)` }} />
                 </div>
 
                 {/* Home Amenities button */}
@@ -915,23 +1061,23 @@ export default function PropertyExperience({
                   }}
                   className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-3xl px-6 py-5 text-left transition-all duration-300"
                   style={{
-                    background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                    background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
-                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
                   }}
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
-                      background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
-                      color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                      background: dark ? 'rgba(245,237,213,0.10)' : lightTheme.iconBg,
+                      color: dark ? `rgba(${SANDY_RGB},0.85)` : lightTheme.iconColor,
                     }}>
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Home Amenities</div>
-                      <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>
+                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Home Amenities</div>
+                      <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>
                         {(() => {
                           const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
                           const preview = all.slice(0, 2);
@@ -940,24 +1086,40 @@ export default function PropertyExperience({
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }} />
+                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : lightTheme.chevronColor }} />
                 </button>
 
                 {/* Pillar Concierge inline button */}
-                <ChatConcierge slug={slug} placement="inline" dark={dark} />
+                <ChatConcierge
+                  slug={slug}
+                  placement="inline"
+                  dark={dark}
+                  inlineLightTheme={isLightThemed ? {
+                    accentRGB: lightTheme.accentRGB,
+                    panelDeepBg: lightTheme.buttonBg.replace(',0.88)', ',0.96)'),
+                    buttonBg: lightTheme.buttonBg,
+                    buttonBorder: lightTheme.buttonBorder,
+                    buttonShadow: lightTheme.buttonShadow,
+                    iconBg: lightTheme.iconBg,
+                    iconColor: lightTheme.iconColor,
+                    titleText: lightTheme.titleText,
+                    subtitleText: lightTheme.subtitleText,
+                    chevronColor: lightTheme.chevronColor,
+                  } : undefined}
+                />
 
                 {/* Manager layout windows */}
                 {managerLayout.length ? (
                   <div className="w-full rounded-3xl p-5" style={{
-                    background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                    background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
-                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
                   }}>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="lux-title text-[1.1rem]" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Amenities</p>
+                        <p className="lux-title text-[1.1rem]" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Amenities</p>
                         {editableCustomWindows ? (
                           <button
                             type="button"
@@ -1024,7 +1186,7 @@ export default function PropertyExperience({
                               onDrop={(e) => { if (!editableCustomWindows) return; e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isFinite(from) && onReorderWindows) onReorderWindows(from, idx); }}
                             >
                               <div className="flex items-start justify-between gap-3">
-                                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: dark ? 'rgba(245,237,213,0.42)' : 'rgba(100,80,40,0.55)' }}>{key}</div>
+                                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: dark ? 'rgba(245,237,213,0.42)' : lightTheme.subtitleText }}>{key}</div>
                                 {editableCustomWindows ? (
                                   <div className="flex items-center gap-2">
                                     <button type="button" onClick={() => onReorderWindows?.(idx, Math.max(0, idx - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-200" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)', color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.40)' }} aria-label="Move up">↑</button>
@@ -1049,37 +1211,37 @@ export default function PropertyExperience({
                     onClick={() => setNeedHelpOpen(true)}
                     className="group flex w-full items-center justify-between gap-4 rounded-3xl px-6 py-5 text-left transition-all duration-300"
                     style={{
-                      background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                      background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
                       backdropFilter: 'blur(20px)',
                       WebkitBackdropFilter: 'blur(20px)',
-                      border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
-                      boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                      border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                      boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
                     }}
                   >
                     <div className="flex items-center gap-4">
                       <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
-                        background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
-                        color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                        background: dark ? 'rgba(245,237,213,0.10)' : lightTheme.iconBg,
+                        color: dark ? `rgba(${SANDY_RGB},0.85)` : lightTheme.iconColor,
                       }}>
                         <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
                           <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Need Help?</div>
-                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>Contact your property manager</div>
+                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Need Help?</div>
+                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>Contact your property manager</div>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }} />
+                    <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : lightTheme.chevronColor }} />
                   </button>
                 ) : null}
 
-                <div className="flex justify-center">
+                <div className="flex justify-center pt-3">
                   <button
                     type="button"
                     onClick={() => setDark((d) => !d)}
                     className="transition-opacity duration-200 hover:opacity-70"
-                    style={{ color: dark ? 'rgba(255,255,255,0.45)' : 'rgba(30,41,59,0.40)' }}
+                    style={{ color: dark ? 'rgba(255,255,255,0.45)' : lightTheme.toggleColor }}
                     title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
                     {dark ? <SunIcon /> : <MoonIcon />}
@@ -1111,17 +1273,17 @@ export default function PropertyExperience({
                     }}
                     className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-2xl transition-all duration-200"
                     style={{
-                      background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                      background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
                       backdropFilter: 'blur(20px)',
                       WebkitBackdropFilter: 'blur(20px)',
-                      border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
-                      color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b',
+                      border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                      color: dark ? 'rgba(255,255,255,0.80)' : lightTheme.titleText,
                     }}
                     aria-label="Back"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <div className="lux-title flex-1 text-center text-3xl tracking-[0.04em]" style={{ color: dark ? '#ffffff' : '#1e293b' }}>Home Amenities</div>
+                  <div className="lux-title flex-1 text-center text-3xl tracking-[0.04em]" style={{ color: dark ? '#ffffff' : lightTheme.headingColor }}>Home Amenities</div>
                   <div className="h-9 w-9 flex-none" />
                 </div>
 
@@ -1220,18 +1382,18 @@ export default function PropertyExperience({
                     const propertyRooms = property.rooms ?? [];
                     const sortedRooms = [...propertyRooms].sort((a, b) => roomSortOrder(a) - roomSortOrder(b));
                     const unassigned = allWindows.filter((w) => !w.room || !propertyRooms.includes(w.room));
-                    const titleColor = dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.80)';
-                    const divColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+                    const titleColor = dark ? `rgba(${SANDY_RGB},0.85)` : `rgba(${lightTheme.accentRGB},0.82)`;
+                    const divColor = dark ? 'rgba(255,255,255,0.06)' : `rgba(${lightTheme.accentRGB},0.10)`;
 
                     return (
                       <div
                         className="w-full rounded-3xl"
                         style={{
-                          background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+                          background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
                           backdropFilter: 'blur(20px)',
                           WebkitBackdropFilter: 'blur(20px)',
-                          border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
-                          boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+                          border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                          boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
                         }}
                       >
                         <div className="px-5 pt-6 pb-8 space-y-6">
@@ -1240,12 +1402,12 @@ export default function PropertyExperience({
                           <div>
                             <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>General</p>
                             <div style={rowStyle}>
-                              <AmenitySquare id="wifi" iconKey="wifi" title="WiFi" selected={openAmenityId === 'wifi'} onToggle={() => openAmenity('wifi')} dark={dark} />
+                              <AmenitySquare id="wifi" iconKey="wifi" title="WiFi" selected={openAmenityId === 'wifi'} onToggle={() => openAmenity('wifi')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                               {property.GarageCode ? (
-                                <AmenitySquare id="garage" iconKey="key" title="Garage Code" selected={openAmenityId === 'garage'} onToggle={() => openAmenity('garage')} dark={dark} />
+                                <AmenitySquare id="garage" iconKey="key" title="Garage Code" selected={openAmenityId === 'garage'} onToggle={() => openAmenity('garage')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                               ) : null}
                               {unassigned.map((w) => (
-                                <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} />
+                                <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                               ))}
                             </div>
                           </div>
@@ -1260,7 +1422,7 @@ export default function PropertyExperience({
                                 <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>{room}</p>
                                 <div style={rowStyle}>
                                   {roomWindows.map((w) => (
-                                    <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} />
+                                    <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                                   ))}
                                 </div>
                               </div>
@@ -1381,6 +1543,7 @@ export default function PropertyExperience({
             phone={property.ManagerPhone ?? ''}
             dark={dark}
             slug={slug}
+            lightTheme={isLightThemed ? lightTheme : undefined}
           />
 
           {/* Photo lightbox */}

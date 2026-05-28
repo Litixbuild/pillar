@@ -772,7 +772,7 @@ export default function ManagerPropertyDetailsClient({
             href={`/p/${encodeURIComponent(slug)}`}
             className="inline-flex items-center gap-1 text-sm font-semibold text-[#7A5A1E] underline decoration-[#D4AF6A]/50 underline-offset-4 hover:decoration-[#D4AF6A] dark:text-[#E8D4A8]"
           >
-            View live <span aria-hidden>↗</span>
+            View live
           </Link>
         </div>
 

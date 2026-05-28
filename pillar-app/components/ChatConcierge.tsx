@@ -5,30 +5,34 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 const SANDY = '#F5EDD5';
 const SANDY_RGB = '245,237,213';
 
-function makeChatVars(dark: boolean): React.CSSProperties {
+function makeChatVars(dark: boolean, theme?: InlineLightTheme): React.CSSProperties {
+  const isThemed = !dark && !!theme;
+  const aRGB = isThemed ? theme!.accentRGB : SANDY_RGB;
+  const aColor = isThemed ? theme!.iconColor : SANDY;
+
   return {
-    '--accent':      SANDY,
-    '--accent-10':   `rgba(${SANDY_RGB},0.10)`,
-    '--accent-18':   `rgba(${SANDY_RGB},0.18)`,
-    '--accent-22':   `rgba(${SANDY_RGB},0.22)`,
-    '--accent-28':   `rgba(${SANDY_RGB},0.28)`,
-    '--accent-45':   `rgba(${SANDY_RGB},0.45)`,
-    '--accent-50':   `rgba(${SANDY_RGB},0.50)`,
-    '--btn-bg-from': `rgba(${SANDY_RGB},0.22)`,
-    '--btn-bg-to':   `rgba(${SANDY_RGB},0.14)`,
-    '--panel-deep':  dark ? 'rgba(12,12,12,0.97)'  : 'rgba(255,255,255,0.93)',
-    '--panel-mid':   dark ? 'rgba(18,18,18,0.60)'  : 'rgba(0,0,0,0.04)',
-    '--panel-card':  dark ? 'rgba(22,22,22,0.92)'  : 'rgba(0,0,0,0.04)',
-    '--panel-input': dark ? 'rgba(14,14,14,0.80)'  : 'rgba(0,0,0,0.06)',
-    '--text-primary':   dark ? 'rgba(255,255,255,0.90)' : 'rgba(61,42,10,0.90)',
-    '--text-muted':     dark ? 'rgba(255,255,255,0.40)' : 'rgba(61,42,10,0.50)',
-    '--border-col':     dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)',
-    '--star-col':       dark ? SANDY : '#B8820A',
-    '--copy-col':       dark ? SANDY : 'rgba(61,42,10,0.78)',
-    '--copy-border':    dark ? `rgba(${SANDY_RGB},0.22)` : 'rgba(61,42,10,0.22)',
-    '--copy-bg':        dark ? `rgba(${SANDY_RGB},0.10)` : 'rgba(61,42,10,0.07)',
+    '--accent':      aColor,
+    '--accent-10':   `rgba(${aRGB},0.10)`,
+    '--accent-18':   `rgba(${aRGB},0.18)`,
+    '--accent-22':   `rgba(${aRGB},0.22)`,
+    '--accent-28':   `rgba(${aRGB},0.28)`,
+    '--accent-45':   `rgba(${aRGB},0.45)`,
+    '--accent-50':   `rgba(${aRGB},0.50)`,
+    '--btn-bg-from': `rgba(${aRGB},0.22)`,
+    '--btn-bg-to':   `rgba(${aRGB},0.14)`,
+    '--panel-deep':  dark ? 'rgba(12,12,12,0.97)' : (isThemed ? theme!.panelDeepBg : 'rgba(255,255,255,0.93)'),
+    '--panel-mid':   dark ? 'rgba(18,18,18,0.60)' : (isThemed ? `rgba(${aRGB},0.03)` : 'rgba(0,0,0,0.04)'),
+    '--panel-card':  dark ? 'rgba(22,22,22,0.92)' : (isThemed ? `rgba(${aRGB},0.04)` : 'rgba(0,0,0,0.04)'),
+    '--panel-input': dark ? 'rgba(14,14,14,0.80)' : (isThemed ? `rgba(${aRGB},0.05)` : 'rgba(0,0,0,0.06)'),
+    '--text-primary':   dark ? 'rgba(255,255,255,0.90)' : (isThemed ? theme!.titleText : 'rgba(61,42,10,0.90)'),
+    '--text-muted':     dark ? 'rgba(255,255,255,0.40)' : (isThemed ? `rgba(${aRGB},0.55)` : 'rgba(61,42,10,0.50)'),
+    '--border-col':     dark ? 'rgba(255,255,255,0.07)' : (isThemed ? `rgba(${aRGB},0.10)` : 'rgba(0,0,0,0.09)'),
+    '--star-col':       dark ? SANDY : (isThemed ? aColor : '#B8820A'),
+    '--copy-col':       dark ? SANDY : (isThemed ? `rgba(${aRGB},0.82)` : 'rgba(61,42,10,0.78)'),
+    '--copy-border':    dark ? `rgba(${SANDY_RGB},0.22)` : (isThemed ? `rgba(${aRGB},0.22)` : 'rgba(61,42,10,0.22)'),
+    '--copy-bg':        dark ? `rgba(${SANDY_RGB},0.10)` : (isThemed ? `rgba(${aRGB},0.08)` : 'rgba(61,42,10,0.07)'),
     '--phone-col':      dark ? SANDY : '#4A6FA5',
-    '--header-sub':     dark ? `rgba(${SANDY_RGB},0.55)` : 'rgba(61,42,10,0.60)',
+    '--header-sub':     dark ? `rgba(${SANDY_RGB},0.55)` : (isThemed ? `rgba(${aRGB},0.60)` : 'rgba(61,42,10,0.60)'),
   } as React.CSSProperties;
 }
 
@@ -219,7 +223,7 @@ function linkifyLine(line: string) {
   const urlRe = /(https?:\/\/[^\s]+)/g;
   return line.split(urlRe).map((part, idx) =>
     urlRe.test(part) ? (
-      <a key={idx} href={part} target="_blank" rel="noreferrer" className="max-w-full wrap-anywhere underline underline-offset-2 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>
+      <a key={idx} href={part} target="_blank" rel="noreferrer" className="max-w-full wrap-anywhere underline underline-offset-2 transition-all duration-200" style={{ color: 'var(--copy-col)', textDecorationColor: 'var(--copy-border)' }}>
         {prettyUrlLabel(part)}
       </a>
     ) : (
@@ -498,7 +502,20 @@ type ButlerCardData =
 
 type ChatMessage = { id: string; role: ChatRole; text: string; data?: ButlerCardData };
 
-type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; dark?: boolean };
+type InlineLightTheme = {
+  accentRGB: string;
+  panelDeepBg: string;
+  buttonBg: string;
+  buttonBorder: string;
+  buttonShadow: string;
+  iconBg: string;
+  iconColor: string;
+  titleText: string;
+  subtitleText: string;
+  chevronColor: string;
+};
+
+type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; dark?: boolean; inlineLightTheme?: InlineLightTheme };
 
 type OverloadedErrorPayload = { code: 'OVERLOADED'; message: string; retryAfterMs: number };
 
@@ -515,8 +532,8 @@ const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Che
 
 /* ─── Main export ────────────────────────────────────────────── */
 
-export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, dark = true }: Props) {
-  const chatVars = useMemo(() => makeChatVars(dark), [dark]);
+export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, dark = true, inlineLightTheme }: Props) {
+  const chatVars = useMemo(() => makeChatVars(dark, inlineLightTheme), [dark, inlineLightTheme]);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -664,11 +681,11 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
             borderColor: 'var(--accent-18)',
             background: 'linear-gradient(135deg, var(--btn-bg-from), var(--btn-bg-to))',
           } : {
-            background: dark ? 'rgba(10,10,10,0.82)' : 'rgba(255,255,255,0.82)',
+            background: dark ? 'rgba(10,10,10,0.82)' : (inlineLightTheme?.buttonBg ?? 'rgba(255,255,255,0.82)'),
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)',
-            boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : '0 4px 20px rgba(0,0,0,0.08)',
+            border: dark ? '1px solid rgba(255,255,255,0.07)' : (inlineLightTheme ? `1px solid ${inlineLightTheme.buttonBorder}` : '1px solid rgba(0,0,0,0.07)'),
+            boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : (inlineLightTheme?.buttonShadow ?? '0 4px 20px rgba(0,0,0,0.08)'),
           }}
         >
           {placement === 'floating' ? (
@@ -679,20 +696,20 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 <div
                   className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl"
                   style={{
-                    background: dark ? 'rgba(245,237,213,0.10)' : 'rgba(100,80,40,0.08)',
-                    color: dark ? `rgba(${SANDY_RGB},0.85)` : 'rgba(100,80,40,0.75)',
+                    background: dark ? 'rgba(245,237,213,0.10)' : (inlineLightTheme?.iconBg ?? 'rgba(100,80,40,0.08)'),
+                    color: dark ? `rgba(${SANDY_RGB},0.85)` : (inlineLightTheme?.iconColor ?? 'rgba(100,80,40,0.75)'),
                   }}
                 >
                   <SlidingTriggerIcon />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>Pillar Concierge</div>
-                  <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : 'rgba(100,80,40,0.55)' }}>
+                  <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : (inlineLightTheme?.titleText ?? '#1e293b') }}>Pillar Concierge</div>
+                  <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : (inlineLightTheme?.subtitleText ?? 'rgba(100,80,40,0.55)') }}>
                     Ask about the home or local area
                   </div>
                 </div>
               </div>
-              <span style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : 'rgba(100,80,40,0.35)' }}>
+              <span style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : (inlineLightTheme?.chevronColor ?? 'rgba(100,80,40,0.35)') }}>
                 <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" />
               </span>
             </>
@@ -776,7 +793,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 onClick={() => send(p)}
                 disabled={isTyping}
                 className="whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-45"
-                style={dark
+                style={dark || inlineLightTheme
                   ? { borderColor: 'var(--accent-28)', backgroundColor: 'var(--accent-22)', color: 'var(--accent)' }
                   : { borderColor: 'rgba(30,41,59,0.22)', backgroundColor: 'rgba(30,41,59,0.05)', color: 'rgba(30,41,59,0.80)' }}
               >
@@ -803,7 +820,11 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               type="submit"
               disabled={!canSend}
               className="inline-flex h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold tracking-wide transition-all duration-300 active:scale-[0.97] disabled:opacity-40"
-              style={{
+              style={!dark && inlineLightTheme ? {
+                background: inlineLightTheme.iconColor,
+                color: '#ffffff',
+                boxShadow: `0 0 20px rgba(${inlineLightTheme.accentRGB},0.22)`,
+              } : {
                 background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`,
                 color: '#3d2a0a',
                 boxShadow: `0 0 20px rgba(${SANDY_RGB},0.25)`,

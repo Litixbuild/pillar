@@ -1,17 +1,38 @@
 import { stripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase";
+import { updateReferrerDiscount } from "@/lib/referral";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function deriveSlotsFromSub(sub: Stripe.Subscription): number {
+  const propertyPriceId = process.env.STRIPE_PROPERTY_PRICE_ID;
+  const propertyItem = propertyPriceId
+    ? sub.items.data.find((item) => item.price.id === propertyPriceId)
+    : null;
+  return 1 + (propertyItem?.quantity ?? 0);
+}
+
 async function updateProfileFromSub(userId: string, sub: Stripe.Subscription) {
   const supabase = createServiceClient();
+  const isActive = sub.status === "active" || sub.status === "trialing";
   await supabase.from("profiles").update({
     stripe_subscription_id: sub.id,
     stripe_subscription_status: sub.status,
-    is_subscribed: sub.status === "active" || sub.status === "trialing",
+    is_subscribed: isActive,
+    property_slots: isActive ? deriveSlotsFromSub(sub) : 1,
   }).eq("id", userId);
+}
+
+async function getReferrerId(userId: string): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("referred_by")
+    .eq("id", userId)
+    .single();
+  return (data?.referred_by as string | null) ?? null;
 }
 
 export async function POST(req: Request) {
@@ -45,15 +66,32 @@ export async function POST(req: Request) {
       if (!userId) break;
 
       await updateProfileFromSub(userId, sub);
+
+      // Credit referrer when this manager's subscription first goes active
+      if (sub.status === "active" || sub.status === "trialing") {
+        const referrerId = await getReferrerId(userId);
+        if (referrerId) await updateReferrerDiscount(referrerId);
+      }
       break;
     }
 
-    case "customer.subscription.updated":
+    case "customer.subscription.updated": {
+      const sub = event.data.object as Stripe.Subscription;
+      const userId = sub.metadata?.userId;
+      if (!userId) break;
+      await updateProfileFromSub(userId, sub);
+      break;
+    }
+
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.userId;
       if (!userId) break;
       await updateProfileFromSub(userId, sub);
+
+      // Referrer loses credit when this manager cancels
+      const referrerId = await getReferrerId(userId);
+      if (referrerId) await updateReferrerDiscount(referrerId);
       break;
     }
 

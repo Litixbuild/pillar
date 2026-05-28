@@ -75,6 +75,7 @@ const COLUMN_MAP: Record<string, string> = {
   HouseRules: 'house_rules',
   ManagerPhone: 'manager_phone',
   LogoSize: 'logo_size',
+  HeroImage: 'hero_image_url',
   BackgroundKey: 'background_key',
   AccentColor: 'accent_color',
   HeadingColor: 'heading_color',

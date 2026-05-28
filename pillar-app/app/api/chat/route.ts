@@ -742,9 +742,7 @@ function buildPlaceDescription(place: PlaceResult): string {
     || 'local spot';
   const type = typeRaw.replace(/_/g, ' ').trim();
   const article = /^[aeiou]/i.test(type) ? 'An' : 'A';
-  const city = place.formattedAddress?.split(',').slice(1, 2).join('').trim();
-  const ratingStr = place.rating ? `, rated ${place.rating} out of 5` : '';
-  let description = `${article} ${type}${city ? ` in ${city}` : ''}${ratingStr}.`;
+  let description = `${article} ${type}.`;
 
   const extras: string[] = [];
   const priceMap: Record<string, string> = {
@@ -1549,7 +1547,8 @@ export async function POST(req: Request) {
           enrichedPlacesText,
           '',
           '## Guidelines',
-          '- Write descriptions using ALL available data: Description, Type, Rating, Price, and attributes.',
+          '- Write descriptions using the Description, Type, Price, and attributes only.',
+          '- Never mention the location, address, city, or rating in the description.',
           '- If no Description is provided, write from the Type and Name — make it specific and useful.',
           '- Never write "I don\'t have information". Always write something compelling.',
           '- Tone: confident, warm, specific — no filler phrases like "a great place to visit".',
@@ -1566,7 +1565,7 @@ export async function POST(req: Request) {
           },
         });
         const names = enrichedForDesc.map((p) => `"${p.name}"`).join(', ');
-        const descPrompt = `Write concierge-voice descriptions for these places. Use Description data when available; otherwise use the Type, Rating, and Name to craft something specific. Also write one short warm intro sentence (max 20 words) for the overall list.\n\nPlaces: ${names}\n\nReturn JSON:\n{"intro":"one warm intro sentence","blurbs":[{"name":"Exact Name","blurb":"2-3 sentence description"}]}`;
+        const descPrompt = `Write concierge-voice descriptions for these places. Use Description data when available; otherwise use the Type and Name to craft something specific. Do not mention the location, address, city, or rating anywhere in the descriptions. Also write one short warm intro sentence (max 20 words) for the overall list.\n\nPlaces: ${names}\n\nReturn JSON:\n{"intro":"one warm intro sentence","blurbs":[{"name":"Exact Name","blurb":"2-3 sentence description"}]}`;
 
         // Always use generateContent — description generation is structured data extraction,
         // not conversation continuation. Chat history about prior places confuses the model.
@@ -1626,7 +1625,7 @@ export async function POST(req: Request) {
           : '';
         const itPrompt = `Using the places listed in your context, build a full-day itinerary with exactly these 6 sections. Pick ONE place per section — the best option from the available data for that time of day. Use exact place names from the data. Write blurbs in plain text only — no asterisks, no markdown, no bold formatting.${prefLine}
 
-For each blurb: write 2-3 sentences that are SPECIFIC to that actual place. Use the Description, Type, Price, and attribute data provided (dine-in, vegetarian, reservations, etc.) to ground every sentence in what that place actually is. Do not write generic descriptions.
+For each blurb: write 2-3 sentences that are SPECIFIC to that actual place. Use the Description, Type, Price, and attribute data provided (dine-in, vegetarian, reservations, etc.) to ground every sentence in what that place actually is. Do not write generic descriptions. Do not mention location, address, city, or rating in any blurb.
 
 Return ONLY valid JSON (no markdown fences, no extra text):
 {"sections":[{"title":"Breakfast","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Morning Activity","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Lunch","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Afternoon Activity","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Dinner","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]},{"title":"Dessert","places":[{"name":"Exact Name","blurb":"2-3 sentence description specific to this place"}]}]}`;
@@ -1703,7 +1702,7 @@ Return ONLY valid JSON (no markdown fences, no extra text):
                 if (p.servesVegetarianFood) attrs.push('vegetarian options');
                 return `Name: ${p.name}\n  Location: ${p.formattedAddress ? p.formattedAddress.split(',').slice(0, 2).join(',') : 'nearby'}\n  ${attrs.length ? attrs.join(' | ') : '(no additional data)'}`.trimEnd();
               }).join('\n\n');
-              const blurbPrompt = `You are a luxury estate concierge building a day itinerary. For each place write 2-3 sentences SPECIFIC to what that place actually is — use the description, type, and attribute data provided. Plain text only, no markdown. Return ONLY valid JSON, no markdown fences: {"blurbs":[{"name":"exact name","blurb":"2-3 sentence description"}]}\n\nPlaces:\n${placeCtx}`;
+              const blurbPrompt = `You are a luxury estate concierge building a day itinerary. For each place write 2-3 sentences SPECIFIC to what that place actually is — use the description, type, and attribute data provided. Do not mention location, address, city, or rating in any description. Plain text only, no markdown. Return ONLY valid JSON, no markdown fences: {"blurbs":[{"name":"exact name","blurb":"2-3 sentence description"}]}\n\nPlaces:\n${placeCtx}`;
               const blurbResult = await withOverloadRetry(() => blurbModel.generateContent(blurbPrompt));
               const blurbStrippedRaw = blurbResult.response.text().replace(/```json\s*/gi, "").replace(/```\s*/gi, "");
               const bStart = blurbStrippedRaw.indexOf("{");

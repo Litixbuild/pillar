@@ -737,11 +737,13 @@ function GridView({ onNavigate, completion, dark, missing }: { onNavigate: (v: V
 /* ─── Property Info view ──────────────────────────────── */
 
 function PropertyInfoView({
-  slug, core, setCore, logoUrl, setLogoUrl, logoUrlDark, setLogoUrlDark, saving, saved, onSave, saveError, dark,
+  slug, core, setCore, heroUrl, setHeroUrl, logoUrl, setLogoUrl, logoUrlDark, setLogoUrlDark, saving, saved, onSave, saveError, dark,
 }: {
   slug: string;
   core: CoreFields;
   setCore: React.Dispatch<React.SetStateAction<CoreFields>>;
+  heroUrl: string | undefined;
+  setHeroUrl: (url: string) => void;
   logoUrl: string | undefined;
   setLogoUrl: (url: string) => void;
   logoUrlDark: string | undefined;
@@ -752,6 +754,9 @@ function PropertyInfoView({
   saveError: string | null;
   dark: boolean;
 }) {
+  const [heroUploading, setHeroUploading] = useState(false);
+  const [heroUploadError, setHeroUploadError] = useState<string | null>(null);
+  const heroFileRef = useRef<HTMLInputElement | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const logoFileRef = useRef<HTMLInputElement | null>(null);
@@ -767,6 +772,19 @@ function PropertyInfoView({
 
   function setField<K extends keyof CoreFields>(key: K, val: string) {
     setCore((prev) => ({ ...prev, [key]: val }));
+  }
+
+  async function handleHeroUpload(file: File) {
+    setHeroUploading(true);
+    setHeroUploadError(null);
+    try {
+      const url = await uploadFile(slug, 'hero', file);
+      setHeroUrl(url);
+    } catch (e) {
+      setHeroUploadError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setHeroUploading(false);
+    }
   }
 
   async function handleLogoUpload(file: File) {
@@ -831,6 +849,52 @@ function PropertyInfoView({
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={sectionLabel}>Guest Content</p>
           </div>
           <div className="space-y-4 p-5">
+            {/* Cover Photo */}
+            <div>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(51,65,85,0.50)' }}>Cover Photo</p>
+              <p className="mb-3 text-[11px]" style={{ color: dark ? 'rgba(255,255,255,0.38)' : 'rgba(51,65,85,0.50)' }}>The background image guests see on the welcome screen when they scan the QR code.</p>
+              <div
+                className="relative mb-2 flex min-h-[140px] items-center justify-center overflow-hidden rounded-xl"
+                style={{
+                  background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                  border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                  backgroundImage: heroUrl ? `url(${heroUrl})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {!heroUrl && (
+                  <span className="text-xs" style={{ color: dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.22)' }}>No cover photo</span>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={heroFileRef}
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) await handleHeroUpload(f);
+                }}
+              />
+              <button
+                type="button"
+                disabled={heroUploading}
+                onClick={() => heroFileRef.current?.click()}
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all disabled:opacity-45"
+                style={{
+                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                  border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.10)',
+                  color: dark ? 'rgba(255,255,255,0.60)' : 'rgba(30,41,59,0.65)',
+                }}
+              >
+                <UploadIcon />
+                {heroUploading ? 'Uploading…' : heroUrl ? 'Replace Photo' : 'Upload Photo'}
+              </button>
+              {heroUploadError ? <p className="mt-1 rounded-lg bg-rose-500/10 px-2 py-1.5 text-[11px] font-medium text-rose-400">{heroUploadError}</p> : null}
+            </div>
+
             <FieldGroup label="House Bio">
               <TextArea value={core.DetailedHouseBio} onChange={(v) => setField('DetailedHouseBio', v)} placeholder="Describe the property for guests…" rows={4} />
             </FieldGroup>
@@ -1626,17 +1690,15 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
 
 /* ─── Settings view ───────────────────────────────────── */
 
-const BG_KEYS = ['background', 'bg1', 'bg2', 'bg3', 'bg4', 'bg5', 'bg6'] as const;
+const BG_KEYS = ['bg1', 'bg2', 'bg4', 'bg5', 'bg6'] as const;
 type BgKey = typeof BG_KEYS[number];
 
 const BG_PALETTES: Record<BgKey, { label: string; accent: string; heading: string; text: string }> = {
-  background: { label: 'Classic Dark',   accent: '#2dd4bf', heading: '#f0fffe', text: '#6ba8a4' },
-  bg1:        { label: 'Ember',          accent: '#fb923c', heading: '#fff8f2', text: '#ffd4b0' },
-  bg2:        { label: 'Lavender Dream', accent: '#7c3aed', heading: '#f5f0ff', text: '#c4b5fd' },
-  bg3:        { label: 'Midnight',       accent: '#60a5fa', heading: '#f8fafc', text: '#94a3b8' },
-  bg4:        { label: 'Forest',         accent: '#4ade80', heading: '#f0fff4', text: '#6bbf8a' },
-  bg5:        { label: 'Crimson',        accent: '#f87171', heading: '#fff1f2', text: '#c86060' },
-  bg6:        { label: 'Sandstone',      accent: '#b8864e', heading: '#fffaf5', text: '#d4b896' },
+  bg1: { label: 'Azure',     accent: '#144c8c', heading: '#0f2d5c', text: 'rgba(20,70,140,0.62)' },
+  bg2: { label: 'Sage',      accent: '#1e5a37', heading: '#0f2e1c', text: 'rgba(30,90,55,0.62)'  },
+  bg4: { label: 'Ember',     accent: '#964110', heading: '#3d1a05', text: 'rgba(150,65,10,0.62)' },
+  bg5: { label: 'Blush',     accent: '#9b2855', heading: '#3d0d24', text: 'rgba(155,40,85,0.62)' },
+  bg6: { label: 'Sandstone', accent: '#6e4b1e', heading: '#2d1a08', text: 'rgba(110,75,30,0.65)' },
 };
 
 function SubBackButton({ onClick, dark }: { onClick: () => void; dark?: boolean }) {
@@ -1658,6 +1720,13 @@ interface PhotoItem { id: string; url: string }
 
 function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey?: string; dark: boolean }) {
   const [sub, setSub] = useState<'grid' | 'backgrounds' | 'photos'>('grid');
+  const [subFading, setSubFading] = useState(false);
+
+  function goToSub(next: 'grid' | 'backgrounds' | 'photos') {
+    setSubFading(true);
+    setTimeout(() => setSub(next), 200);
+    setTimeout(() => setSubFading(false), 220);
+  }
   const [bgIndex, setBgIndex] = useState<number>(() => {
     const i = BG_KEYS.indexOf((initialBgKey ?? '') as BgKey);
     return i >= 0 ? i : 0;
@@ -1761,7 +1830,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         fields: {
-          BackgroundKey: currentBg === 'background' ? '' : currentBg,
+          BackgroundKey: currentBg,
           AccentColor: palette.accent,
           HeadingColor: palette.heading,
           TextColor: palette.text,
@@ -1792,9 +1861,8 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   if (sub === 'photos') {
     const current = photos[photoIdx];
     return (
-      <div className="flex flex-col items-center px-4 pt-6 pb-32">
-        <SubBackButton onClick={() => setSub('grid')} dark={dark} />
-        <h2 className="mb-6 w-full text-base font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>
+      <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
+        <h2 className="lux-title mb-6 w-full text-3xl font-light tracking-wide" style={{ color: '#ffffff' }}>
           Property Photos
         </h2>
 
@@ -1949,77 +2017,168 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   }
 
   if (sub === 'backgrounds') {
-    const arrowStyle: React.CSSProperties = dark
-      ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.60)' }
-      : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(255,255,255,0.92)', color: 'rgba(30,41,59,0.55)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' };
+    const whiteAlpha = currentBg === 'bg4' ? 0.60 : 0.55;
     return (
-      <div className="flex flex-col items-center px-4 pt-6 pb-32">
-        <SubBackButton onClick={() => setSub('grid')} dark={dark} />
-        <h2 className="mb-6 text-base font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>Choose a Theme</h2>
+      <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
+        <h2 className="lux-title mb-5 w-full text-3xl font-light tracking-wide" style={{ color: '#ffffff' }}>
+          Choose a Theme
+        </h2>
 
-        <div className="flex w-full max-w-sm items-center gap-3">
-          <button type="button" onClick={() => setBgIndex((i) => (i - 1 + BG_KEYS.length) % BG_KEYS.length)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition"
-            style={arrowStyle}
+        {/* Full-width preview card */}
+        <div
+          className="relative w-full overflow-hidden rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.30)]"
+          style={{ border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+        >
+          {/* Background image */}
+          <img
+            key={currentBg}
+            src={`/images/${currentBg}.png`}
+            alt={palette.label}
+            className="h-[340px] w-full object-cover"
+          />
+
+          {/* White overlay — mirrors the white.png layer in the tenant view */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: `rgba(255,255,255,${whiteAlpha})` }}
+          />
+
+          {/* Prev arrow */}
+          <button
+            type="button"
+            onClick={() => setBgIndex((i) => (i - 1 + BG_KEYS.length) % BG_KEYS.length)}
+            className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(0,0,0,0.32)', borderColor: 'rgba(255,255,255,0.22)', color: '#fff', backdropFilter: 'blur(8px)' }}
             aria-label="Previous theme"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
 
-          <div className="relative flex-1 overflow-hidden rounded-2xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-            <img key={currentBg} src={`/images/${currentBg}.png`} alt={palette.label} className="h-56 w-full object-cover" />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black/70 to-transparent" />
-            <div className="absolute inset-x-3 bottom-3 rounded-xl p-3" style={{ background: 'rgba(5,12,22,0.80)', backdropFilter: 'blur(12px)' }}>
-              <p className="text-sm font-light leading-tight" style={{ color: palette.heading }}>Your Property</p>
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: palette.text }}>WiFi, house rules & amenities.</p>
-              <div
-                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold"
-                style={{ borderColor: `${palette.accent}40`, color: palette.accent, background: `linear-gradient(135deg, ${palette.accent}4d, ${palette.accent}2e)` }}
-              >
-                Amenities
-                <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3" aria-hidden="true">
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" onClick={() => setBgIndex((i) => (i + 1) % BG_KEYS.length)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition"
-            style={arrowStyle}
+          {/* Next arrow */}
+          <button
+            type="button"
+            onClick={() => setBgIndex((i) => (i + 1) % BG_KEYS.length)}
+            className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(0,0,0,0.32)', borderColor: 'rgba(255,255,255,0.22)', color: '#fff', backdropFilter: 'blur(8px)' }}
             aria-label="Next theme"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
               <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+
+          {/* Tenant UI mock overlay */}
+          <div className="absolute inset-x-5 bottom-5 space-y-2.5">
+            {/* Property heading */}
+            <div className="pb-0.5">
+              <p
+                className="mb-0.5 text-[9px] font-medium uppercase tracking-[0.32em]"
+                style={{ color: palette.text }}
+              >
+                123 Ocean Drive
+              </p>
+              <p className="text-xl font-light leading-tight" style={{ color: palette.heading }}>
+                The Grand Estate
+              </p>
+              <div className="mt-1.5 h-px w-6" style={{ background: `${palette.accent}55` }} />
+            </div>
+
+            {/* Home Amenities button */}
+            <div
+              className="flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3"
+              style={{
+                background: 'rgba(255,255,255,0.88)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: `1px solid ${palette.accent}22`,
+                boxShadow: `0 2px 12px rgba(0,0,0,0.07)`,
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="flex h-7 w-7 flex-none items-center justify-center rounded-xl"
+                  style={{ background: `${palette.accent}14`, color: palette.accent }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                    <path d="M9 21v-8h6v8" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold leading-none" style={{ color: palette.heading }}>
+                    Home Amenities
+                  </p>
+                  <p className="mt-0.5 text-[9px] leading-none" style={{ color: palette.text }}>
+                    WiFi, garage &amp; more
+                  </p>
+                </div>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 flex-none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke={palette.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Need Help button */}
+            <div
+              className="flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3"
+              style={{
+                background: 'rgba(255,255,255,0.88)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: `1px solid ${palette.accent}22`,
+                boxShadow: `0 2px 12px rgba(0,0,0,0.07)`,
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="flex h-7 w-7 flex-none items-center justify-center rounded-xl"
+                  style={{ background: `${palette.accent}14`, color: palette.accent }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-[11px] font-semibold" style={{ color: palette.heading }}>
+                  Need Help?
+                </p>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 flex-none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke={palette.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 flex w-full max-w-sm flex-col items-center gap-4">
-          <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.70)' : '#1e293b' }}>{palette.label}</p>
-          <div className="flex items-center gap-8">
-            {(['accent', 'heading', 'text'] as const).map((k, i) => (
-              <div key={k} className="flex flex-col items-center gap-1.5">
-                <div className="h-9 w-9 rounded-full border-2 shadow-lg" style={{ backgroundColor: palette[k], borderColor: dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.12)' }} />
-                <p className="text-[10px]" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.50)' }}>{['Accent', 'Titles', 'Text'][i]}</p>
-              </div>
-            ))}
-          </div>
+        {/* Label + dot indicators */}
+        <div className="mt-4 flex w-full flex-col items-center gap-3">
+          <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.70)' : '#1e293b' }}>
+            {palette.label}
+          </p>
           <div className="flex items-center gap-1.5">
             {BG_KEYS.map((_, idx) => (
-              <button key={idx} type="button" onClick={() => setBgIndex(idx)} aria-label={`Theme ${idx + 1}`}
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setBgIndex(idx)}
+                aria-label={`Theme ${idx + 1}`}
                 className="h-1.5 rounded-full transition-all duration-200"
-                style={{ width: idx === bgIndex ? '20px' : '6px', backgroundColor: idx === bgIndex ? palette.accent : (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)') }}
+                style={{
+                  width: idx === bgIndex ? '20px' : '6px',
+                  backgroundColor: idx === bgIndex ? palette.accent : (dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.15)'),
+                }}
               />
             ))}
           </div>
         </div>
 
         {themeError ? <p className="mt-3 text-xs text-red-400">{themeError}</p> : null}
-        <button type="button" onClick={() => void handleApplyTheme()} disabled={themeSaving}
-          className="mt-5 h-12 w-full max-w-sm rounded-2xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+        <button
+          type="button"
+          onClick={() => void handleApplyTheme()}
+          disabled={themeSaving}
+          className="mt-4 h-12 w-full rounded-2xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
           style={themeSaved
             ? { background: 'rgba(52,211,153,0.15)', color: 'rgb(52,211,153)' }
             : dark
@@ -2028,6 +2187,19 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           }
         >
           {themeSaving ? 'Applying…' : themeSaved ? 'Theme Applied ✓' : `Apply ${palette.label} Theme`}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void handleResetAll()}
+          disabled={resetSaving}
+          className="mt-2.5 h-10 w-full rounded-2xl text-sm font-medium transition-all duration-200 disabled:opacity-40"
+          style={resetDone
+            ? { background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgb(52,211,153)' }
+            : { background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.38)', color: 'rgba(255,255,255,0.85)' }
+          }
+        >
+          {resetSaving ? 'Resetting…' : resetDone ? 'Reset to Default ✓' : 'Reset to Default'}
         </button>
       </div>
     );
@@ -2046,9 +2218,9 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const swatchBorder = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
 
   return (
-    <div className="px-4 pt-6 pb-32 space-y-3">
+    <div className="px-4 pt-6 pb-32 space-y-3" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
       <button
-        type="button" onClick={() => setSub('photos')}
+        type="button" onClick={() => goToSub('photos')}
         className="flex w-full items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200"
         style={settingCard}
       >
@@ -2071,7 +2243,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
       </button>
 
       <button
-        type="button" onClick={() => setSub('backgrounds')}
+        type="button" onClick={() => goToSub('backgrounds')}
         className="flex w-full items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200"
         style={settingCard}
       >
@@ -2880,6 +3052,7 @@ export default function ManagerPropertyEditorClient({
     LogoSize: property.LogoSize ?? 100,
   });
 
+  const [heroUrl, setHeroUrl] = useState<string | undefined>(property.HeroImage);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(property.LogoUrl);
   const [logoUrlDark, setLogoUrlDark] = useState<string | undefined>(property.LogoUrlDark);
   const [windows, setWindows] = useState<WindowDraft[]>(property.windows ?? []);
@@ -2909,7 +3082,8 @@ export default function ManagerPropertyEditorClient({
 
   function goTo(next: View) {
     setFading(true);
-    setTimeout(() => { setView(next); setFading(false); }, 200);
+    setTimeout(() => setView(next), 200);
+    setTimeout(() => setFading(false), 220);
   }
 
   function goBack() {
@@ -3010,18 +3184,19 @@ export default function ManagerPropertyEditorClient({
               className="inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-all"
               style={{ borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.90)' }}
             >
-              View live ↗
+              View live
             </a>
           ) : null}
         </div>
       </div>
 
       {/* Content with fade */}
-      <div className="relative" style={{ opacity: fading ? 0 : 1, transform: fading ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)', transition: 'opacity 0.20s ease, transform 0.20s ease' }}>
+      <div className="relative" style={{ opacity: fading ? 0 : 1, transform: fading ? 'translateY(12px) scale(0.99)' : 'translateY(0) scale(1)', transition: 'opacity 0.24s ease-out, transform 0.24s ease-out' }}>
         {view === 'grid' && <GridView onNavigate={goTo} completion={completion} dark={dark} missing={missingItems} />}
         {view === 'property-info' && (
           <PropertyInfoView
             slug={slug} core={core} setCore={setCore}
+            heroUrl={heroUrl} setHeroUrl={setHeroUrl}
             logoUrl={logoUrl} setLogoUrl={setLogoUrl}
             logoUrlDark={logoUrlDark} setLogoUrlDark={setLogoUrlDark}
             saving={saving} saved={saved} onSave={handleSave} saveError={saveError}

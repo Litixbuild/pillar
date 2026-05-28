@@ -39,12 +39,20 @@ export default function ManagerDashboardClient({
   subscriptionStatus,
   hasStripeCustomer,
   managerName,
+  referralCode,
+  referralDiscountCents,
+  activeReferralCount,
+  propertySlots,
 }: {
   properties: Property[];
   isSubscribed: boolean;
   subscriptionStatus: string | null;
   hasStripeCustomer: boolean;
   managerName: string;
+  referralCode: string | null;
+  referralDiscountCents: number;
+  activeReferralCount: number;
+  propertySlots: number;
 }) {
   const [dark, setDark] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -56,6 +64,9 @@ export default function ManagerDashboardClient({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [slotLoading, setSlotLoading] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
+  const [referralCopied, setReferralCopied] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('pillar-theme');
@@ -129,6 +140,27 @@ export default function ManagerDashboardClient({
     } else {
       setBillingLoading(false);
     }
+  }
+
+  async function handleAddSlot() {
+    setSlotLoading(true);
+    setSlotError(null);
+    const res = await fetch('/api/manager/billing/add-property-slot', { method: 'POST' });
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setSlotError(data.error || 'Failed to upgrade. Please try again or contact support.');
+      setSlotLoading(false);
+    }
+  }
+
+  function handleCopyReferral() {
+    if (!referralCode) return;
+    void navigator.clipboard.writeText(`https://pmpillar.com/ref/${referralCode}`).then(() => {
+      setReferralCopied(true);
+      setTimeout(() => setReferralCopied(false), 2000);
+    });
   }
 
   /* ── Theme helpers ── */
@@ -232,7 +264,34 @@ export default function ManagerDashboardClient({
 
               {/* Add Property button */}
               <div className="mb-5">
-                {isSubscribed ? (
+                {!isSubscribed ? (
+                  <div title="Set up billing to add properties">
+                    <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border px-4 text-sm font-semibold"
+                      style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.25)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.30)' }}>
+                      <span className="text-base leading-none">+</span> Add Property
+                    </button>
+                    <p className="mt-1.5 text-[11px]" style={{ color: mutedColor }}>Active subscription required</p>
+                  </div>
+                ) : properties.length >= propertySlots ? (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      disabled={slotLoading}
+                      onClick={() => void handleAddSlot()}
+                      className="inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+                      style={dark
+                        ? { borderColor: 'rgba(251,146,60,0.35)', background: 'rgba(251,146,60,0.10)', color: 'rgb(251,146,60)' }
+                        : { borderColor: 'rgba(234,88,12,0.30)', background: 'rgba(234,88,12,0.08)', color: 'rgb(194,65,12)' }}
+                    >
+                      <span className="text-base leading-none">+</span>
+                      {slotLoading ? 'Upgrading…' : 'Add Property Slot — $9.99/mo'}
+                    </button>
+                    <p className="text-[11px]" style={{ color: mutedColor }}>
+                      You&apos;ve used all {propertySlots} {propertySlots === 1 ? 'slot' : 'slots'}. Adding a slot charges $9.99/month prorated to your current billing cycle.
+                    </p>
+                    {slotError ? <p className="text-[11px] text-rose-400">{slotError}</p> : null}
+                  </div>
+                ) : (
                   <button
                     type="button"
                     onClick={() => { setShowModal(true); setPropertyName(''); setCreateError(null); }}
@@ -241,14 +300,6 @@ export default function ManagerDashboardClient({
                   >
                     <span className="text-base leading-none">+</span> Add Property
                   </button>
-                ) : (
-                  <div title="Set up billing to add properties">
-                    <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border px-4 text-sm font-semibold"
-                      style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.25)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.30)' }}>
-                      <span className="text-base leading-none">+</span> Add Property
-                    </button>
-                    <p className="mt-1.5 text-[11px]" style={{ color: mutedColor }}>Active subscription required</p>
-                  </div>
                 )}
               </div>
 
@@ -281,7 +332,7 @@ export default function ManagerDashboardClient({
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           {liveHref ? (
                             <Link href={liveHref} target="_blank" className="inline-flex h-8 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition-all duration-200" style={viewLinkStyle}>
-                              View live ↗
+                              View live
                             </Link>
                           ) : null}
                           {slug ? (
@@ -381,6 +432,64 @@ export default function ManagerDashboardClient({
               )}
             </div>
           </div>
+          {/* Referral card */}
+          {referralCode ? (
+            <div className="overflow-hidden rounded-2xl" style={card}>
+              <div className="flex items-center justify-between px-6 py-4" style={cardHeader}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
+                  Refer &amp; Save
+                </p>
+                {referralDiscountCents > 0 && (
+                  <span className="rounded-full border px-2.5 py-0.5 text-[10px] font-semibold" style={{ background: 'rgba(34,197,94,0.10)', borderColor: 'rgba(34,197,94,0.25)', color: 'rgb(34,197,94)' }}>
+                    ${(referralDiscountCents / 100).toFixed(0)} off/mo
+                  </span>
+                )}
+              </div>
+              <div className="space-y-5 p-6">
+                <div>
+                  <p className="text-sm font-medium" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
+                    Invite property managers, earn $1/month off
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed" style={{ color: mutedColor }}>
+                    For every manager you refer who subscribes, you get $1 off your monthly bill — forever, as long as they stay active.
+                  </p>
+                </div>
+
+                {/* Referral link copy row */}
+                <div className="flex items-center gap-2 overflow-hidden rounded-xl border px-3 py-2.5" style={{ borderColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs" style={{ color: mutedColor }}>
+                    pmpillar.com/ref/{referralCode}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyReferral}
+                    className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200"
+                    style={dark
+                      ? { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.12)' }
+                      : { background: 'rgba(15,23,42,0.88)', color: '#fff' }}
+                  >
+                    {referralCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+
+                {/* Active referral count */}
+                <div className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                  <div className="text-2xl font-light" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
+                    {activeReferralCount}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium" style={{ color: dark ? 'rgba(255,255,255,0.70)' : '#1e293b' }}>
+                      active {activeReferralCount === 1 ? 'referral' : 'referrals'}
+                    </p>
+                    <p className="text-[11px]" style={{ color: mutedColor }}>
+                      ${activeReferralCount} off your next bill
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
         </div>
 
         {/* Sign out */}
