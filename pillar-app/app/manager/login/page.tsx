@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -28,18 +28,33 @@ function MoonIcon() {
 
 export default function ManagerLoginPage() {
   const [dark, setDark] = useState(false);
+  const [step, setStep] = useState<"login" | "mfa">("login");
+  const [emailHint, setEmailHint] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [rememberDevice, setRememberDevice] = useState(false);
+  const codeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("pillar-theme");
     if (stored) setDark(stored === "dark");
   }, []);
 
+  useEffect(() => {
+    if (step === "mfa") setTimeout(() => codeRef.current?.focus(), 80);
+  }, [step]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => setResendCooldown((n) => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
+
   function toggleMode() {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle('dark', next);
+    document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
@@ -48,145 +63,208 @@ export default function ManagerLoginPage() {
     ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
     : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
 
-
   const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
   const headingColor = "#ffffff";
   const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
-
   const inputCls = "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
-
   const submitStyle = dark
     ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
     : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
-
   const forgotColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.55)";
-
   const signupStyle = dark
     ? { borderColor: "rgba(245,237,213,0.30)", backgroundColor: "rgba(245,237,213,0.08)", color: "rgba(245,237,213,0.85)" }
     : { borderColor: "rgba(255,255,255,0.30)", backgroundColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.85)" };
 
+  async function handleResend() {
+    if (resendCooldown > 0) return;
+    setResendCooldown(30);
+    const res = await fetch("/api/manager/resend-mfa", { method: "POST" });
+    if (!res.ok) {
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(d.error ?? "Failed to resend. Please try again.");
+    }
+  }
+
   return (
-    <div
-      className="relative flex flex-col items-center justify-center overflow-hidden px-5"
-      style={{ height: "100dvh" }}
-    >
+    <div className="relative flex flex-col items-center justify-center overflow-hidden px-5" style={{ height: "100dvh" }}>
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
-      {/* Back arrow — top left */}
-      <Link
-        href="/"
-        className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70"
-        style={{ color: backArrowColor }}
-        aria-label="Back to home"
-      >
-        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
-          <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </Link>
+      {/* Back arrow */}
+      {step === "login" ? (
+        <Link href="/" className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label="Back to home">
+          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
+            <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      ) : (
+        <button type="button" onClick={() => { setStep("login"); setError(null); }} className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label="Back to login">
+          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
+            <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
 
-      {/* Dark mode toggle — top right */}
-      <button
-        type="button"
-        onClick={toggleMode}
-        className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
-        style={toggleStyle}
-        title={dark ? "Switch to light mode" : "Switch to dark mode"}
-      >
+      {/* Dark mode toggle */}
+      <button type="button" onClick={toggleMode} className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200" style={toggleStyle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
         {dark ? <SunIcon /> : <MoonIcon />}
       </button>
 
-      {/* Content */}
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
+        <Image src="/images/pillarlogowhite.png" alt="Pillar" width={300} height={200} className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56" priority />
 
-        {/* Logo */}
-        <Image
-          src="/images/pillarlogowhite.png"
-          alt="Pillar"
-          width={300}
-          height={200}
-          className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56"
-          priority
-        />
+        {/* ── Step 1: Email / Password ── */}
+        {step === "login" ? (
+          <>
+            <div className="mb-7 text-center">
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>Manager Login</h1>
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
+            </div>
 
-        {/* Heading */}
-        <div className="mb-7 text-center">
-          <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>
-            Manager Login
-          </h1>
-          <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
-        </div>
+            {error ? <div className="mb-4 w-full rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300/80">{error}</div> : null}
 
-        {/* Error */}
-        {error ? (
-          <div className="mb-4 w-full rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300/80">
-            {error}
-          </div>
+            <form
+              className="w-full space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError(null);
+                setLoading(true);
+                const fd = new FormData(e.currentTarget);
+                const res = await fetch("/api/manager/login", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ email: String(fd.get("email") || ""), password: String(fd.get("password") || "") }),
+                });
+                const data = (await res.json().catch(() => ({}))) as { ok?: boolean; mfa_required?: boolean; phone_hint?: string; error?: string };
+                if (!res.ok) {
+                  setError(data.error ?? "Login failed. Please try again.");
+                  setLoading(false);
+                  return;
+                }
+                if (data.mfa_required) {
+                  setEmailHint((data as { email_hint?: string }).email_hint ?? "");
+                  setStep("mfa");
+                  setResendCooldown(30);
+                  setLoading(false);
+                  return;
+                }
+                window.location.href = "/manager";
+              }}
+            >
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
+                <input name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
+                <input name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
+              </div>
+              <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
+                {loading ? "Signing in…" : "Sign In"}
+              </button>
+              <div className="pt-1 flex flex-col items-center gap-3 text-center">
+                <Link href="/manager/forgot-password" className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80" style={{ color: forgotColor }}>
+                  Forgot Password?
+                </Link>
+                <Link href="/manager/signup" className="group flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-300" style={signupStyle}>
+                  Don&apos;t have an account?
+                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">Sign up →</span>
+                </Link>
+              </div>
+            </form>
+          </>
         ) : null}
 
-        {/* Form */}
-        <form
-          className="w-full space-y-4"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setError(null);
-            setLoading(true);
-            const form = e.currentTarget as HTMLFormElement;
-            const fd = new FormData(form);
-            const email = String(fd.get("email") || "");
-            const password = String(fd.get("password") || "");
-            const res = await fetch("/api/manager/login", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ email, password }),
-            });
-            if (!res.ok) {
-              const data = (await res.json().catch(() => ({}))) as { error?: string };
-              setError(data.error || "Login failed. Please try again.");
-              setLoading(false);
-              return;
-            }
-            window.location.href = "/manager";
-          }}
-        >
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
-            <input name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
-          </div>
+        {/* ── Step 2: MFA code ── */}
+        {step === "mfa" ? (
+          <>
+            <div className="mb-7 text-center">
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>Verify Your Identity</h1>
+              <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
+              {emailHint ? (
+                <p className="mt-4 text-sm" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  A code was sent to <span style={{ color: "rgba(255,255,255,0.85)" }}>{emailHint}</span>
+                </p>
+              ) : null}
+            </div>
 
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
-            <input name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
-          </div>
+            {error ? <div className="mb-4 w-full rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300/80">{error}</div> : null}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
-            style={submitStyle}
-          >
-            {loading ? "Signing in…" : "Sign In"}
-          </button>
-
-          <div className="pt-1 flex flex-col items-center gap-3 text-center">
-            <Link
-              href="/manager/forgot-password"
-              className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-              style={{ color: forgotColor }}
+            <form
+              className="w-full space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError(null);
+                setLoading(true);
+                const fd = new FormData(e.currentTarget);
+                const res = await fetch("/api/manager/verify-mfa", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ code: String(fd.get("code") || ""), remember_device: rememberDevice }),
+                });
+                const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+                if (!res.ok) {
+                  setError(data.error ?? "Verification failed.");
+                  setLoading(false);
+                  return;
+                }
+                window.location.href = "/manager";
+              }}
             >
-              Forgot Password?
-            </Link>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>6-Digit Code</p>
+                <input
+                  ref={codeRef}
+                  name="code"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  required
+                  placeholder="000000"
+                  className={inputCls + " tracking-[0.5em] text-center"}
+                />
+              </div>
 
-            <Link
-              href="/manager/signup"
-              className="group flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-300"
-              style={signupStyle}
-            >
-              Don&apos;t have an account?
-              <span className="transition-transform duration-300 group-hover:translate-x-0.5">Sign up →</span>
-            </Link>
-          </div>
-        </form>
+              {/* Remember device */}
+              <label className="flex cursor-pointer items-center gap-3">
+                <div
+                  onClick={() => setRememberDevice((v) => !v)}
+                  className="relative flex h-5 w-5 flex-none items-center justify-center rounded-md border transition-all duration-200"
+                  style={rememberDevice
+                    ? { background: dark ? SANDY : "rgba(255,255,255,0.90)", borderColor: dark ? SANDY : "rgba(255,255,255,0.90)" }
+                    : { background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.25)" }}
+                >
+                  {rememberDevice ? (
+                    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
+                      <path d="M5 13l4 4L19 7" stroke={dark ? "#3d2a0a" : "#1e293b"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : null}
+                </div>
+                <span className="text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
+                  Remember this device for 30 days
+                </span>
+              </label>
+
+              <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
+                {loading ? "Verifying…" : "Verify"}
+              </button>
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendCooldown > 0}
+                  className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80 disabled:opacity-40"
+                  style={{ color: forgotColor }}
+                >
+                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend Code"}
+                </button>
+              </div>
+            </form>
+          </>
+        ) : null}
       </div>
     </div>
   );
