@@ -63,13 +63,19 @@ export async function POST(req: Request) {
     const workOrder = await submitWorkOrder(slug, categoryName, description, otherMessage);
     const routing = await getRoutingContactForCategory(slug, categoryName);
 
+    const smsError: string[] = [];
+
     if (routing) {
       const notifyJobs: Promise<void>[] = [];
 
       if (routing.phone) {
         notifyJobs.push(
           notifyBySms(routing.phone, slug, categoryName, description, otherMessage)
-            .catch((e) => console.error('[work-order] SMS notification failed:', e))
+            .catch((e) => {
+              const msg = e instanceof Error ? e.message : String(e);
+              console.error('[work-order] SMS failed:', msg);
+              smsError.push(msg);
+            })
         );
       }
 
@@ -83,7 +89,11 @@ export async function POST(req: Request) {
       await Promise.allSettled(notifyJobs);
     }
 
-    return Response.json({ ok: true, id: workOrder.id }, { status: 201 });
+    return Response.json({
+      ok: true,
+      id: workOrder.id,
+      ...(smsError.length ? { sms_error: smsError[0] } : {}),
+    }, { status: 201 });
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }

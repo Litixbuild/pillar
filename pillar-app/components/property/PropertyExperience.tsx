@@ -333,6 +333,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [lateCheckoutSent, setLateCheckoutSent] = useState(false);
+  const [lateCheckoutLoading, setLateCheckoutLoading] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -519,11 +520,24 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
               ) : (
                 <button
                   type="button"
-                  onClick={() => { setLateCheckoutSent(true); }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200"
+                  disabled={lateCheckoutLoading}
+                  onClick={() => {
+                    setLateCheckoutLoading(true);
+                    fetch('/api/guest/late-checkout', {
+                      method: 'POST',
+                      headers: { 'content-type': 'application/json' },
+                      body: JSON.stringify({ slug }),
+                    })
+                      .catch(() => undefined)
+                      .finally(() => {
+                        setLateCheckoutLoading(false);
+                        setLateCheckoutSent(true);
+                      });
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
                   style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 >
-                  Request Late Checkout
+                  {lateCheckoutLoading ? 'Sending…' : 'Request Late Checkout'}
                 </button>
               )}
             </div>
@@ -788,6 +802,24 @@ export default function PropertyExperience({
       return () => cancelAnimationFrame(raf);
     }
   }, [openAmenityId]);
+
+  // Prevent iOS from scrolling the background when any overlay modal is open.
+  // Without this, the keyboard opening inside the modal scrolls the window and
+  // the position never restores, making content appear shifted toward the logo.
+  useEffect(() => {
+    const isAnyModalOpen = needHelpOpen || !!openAmenityId || lightboxOpen;
+    if (!isAnyModalOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [needHelpOpen, openAmenityId, lightboxOpen]);
 
   function openAmenity(id: string) {
     setAmenityAnimating(false);

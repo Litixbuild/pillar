@@ -15,5 +15,8 @@ function getClient() {
 export async function sendSms(to: string, body: string): Promise<void> {
   const from = process.env.TWILIO_PHONE_NUMBER?.trim();
   if (!from) throw new Error('TWILIO_PHONE_NUMBER is not set');
-  await getClient().messages.create({ to, from, body });
+  // Normalize to E.164 — strip spaces, dashes, parens, dots
+  const digits = to.replace(/[^\d+]/g, '');
+  const e164 = digits.startsWith('+') ? digits : `+1${digits}`;
+  await getClient().messages.create({ to: e164, from, body });
 }

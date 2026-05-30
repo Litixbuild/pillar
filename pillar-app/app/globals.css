@@ -57,6 +57,8 @@ body {
 /* Prevent iOS Safari auto-zoom on input focus (triggered when font-size < 16px) */
 input, textarea, select {
   font-size: 16px;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Luxury titles */
