@@ -1354,7 +1354,7 @@ export default function PropertyExperience({
                 ) : null}
 
                 {property.CheckoutInstructions ? (
-                  <div className="flex justify-center pb-2">
+                  <div className="flex justify-center pt-3 pb-2">
                     <button
                       type="button"
                       onClick={() => setCheckoutOpen(true)}
