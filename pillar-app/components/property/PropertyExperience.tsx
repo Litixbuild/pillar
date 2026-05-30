@@ -561,6 +561,74 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
   );
 }
 
+function CheckoutModal({ open, onClose, instructions, dark, lightTheme: modalTheme }: { open: boolean; onClose: () => void; instructions: string; dark: boolean; lightTheme?: LightTheme }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!open) { setVisible(false); return; }
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const isModalThemed = !dark && !!modalTheme;
+  const mRGB = isModalThemed ? modalTheme!.accentRGB : '100,80,40';
+  const panelBg = dark ? 'rgba(10,10,10,0.97)' : (isModalThemed ? modalTheme!.buttonBg.replace(',0.88)', ',0.97)') : 'rgba(255,255,255,0.97)');
+  const borderCol = dark ? 'rgba(255,255,255,0.08)' : (isModalThemed ? `rgba(${mRGB},0.12)` : 'rgba(0,0,0,0.08)');
+  const textCol = dark ? 'rgba(255,255,255,0.90)' : (isModalThemed ? modalTheme!.titleText : '#1e293b');
+  const mutedCol = dark ? 'rgba(255,255,255,0.35)' : (isModalThemed ? `rgba(${mRGB},0.48)` : 'rgba(30,41,59,0.40)');
+  const bodyCol = dark ? 'rgba(255,255,255,0.75)' : (isModalThemed ? `rgba(${mRGB},0.82)` : 'rgba(30,41,59,0.72)');
+  const closeBtnBg = dark ? 'rgba(255,255,255,0.05)' : (isModalThemed ? `rgba(${mRGB},0.06)` : 'rgba(0,0,0,0.04)');
+  const overlayBg = dark ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)';
+  const accentGlowRGB = isModalThemed ? mRGB : SANDY_RGB;
+
+  return (
+    <div
+      className="fixed inset-0 z-60 flex items-end justify-center px-6 pb-6"
+      style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.45s ease-out' }}
+    >
+      <button type="button" onClick={onClose} className="absolute inset-0 backdrop-blur-sm" style={{ background: overlayBg }} aria-label="Close" />
+      <div
+        className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
+        style={{
+          background: panelBg,
+          border: `1px solid ${borderCol}`,
+          transform: visible ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'opacity 0.45s ease-out, transform 0.45s ease-out',
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${accentGlowRGB},0.25), transparent)` }} />
+        <div className="max-h-[75vh] overflow-y-auto px-6 pb-7 pt-6">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="lux-title text-2xl" style={{ color: textCol }}>Checkout Instructions</h2>
+              <p className="mt-1 text-sm" style={{ color: mutedCol }}>From your property manager.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-2xl transition-all duration-200"
+              style={{ background: closeBtnBg, border: `1px solid ${borderCol}`, color: mutedCol }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: bodyCol }}>{instructions}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GlassCard({ children }: { children: ReactNode }) {
   return (
     <section className="relative overflow-hidden rounded-2xl border p-6 backdrop-blur-sm" style={{ background: 'var(--panel-card)', borderColor: 'var(--border-col)' }}>
@@ -781,6 +849,7 @@ export default function PropertyExperience({
   const [openAmenityId, setOpenAmenityId] = useState<string | null>(null);
   const [amenityAnimating, setAmenityAnimating] = useState(false);
   const [needHelpOpen, setNeedHelpOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -807,7 +876,7 @@ export default function PropertyExperience({
   // Without this, the keyboard opening inside the modal scrolls the window and
   // the position never restores, making content appear shifted toward the logo.
   useEffect(() => {
-    const isAnyModalOpen = needHelpOpen || !!openAmenityId || lightboxOpen;
+    const isAnyModalOpen = needHelpOpen || checkoutOpen || !!openAmenityId || lightboxOpen;
     if (!isAnyModalOpen) return;
     const scrollY = window.scrollY;
     document.body.style.position = 'fixed';
@@ -1051,6 +1120,17 @@ export default function PropertyExperience({
           ════════════════════════════════════════════════════════ */}
       {expanded ? (
         <>
+          {/* Dark mode toggle — fixed top-right */}
+          <button
+            type="button"
+            onClick={() => setDark((d) => !d)}
+            className="fixed top-5 right-5 z-20 transition-opacity duration-200 hover:opacity-70"
+            style={{ color: dark ? 'rgba(255,255,255,0.45)' : lightTheme.toggleColor }}
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? <SunIcon /> : <MoonIcon />}
+          </button>
+
           <div className="relative">
             {/* Content view */}
             <div
@@ -1273,17 +1353,18 @@ export default function PropertyExperience({
                   </button>
                 ) : null}
 
-                <div className="flex justify-center pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setDark((d) => !d)}
-                    className="transition-opacity duration-200 hover:opacity-70"
-                    style={{ color: dark ? 'rgba(255,255,255,0.45)' : lightTheme.toggleColor }}
-                    title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                  >
-                    {dark ? <SunIcon /> : <MoonIcon />}
-                  </button>
-                </div>
+                {property.CheckoutInstructions ? (
+                  <div className="flex justify-center pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutOpen(true)}
+                      className="text-[11px] uppercase tracking-[0.22em] transition-opacity duration-200 hover:opacity-80"
+                      style={{ color: dark ? 'rgba(245,237,213,0.32)' : `rgba(${lightTheme.accentRGB},0.38)` }}
+                    >
+                      Checkout Instructions
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -1582,6 +1663,16 @@ export default function PropertyExperience({
             slug={slug}
             lightTheme={isLightThemed ? lightTheme : undefined}
           />
+
+          {property.CheckoutInstructions ? (
+            <CheckoutModal
+              open={checkoutOpen}
+              onClose={() => setCheckoutOpen(false)}
+              instructions={property.CheckoutInstructions}
+              dark={dark}
+              lightTheme={isLightThemed ? lightTheme : undefined}
+            />
+          ) : null}
 
           {/* Photo lightbox */}
           {lightboxOpen && photos.length > 0 && (

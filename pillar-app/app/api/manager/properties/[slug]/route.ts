@@ -44,6 +44,7 @@ const CORE_EDITABLE_FIELDS = [
   'AccentColor',
   'HeadingColor',
   'TextColor',
+  'CheckoutInstructions',
 ] as const;
 
 const NUMERIC_EDITABLE_FIELDS = ['LogoSize'] as const;

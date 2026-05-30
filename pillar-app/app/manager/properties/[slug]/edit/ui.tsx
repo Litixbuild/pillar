@@ -21,6 +21,7 @@ interface CoreFields {
   PropertyAddress: string;
   PropertyZipCode: string;
   DetailedHouseBio: string;
+  CheckoutInstructions: string;
   WiFiName: string;
   WiFiPassword: string;
   GarageCode: string;
@@ -897,6 +898,9 @@ function PropertyInfoView({
 
             <FieldGroup label="House Bio">
               <TextArea value={core.DetailedHouseBio} onChange={(v) => setField('DetailedHouseBio', v)} placeholder="Describe the property for guests…" rows={4} />
+            </FieldGroup>
+            <FieldGroup label="Checkout Instructions">
+              <TextArea value={core.CheckoutInstructions} onChange={(v) => setField('CheckoutInstructions', v)} placeholder="e.g. Check out by 11am, leave keys on the counter, take out rubbish…" rows={5} />
             </FieldGroup>
           </div>
         </div>
@@ -3045,6 +3049,7 @@ export default function ManagerPropertyEditorClient({
     PropertyAddress: property.PropertyAddress === 'Not provided' ? '' : (property.PropertyAddress ?? ''),
     PropertyZipCode: property.PropertyZipCode === 'Not provided' ? '' : (property.PropertyZipCode ?? ''),
     DetailedHouseBio: property.DetailedHouseBio === 'Not provided' ? '' : (property.DetailedHouseBio ?? ''),
+    CheckoutInstructions: property.CheckoutInstructions ?? '',
     WiFiName: property.WiFiName ?? '',
     WiFiPassword: property.WiFiPassword ?? '',
     GarageCode: property.GarageCode ?? '',

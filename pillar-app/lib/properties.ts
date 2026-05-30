@@ -46,6 +46,7 @@ function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = [], photos: 
     AccentColor: typeof row.accent_color === 'string' && row.accent_color ? row.accent_color : undefined,
     HeadingColor: typeof row.heading_color === 'string' && row.heading_color ? row.heading_color : undefined,
     TextColor: typeof row.text_color === 'string' && row.text_color ? row.text_color : undefined,
+    CheckoutInstructions: typeof row.checkout_instructions === 'string' && row.checkout_instructions ? row.checkout_instructions : undefined,
     windows,
     photos,
     rooms: Array.isArray(row.rooms)
@@ -80,6 +81,7 @@ const COLUMN_MAP: Record<string, string> = {
   AccentColor: 'accent_color',
   HeadingColor: 'heading_color',
   TextColor: 'text_color',
+  CheckoutInstructions: 'checkout_instructions',
 };
 
 async function fetchWindowsBySlug(slug: string): Promise<AmenityWindow[]> {

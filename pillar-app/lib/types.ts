@@ -43,6 +43,7 @@ export interface Property {
   AccentColor?: string;
   HeadingColor?: string;
   TextColor?: string;
+  CheckoutInstructions?: string;
   windows?: AmenityWindow[];
   rooms?: string[];
   photos?: string[];
