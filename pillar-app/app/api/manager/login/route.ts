@@ -74,66 +74,49 @@ export async function POST(req: Request) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("full_name, mfa_enabled")
+    .select("full_name")
     .eq("id", data.user.id)
     .single();
 
   const managerName = profile?.full_name ?? undefined;
-  const mfaEnabled = profile?.mfa_enabled === true;
 
   const jar = await cookies();
   const isProd = process.env.NODE_ENV === "production";
 
-  // ── MFA path ─────────────────────────────────────────────────────
-  if (mfaEnabled) {
-    const deviceToken = jar.get(getDeviceCookieName())?.value;
+  // ── Check for trusted device — skip OTP if recognised ────────────
+  const deviceToken = jar.get(getDeviceCookieName())?.value;
+  if (deviceToken) {
+    const { data: device } = await service
+      .from("mfa_trusted_devices")
+      .select("id, expires_at")
+      .eq("device_token", deviceToken)
+      .eq("manager_id", data.user.id)
+      .single();
 
-    if (deviceToken) {
-      const { data: device } = await service
-        .from("mfa_trusted_devices")
-        .select("id, expires_at")
-        .eq("device_token", deviceToken)
-        .eq("manager_id", data.user.id)
-        .single();
-
-      if (device && new Date(device.expires_at) > new Date()) {
-        // Trusted device — skip MFA entirely
-        const token = signManagerSession({ email, name: managerName, userId: data.user.id, iat: Date.now() });
-        jar.set({ name: getManagerCookieName(), value: token, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
-        return Response.json({ ok: true }, { status: 200 });
-      }
-      if (device) await service.from("mfa_trusted_devices").delete().eq("id", device.id);
-      jar.delete(getDeviceCookieName());
+    if (device && new Date(device.expires_at) > new Date()) {
+      const token = signManagerSession({ email, name: managerName, userId: data.user.id, iat: Date.now() });
+      jar.set({ name: getManagerCookieName(), value: token, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
+      return Response.json({ ok: true }, { status: 200 });
     }
-
-    // Generate and email OTP
-    const code = generateOtp();
-    const codeHash = hashOtp(code);
-
-    try {
-      await sendOtpEmail(email, managerName, code);
-    } catch (e) {
-      console.error("[login] OTP email error:", e);
-      return Response.json({ error: "Failed to send verification email. Please try again." }, { status: 503 });
-    }
-
-    const tempToken = signTempToken({ userId: data.user.id, email, name: managerName, codeHash, iat: Date.now() });
-    jar.set({ name: getTempCookieName(), value: tempToken, httpOnly: true, sameSite: "lax", secure: isProd, path: "/", maxAge: 15 * 60 });
-
-    // Mask email for display: j***@domain.com
-    const [local, domain] = email.split('@');
-    const masked = `${local[0]}${'*'.repeat(Math.max(2, (local?.length ?? 1) - 1))}@${domain}`;
-    return Response.json({ mfa_required: true, email_hint: masked }, { status: 200 });
+    if (device) await service.from("mfa_trusted_devices").delete().eq("id", device.id);
+    jar.delete(getDeviceCookieName());
   }
 
-  // ── Direct session (MFA not enabled) ─────────────────────────────
-  let token = "";
+  // ── Unknown device — always require email OTP ─────────────────────
+  const code = generateOtp();
+  const codeHash = hashOtp(code);
+
   try {
-    token = signManagerSession({ email, name: managerName, userId: data.user.id, iat: Date.now() });
+    await sendOtpEmail(email, managerName, code);
   } catch (e) {
-    return Response.json({ error: e instanceof Error ? e.message : "Missing MANAGER_SESSION_SECRET." }, { status: 500 });
+    console.error("[login] OTP email error:", e);
+    return Response.json({ error: "Failed to send verification email. Please try again." }, { status: 503 });
   }
 
-  jar.set({ name: getManagerCookieName(), value: token, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
-  return Response.json({ ok: true }, { status: 200 });
+  const tempToken = signTempToken({ userId: data.user.id, email, name: managerName, codeHash, iat: Date.now() });
+  jar.set({ name: getTempCookieName(), value: tempToken, httpOnly: true, sameSite: "lax", secure: isProd, path: "/", maxAge: 15 * 60 });
+
+  const [local, domain] = email.split('@');
+  const masked = `${local[0]}${'*'.repeat(Math.max(2, (local?.length ?? 1) - 1))}@${domain}`;
+  return Response.json({ mfa_required: true, email_hint: masked }, { status: 200 });
 }

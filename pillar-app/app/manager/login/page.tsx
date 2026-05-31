@@ -33,7 +33,6 @@ export default function ManagerLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [rememberDevice, setRememberDevice] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -200,7 +199,7 @@ export default function ManagerLoginPage() {
                 const res = await fetch("/api/manager/verify-mfa", {
                   method: "POST",
                   headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ code: String(fd.get("code") || ""), remember_device: rememberDevice }),
+                  body: JSON.stringify({ code: String(fd.get("code") || "") }),
                 });
                 const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
                 if (!res.ok) {
@@ -226,26 +225,6 @@ export default function ManagerLoginPage() {
                   className={inputCls + " tracking-[0.5em] text-center"}
                 />
               </div>
-
-              {/* Remember device */}
-              <label className="flex cursor-pointer items-center gap-3">
-                <div
-                  onClick={() => setRememberDevice((v) => !v)}
-                  className="relative flex h-5 w-5 flex-none items-center justify-center rounded-md border transition-all duration-200"
-                  style={rememberDevice
-                    ? { background: dark ? SANDY : "rgba(255,255,255,0.90)", borderColor: dark ? SANDY : "rgba(255,255,255,0.90)" }
-                    : { background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.25)" }}
-                >
-                  {rememberDevice ? (
-                    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
-                      <path d="M5 13l4 4L19 7" stroke={dark ? "#3d2a0a" : "#1e293b"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ) : null}
-                </div>
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.70)" }}>
-                  Remember this device for 30 days
-                </span>
-              </label>
 
               <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
                 {loading ? "Verifying…" : "Verify"}

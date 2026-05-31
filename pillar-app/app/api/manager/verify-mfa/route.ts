@@ -14,9 +14,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as { code?: unknown; remember_device?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { code?: unknown } | null;
   const code = typeof body?.code === "string" ? body.code.replace(/\s/g, '') : "";
-  const rememberDevice = body?.remember_device === true;
 
   if (!code || !/^\d{6}$/.test(code)) {
     return Response.json({ error: "Enter a valid 6-digit code." }, { status: 400 });
@@ -50,25 +49,23 @@ export async function POST(req: Request) {
   const isProd = process.env.NODE_ENV === "production";
   jar.delete(getTempCookieName());
 
-  if (rememberDevice) {
-    const deviceToken = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const service = createServiceClient();
-    await service.from("mfa_trusted_devices").insert({
-      manager_id: pending.userId,
-      device_token: deviceToken,
-      expires_at: expiresAt.toISOString(),
-    });
-    jar.set({
-      name: getDeviceCookieName(),
-      value: deviceToken,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: isProd,
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60,
-    });
-  }
+  const deviceToken = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const service = createServiceClient();
+  await service.from("mfa_trusted_devices").insert({
+    manager_id: pending.userId,
+    device_token: deviceToken,
+    expires_at: expiresAt.toISOString(),
+  });
+  jar.set({
+    name: getDeviceCookieName(),
+    value: deviceToken,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    path: "/",
+    maxAge: 30 * 24 * 60 * 60,
+  });
 
   const sessionToken = signManagerSession({ email: pending.email, name: pending.name, userId: pending.userId, iat: Date.now() });
   jar.set({ name: getManagerCookieName(), value: sessionToken, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
