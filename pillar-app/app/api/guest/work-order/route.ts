@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
 import { submitWorkOrder, getRoutingContactForCategory } from '@/lib/workOrders';
 import { sendSms } from '@/lib/twilio';
+import { sendWorkOrderEmail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,31 +19,6 @@ async function notifyBySms(to: string, slug: string, categoryName: string, descr
   await sendSms(to, lines.join(' '));
 }
 
-async function notifyByEmail(to: string, slug: string, categoryName: string, description: string | null, otherMessage: string | null) {
-  const smtpUser = process.env.ZOHO_SMTP_USER;
-  const smtpPass = process.env.ZOHO_SMTP_PASS;
-  if (!smtpUser || !smtpPass) throw new Error('Email service not configured');
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.zoho.com',
-    port: 465,
-    secure: true,
-    auth: { user: smtpUser, pass: smtpPass },
-  });
-
-  await transporter.sendMail({
-    from: `"Pillar Work Orders" <${smtpUser}>`,
-    to,
-    subject: `New Work Order: ${categoryName} — ${slug}`,
-    html: `
-      <p><strong>Property:</strong> ${slug}</p>
-      <p><strong>Category:</strong> ${categoryName}</p>
-      ${description ? `<p><strong>Description:</strong> ${description.replace(/\n/g, '<br />')}</p>` : ''}
-      ${otherMessage ? `<p><strong>Note:</strong> ${otherMessage}</p>` : ''}
-      <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-    `,
-  });
-}
 
 // POST /api/guest/work-order
 export async function POST(req: Request) {
@@ -81,7 +56,7 @@ export async function POST(req: Request) {
 
       if (routing.email) {
         notifyJobs.push(
-          notifyByEmail(routing.email, slug, categoryName, description, otherMessage)
+          sendWorkOrderEmail(routing.email, slug, categoryName, description, otherMessage)
             .catch((e) => console.error('[work-order] Email notification failed:', e))
         );
       }

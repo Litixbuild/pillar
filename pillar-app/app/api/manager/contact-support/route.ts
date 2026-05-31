@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
-import nodemailer from 'nodemailer';
 import { getManagerCookieName, verifyManagerSession } from '@/lib/managerAuth';
+import { sendSupportEmail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,34 +28,14 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Topic and description are required.' }, { status: 400 });
   }
 
-  const smtpUser = process.env.ZOHO_SMTP_USER;
-  const smtpPass = process.env.ZOHO_SMTP_PASS;
-
-  if (!smtpUser || !smtpPass) {
-    return Response.json({ error: 'Email service not configured.' }, { status: 503 });
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.zoho.com',
-    port: 465,
-    secure: true,
-    auth: { user: smtpUser, pass: smtpPass },
-  });
-
   try {
-    await transporter.sendMail({
-      from: `"Pillar Support" <${smtpUser}>`,
-      to: 'support@pmpillar.com',
+    await sendSupportEmail({
       replyTo: session.email,
-      subject: `[Support] ${topic} — ${propertyName ?? slug ?? 'Unknown'} (${slug ?? 'no-id'})`,
-      html: `
-        <p><strong>From:</strong> ${session.name ?? session.email} &lt;${session.email}&gt;</p>
-        <p><strong>Property:</strong> ${propertyName ?? '—'}</p>
-        <p><strong>Property ID:</strong> ${slug ?? '—'}</p>
-        <p><strong>Topic:</strong> ${topic}</p>
-        <hr />
-        <p>${description.replace(/\n/g, '<br />')}</p>
-      `,
+      fromName: session.name ?? session.email,
+      slug,
+      propertyName,
+      topic,
+      description,
     });
   } catch (err) {
     console.error('[contact-support] SMTP error:', err);

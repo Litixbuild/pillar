@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
 import { createServiceClient } from '@/lib/supabase';
 import { sendSms } from '@/lib/twilio';
+import { sendLateCheckoutEmail } from '@/lib/mailer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,30 +45,11 @@ export async function POST(req: Request) {
         .single();
 
       const managerEmail = typeof profile?.email === 'string' ? profile.email.trim() : null;
-      const smtpUser = process.env.ZOHO_SMTP_USER;
-      const smtpPass = process.env.ZOHO_SMTP_PASS;
 
-      if (managerEmail && smtpUser && smtpPass) {
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.zoho.com',
-          port: 465,
-          secure: true,
-          auth: { user: smtpUser, pass: smtpPass },
-        });
-
+      if (managerEmail) {
         notifyJobs.push(
-          transporter.sendMail({
-            from: `"Pillar Work Orders" <${smtpUser}>`,
-            to: managerEmail,
-            subject: `Late Checkout Request — ${propertyName}`,
-            html: `
-              <p><strong>Property:</strong> ${propertyName}</p>
-              <p>A tenant has requested a late checkout.</p>
-              <p><strong>Submitted:</strong> ${now}</p>
-            `,
-          }).then(() => undefined).catch((e) =>
-            console.error('[late-checkout] Email error:', e)
-          )
+          sendLateCheckoutEmail(managerEmail, propertyName, now)
+            .catch((e) => console.error('[late-checkout] Email error:', e))
         );
       }
     }
