@@ -411,6 +411,10 @@ function getPinnedGeminiModelId(): string {
   return (process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash").trim();
 }
 
+function getFastGeminiModelId(): string {
+  return (process.env.GEMINI_FAST_MODEL?.trim() || "gemini-2.5-flash").trim();
+}
+
 function getVertexApiKey(): string | null {
   const v = process.env.VERTEX_API_KEY?.trim();
   return v || null;
@@ -815,62 +819,7 @@ function stripMarkdown(text: string): string {
     .replace(/^#{1,6}\s+/gm, "");
 }
 
-function decodeHtmlEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&nbsp;/g, ' ');
-}
 
-// Fetches a place's website and extracts the best available description text.
-// Tries og:description → meta description → first substantial paragraph.
-async function fetchWebsiteDescription(url: string): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 3000);
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        signal: controller.signal,
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' },
-        cache: 'no-store',
-        redirect: 'follow',
-      });
-    } finally {
-      clearTimeout(tid);
-    }
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    // og:description — written specifically for social/preview summaries
-    const ogA = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{20,})["']/i)?.[1];
-    const ogB = html.match(/<meta[^>]+content=["']([^"']{20,})["'][^>]+property=["']og:description["']/i)?.[1];
-    const og = (ogA || ogB)?.trim();
-    if (og) return decodeHtmlEntities(og).slice(0, 700);
-
-    // meta description
-    const mA = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{20,})["']/i)?.[1];
-    const mB = html.match(/<meta[^>]+content=["']([^"']{20,})["'][^>]+name=["']description["']/i)?.[1];
-    const meta = (mA || mB)?.trim();
-    if (meta) return decodeHtmlEntities(meta).slice(0, 700);
-
-    // First substantial paragraph (50+ chars of visible text)
-    const pMatches = html.match(/<p[^>]*>([\s\S]{50,?}?)<\/p>/gi);
-    if (pMatches?.length) {
-      const text = decodeHtmlEntities(pMatches[0].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
-      if (text.length >= 40) return text.slice(0, 700);
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 async function openMeteoGeocodeZip(zip: string): Promise<LatLng> {
   const z = zip.trim();
@@ -1029,7 +978,7 @@ async function placesTextSearchLegacy(apiKey: string, query: string): Promise<Pl
 // "spa sounds great" are understood in context rather than keyword-matched blindly.
 async function classifyWithAI(
   genAI: GoogleGenerativeAI,
-  modelId: string,
+  _modelId: string,
   history: Array<{ role: "user" | "model"; text: string }>,
   message: string,
   near: string,
@@ -1067,7 +1016,7 @@ Rules:
 - dayPlanModifiers: ONLY when isDayPlan is true — short phrase capturing preferences from the full conversation ("indoor only", "outdoor", "rainy day", "romantic", "budget"). Empty string if none. If guest said "indoors", "inside", "rainy", or "not outdoor" use "indoor only".
 - Always provide a non-empty placesQuery when needsPlaces is true.${placesContextNote}`;
 
-  const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { maxOutputTokens: 300 } });
+  const model = genAI.getGenerativeModel({ model: getFastGeminiModelId(), generationConfig: { maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } } as any });
   const result = await withOverloadRetry(() => model.generateContent(prompt));
   // Strip any markdown fences (global), then find the outermost JSON object —
   // same approach used for place-description parsing; far more robust than anchored strip.
@@ -1362,7 +1311,8 @@ export async function POST(req: Request) {
         } else {
           rawPlaces = await withOverloadRetry(() => fetchPlaces(smartPlacesQuery));
         }
-        livePlaces = filterPlacesForIntent(message, rawPlaces);
+        const filteredPlaces = filterPlacesForIntent(message, rawPlaces);
+        livePlaces = filteredPlaces.length >= 3 ? filteredPlaces : (filteredPlaces.length < rawPlaces.length ? rawPlaces : filteredPlaces);
       }
     }
 
@@ -1389,10 +1339,13 @@ export async function POST(req: Request) {
     // Descriptions are generated later, after systemInstruction is built with full place context.
     let singlePlacesSelected: PlaceResult[] = [];
     if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
-      const offset = wantsMoreOptions ? 5 : 0;
-      singlePlacesSelected = livePlaces.slice(offset, offset + 5).length > 0
-        ? livePlaces.slice(offset, offset + 5)
-        : livePlaces.slice(0, 5);
+      if (wantsMoreOptions) {
+        const shownKeys = new Set(livePlaces.slice(0, 5).map(normalizePlaceKey));
+        const nextBatch = livePlaces.filter((p) => !shownKeys.has(normalizePlaceKey(p))).slice(0, 5);
+        singlePlacesSelected = nextBatch.length >= 3 ? nextBatch : livePlaces.slice(0, 5);
+      } else {
+        singlePlacesSelected = livePlaces.slice(0, 5);
+      }
       if (singlePlacesSelected.length > 0) {
         try {
           const placesKey = requireGooglePlacesApiKey();
@@ -1513,15 +1466,7 @@ export async function POST(req: Request) {
     // systemInstruction already has all place data (editorialSummary, type, price, etc.)
     // via fmtPlace — same setup that makes day-plan descriptions work perfectly.
     if (singlePlacesSelected.length > 0) {
-      // Fetch websites in parallel for richer description source material.
-      const websiteResults = await Promise.allSettled(
-        singlePlacesSelected.map((p) => p.websiteUri ? fetchWebsiteDescription(p.websiteUri) : Promise.resolve(null))
-      );
-      // Inject any website text back into the place context so Gemini sees it.
-      const enrichedForDesc = singlePlacesSelected.map((p, idx) => {
-        const webText = websiteResults[idx].status === 'fulfilled' ? websiteResults[idx].value : null;
-        return webText ? { ...p, editorialSummary: webText } : p;
-      });
+      const enrichedForDesc = singlePlacesSelected;
 
       let descBlurbs: Record<string, string> = {};
       let descIntro: string | undefined;
@@ -1557,12 +1502,13 @@ export async function POST(req: Request) {
         // JSON response mode: forces clean JSON output and avoids thinking overhead
         // consuming all the token budget before visible output is generated.
         const descModel = genAI.getGenerativeModel({
-          model: modelId,
+          model: getFastGeminiModelId(),
           systemInstruction: descSystemInstruction,
           generationConfig: {
             maxOutputTokens: 8192,
             responseMimeType: 'application/json',
-          },
+            thinkingConfig: { thinkingBudget: 0 },
+          } as any,
         });
         const names = enrichedForDesc.map((p) => `"${p.name}"`).join(', ');
         const descPrompt = `Write concierge-voice descriptions for these places. Use Description data when available; otherwise use the Type and Name to craft something specific. Do not mention the location, address, city, or rating anywhere in the descriptions. Also write one short warm intro sentence (max 20 words) for the overall list.\n\nPlaces: ${names}\n\nReturn JSON:\n{"intro":"one warm intro sentence","blurbs":[{"name":"Exact Name","blurb":"2-3 sentence description"}]}`;
