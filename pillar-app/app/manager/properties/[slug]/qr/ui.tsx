@@ -19,7 +19,7 @@ export default function QRPrintClient({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const confirmed = confirmText === 'Generate';
+  const confirmed = confirmText.trim().toLowerCase() === 'generate';
 
   async function handleRegenerate() {
     if (!confirmed || isGenerating) return;

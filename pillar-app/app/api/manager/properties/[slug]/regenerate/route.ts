@@ -41,7 +41,12 @@ export async function POST(
     newSlug = `${base}-${randomSuffix()}`;
   }
 
-  await regeneratePropertySlug(session.userId, oldSlug, newSlug);
+  try {
+    await regeneratePropertySlug(session.userId, oldSlug, newSlug);
+  } catch (e) {
+    console.error('[regenerate] failed:', e);
+    return Response.json({ error: 'Failed to regenerate. Please try again.' }, { status: 500 });
+  }
 
   return Response.json({ slug: newSlug }, { status: 200 });
 }

@@ -271,11 +271,15 @@ export async function regeneratePropertySlug(
 
   if (propError) throw new Error(`Failed to update slug: ${propError.message}`);
 
-  // Re-parent any windows to the new slug
-  await supabase
-    .from('property_windows')
-    .update({ property_slug: newSlug })
-    .eq('property_slug', oldSlug.trim());
+  // Re-parent all child tables to the new slug.
+  // The DB cascades handle this automatically if ON UPDATE CASCADE is set,
+  // but we also do it explicitly here as a safety net.
+  await Promise.all([
+    supabase.from('property_windows').update({ property_slug: newSlug }).eq('property_slug', oldSlug.trim()),
+    supabase.from('property_photos').update({ property_slug: newSlug }).eq('property_slug', oldSlug.trim()),
+    supabase.from('work_order_categories').update({ property_slug: newSlug }).eq('property_slug', oldSlug.trim()),
+    supabase.from('work_orders').update({ property_slug: newSlug }).eq('property_slug', oldSlug.trim()),
+  ]);
 }
 
 export async function createProperty(managerId: string, name: string, slug: string): Promise<void> {
