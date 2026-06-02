@@ -28,8 +28,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Pillar - Luxury Property Management Support",
-  description: "Luxury property management support services",
+  title: "Pillar — Guest Experience for Property Managers",
+  description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
   icons: {
     icon: '/images/pillarlogowhite.png',
   },
@@ -47,6 +47,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Synchronously apply saved theme before first paint to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('pillar-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>

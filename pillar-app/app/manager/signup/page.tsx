@@ -159,6 +159,16 @@ export default function ManagerSignupPage() {
             const email = String(fd.get("email") || "");
             const password = String(fd.get("password") || "");
             const confirmPassword = String(fd.get("confirmPassword") || "");
+            if (password !== confirmPassword) {
+              setError("Passwords do not match.");
+              setLoading(false);
+              return;
+            }
+            if (password.length < 8) {
+              setError("Password must be at least 8 characters.");
+              setLoading(false);
+              return;
+            }
             const res = await fetch("/api/manager/signup", {
               method: "POST",
               headers: { "content-type": "application/json" },
@@ -175,23 +185,23 @@ export default function ManagerSignupPage() {
           }}
         >
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Full Name</p>
-            <input name="name" type="text" autoComplete="name" required placeholder="Jane Smith" className={inputCls} />
+            <label htmlFor="signup-name" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Full Name</label>
+            <input id="signup-name" name="name" type="text" autoComplete="name" required placeholder="Jane Smith" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
-            <input name="email" type="email" autoComplete="username" required placeholder="you@domain.com" className={inputCls} />
+            <label htmlFor="signup-email" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</label>
+            <input id="signup-email" name="email" type="email" autoComplete="username" required placeholder="you@domain.com" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
-            <input name="password" type="password" autoComplete="new-password" required minLength={8} placeholder="Min. 8 characters" className={inputCls} />
+            <label htmlFor="signup-password" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</label>
+            <input id="signup-password" name="password" type="password" autoComplete="new-password" required minLength={8} placeholder="Min. 8 characters" className={inputCls} />
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Confirm Password</p>
-            <input name="confirmPassword" type="password" autoComplete="new-password" required placeholder="••••••••" className={inputCls} />
+            <label htmlFor="signup-confirm" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Confirm Password</label>
+            <input id="signup-confirm" name="confirmPassword" type="password" autoComplete="new-password" required placeholder="••••••••" className={inputCls} />
           </div>
 
           <button

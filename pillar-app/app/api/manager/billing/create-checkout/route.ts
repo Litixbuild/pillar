@@ -34,11 +34,17 @@ export async function POST() {
   let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
 
   if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: session.email,
-      metadata: { userId: session.userId },
-    });
-    customerId = customer.id;
+    // Check Stripe first to prevent duplicate customers from race conditions
+    const existing = await stripe.customers.list({ email: session.email, limit: 1 });
+    if (existing.data.length > 0) {
+      customerId = existing.data[0].id;
+    } else {
+      const customer = await stripe.customers.create({
+        email: session.email,
+        metadata: { userId: session.userId },
+      });
+      customerId = customer.id;
+    }
 
     await supabase
       .from("profiles")

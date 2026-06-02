@@ -96,6 +96,32 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ slug: strin
     const ok = await requirePropertyAccess(session.userId, slug);
     if (!ok) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
+    // Clean up storage files before deleting DB records
+    try {
+      const { createServiceClient } = await import('@/lib/supabase');
+      const supabase = createServiceClient();
+      const STORAGE_MARKER = '/object/public/property-media/';
+
+      const [photosResult, windowsResult] = await Promise.all([
+        supabase.from('property_photos').select('url').eq('property_slug', slug),
+        supabase.from('property_windows').select('url').eq('property_slug', slug),
+      ]);
+
+      const storagePaths: string[] = [];
+      for (const row of [...(photosResult.data ?? []), ...(windowsResult.data ?? [])]) {
+        const url = (row as Record<string, unknown>).url;
+        if (typeof url !== 'string') continue;
+        const idx = url.indexOf(STORAGE_MARKER);
+        if (idx !== -1) storagePaths.push(url.slice(idx + STORAGE_MARKER.length));
+      }
+
+      if (storagePaths.length > 0) {
+        await supabase.storage.from('property-media').remove(storagePaths);
+      }
+    } catch {
+      // Storage cleanup is best-effort — don't block the delete if it fails
+    }
+
     await deleteProperty(session.userId, slug);
     return Response.json({ ok: true }, { status: 200 });
   } catch (e) {

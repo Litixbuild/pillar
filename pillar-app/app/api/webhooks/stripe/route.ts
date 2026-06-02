@@ -80,6 +80,15 @@ export async function POST(req: Request) {
       const userId = sub.metadata?.userId;
       if (!userId) break;
       await updateProfileFromSub(userId, sub);
+
+      // Update referrer discount when subscription becomes inactive (e.g. goes past_due)
+      const prevAttrs = event.data.previous_attributes as Record<string, unknown> | undefined;
+      const statusChanged = prevAttrs?.status !== undefined;
+      const isNowInactive = sub.status !== "active" && sub.status !== "trialing";
+      if (statusChanged && isNowInactive) {
+        const referrerId = await getReferrerId(userId);
+        if (referrerId) await updateReferrerDiscount(referrerId);
+      }
       break;
     }
 
@@ -92,6 +101,30 @@ export async function POST(req: Request) {
       // Referrer loses credit when this manager cancels
       const referrerId = await getReferrerId(userId);
       if (referrerId) await updateReferrerDiscount(referrerId);
+      break;
+    }
+
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subDetails = invoice.parent?.type === "subscription_details"
+        ? (invoice.parent as { type: string; subscription_details?: { subscription: string | Stripe.Subscription | null } }).subscription_details
+        : null;
+      const subId = typeof subDetails?.subscription === "string"
+        ? subDetails.subscription
+        : subDetails?.subscription?.id;
+      if (!subId) break;
+
+      const sub = await stripe.subscriptions.retrieve(subId);
+      const userId = sub.metadata?.userId;
+      if (!userId) break;
+
+      await updateProfileFromSub(userId, sub);
+
+      // Re-credit referrer if payment success restored an active subscription
+      if (sub.status === "active" || sub.status === "trialing") {
+        const referrerId = await getReferrerId(userId);
+        if (referrerId) await updateReferrerDiscount(referrerId);
+      }
       break;
     }
 

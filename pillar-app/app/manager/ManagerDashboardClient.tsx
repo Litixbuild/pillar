@@ -64,6 +64,7 @@ export default function ManagerDashboardClient({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
   const [slotLoading, setSlotLoading] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
@@ -122,22 +123,26 @@ export default function ManagerDashboardClient({
 
   async function handleStartCheckout() {
     setBillingLoading(true);
+    setBillingError(null);
     const res = await fetch('/api/manager/billing/create-checkout', { method: 'POST' });
     if (res.ok) {
       const { url } = (await res.json()) as { url: string };
       window.location.href = url;
     } else {
+      setBillingError('Unable to start checkout. Please try again or contact support.');
       setBillingLoading(false);
     }
   }
 
   async function handleOpenPortal() {
     setBillingLoading(true);
+    setBillingError(null);
     const res = await fetch('/api/manager/billing/portal', { method: 'POST' });
     if (res.ok) {
       const { url } = (await res.json()) as { url: string };
       window.location.href = url;
     } else {
+      setBillingError('Unable to open billing portal. Please try again or contact support.');
       setBillingLoading(false);
     }
   }
@@ -380,7 +385,7 @@ export default function ManagerDashboardClient({
                       Pillar Subscription
                     </p>
                     <p className="mt-0.5 text-xs" style={{ color: mutedColor }}>
-                      Subscription is active
+                      {properties.length} of {propertySlots} {propertySlots === 1 ? 'property slot' : 'property slots'} used
                     </p>
                   </div>
                   <button
@@ -394,6 +399,7 @@ export default function ManagerDashboardClient({
                   >
                     {billingLoading ? 'Opening…' : 'Manage billing →'}
                   </button>
+                  {billingError ? <p className="text-xs text-rose-400">{billingError}</p> : null}
                 </div>
               ) : subscriptionStatus === 'past_due' ? (
                 <div className="space-y-3">
@@ -428,6 +434,7 @@ export default function ManagerDashboardClient({
                   >
                     {billingLoading ? 'Loading…' : 'Subscribe now →'}
                   </button>
+                  {billingError ? <p className="text-xs text-rose-400">{billingError}</p> : null}
                 </div>
               )}
             </div>

@@ -4,7 +4,7 @@ function createTransporter() {
   const user = process.env.ZOHO_SMTP_USER;
   const pass = process.env.ZOHO_SMTP_PASS;
   if (!user || !pass) throw new Error("Email service not configured");
-  return { transporter: nodemailer.createTransport({ host: "smtp.zoho.com", port: 465, secure: true, auth: { user, pass } }), user };
+  return { transporter: nodemailer.createTransport({ host: "smtp.zoho.com", port: 465, secure: true, auth: { user, pass }, connectionTimeout: 8000, greetingTimeout: 8000, socketTimeout: 10000 }), user };
 }
 
 export async function sendOtpEmail(to: string, name: string | undefined, code: string) {

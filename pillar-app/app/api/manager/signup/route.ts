@@ -54,6 +54,12 @@ export async function POST(req: Request) {
     return Response.json({ error: error?.message ?? "Signup failed" }, { status: 400 });
   }
 
+  // Empty identities = email already exists (Supabase returns a fake success to prevent enumeration).
+  // Don't create a duplicate profile — just tell them to check their inbox.
+  if (!data.user.identities || data.user.identities.length === 0) {
+    return Response.json({ ok: true, requiresEmailVerification: true }, { status: 200 });
+  }
+
   const service = createServiceClient();
   const referralCode = await getUniqueReferralCode(service);
 

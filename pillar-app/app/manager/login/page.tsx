@@ -151,12 +151,12 @@ export default function ManagerLoginPage() {
               }}
             >
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</p>
-                <input name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
+                <label htmlFor="login-email" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</label>
+                <input id="login-email" name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
               </div>
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</p>
-                <input name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
+                <label htmlFor="login-password" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</label>
+                <input id="login-password" name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
               </div>
               <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
                 {loading ? "Signing in…" : "Sign In"}
@@ -211,8 +211,9 @@ export default function ManagerLoginPage() {
               }}
             >
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>6-Digit Code</p>
+                <label htmlFor="mfa-code" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>6-Digit Code</label>
                 <input
+                  id="mfa-code"
                   ref={codeRef}
                   name="code"
                   type="text"

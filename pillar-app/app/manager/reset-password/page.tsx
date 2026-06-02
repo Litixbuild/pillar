@@ -237,10 +237,11 @@ export default function ResetPasswordPage() {
 
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
+                <label htmlFor="reset-password" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
                   New Password
-                </p>
+                </label>
                 <input
+                  id="reset-password"
                   name="password"
                   type="password"
                   autoComplete="new-password"
@@ -252,10 +253,11 @@ export default function ResetPasswordPage() {
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
+                <label htmlFor="reset-confirm" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: "rgba(245,237,213,0.65)" }}>
                   Confirm Password
-                </p>
+                </label>
                 <input
+                  id="reset-confirm"
                   name="confirm"
                   type="password"
                   autoComplete="new-password"
