@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import ChatConcierge from '@/components/ChatConcierge';
 import CopyPasswordButton from './CopyPasswordButton';
 import type { PropertyFields, ManagerLayoutItem, Property, AmenityWindow } from '@/lib/types';
@@ -325,6 +326,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalTheme }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string; lightTheme?: LightTheme }) {
+  const t = useTranslations('guest');
   const [category, setCategory] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [otherMessage, setOtherMessage] = useState('');
@@ -395,8 +397,8 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
           {/* Header */}
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="lux-title text-2xl" style={{ color: textCol }}>Need Help?</h2>
-              <p className="mt-1 text-sm" style={{ color: mutedCol }}>Tell us what needs attention.</p>
+              <h2 className="lux-title text-2xl" style={{ color: textCol }}>{t('needHelp')}</h2>
+              <p className="mt-1 text-sm" style={{ color: mutedCol }}>{t('tellUsWhat')}</p>
             </div>
             <button
               type="button"
@@ -412,7 +414,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
           {/* Work order form */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Type</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>{t('type')}</div>
               <div className="relative">
                 <button
                   type="button"
@@ -422,7 +424,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
                   aria-haspopup="listbox"
                   aria-expanded={categoryOpen}
                 >
-                  <span>{category || 'Select…'}</span>
+                  <span>{category || t('selectPlaceholder')}</span>
                   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`} style={{ color: mutedCol }} />
                 </button>
 
@@ -449,11 +451,11 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
 
             {category === 'Other' ? (
               <div className="space-y-2">
-                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Message</div>
+                <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>{t('message')}</div>
                 <input
                   value={otherMessage}
                   onChange={(e) => { setOtherMessage(e.target.value); setSent(false); setSubmitError(null); }}
-                  placeholder="What is this about?"
+                  placeholder={t('messagePlaceholder')}
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
                   style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 />
@@ -461,23 +463,23 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
             ) : null}
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>Describe the problem</div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em]" style={{ color: sandyLabel }}>{t('describeProblem')}</div>
               <textarea
                 value={description}
                 onChange={(e) => { setDescription(e.target.value); setSent(false); }}
-                placeholder="Add details (location, urgency, anything helpful)"
+                placeholder={t('describePlaceholder')}
                 className="min-h-25 w-full resize-none rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
                 style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
               />
             </div>
 
-            {sent ? <div className="text-sm text-emerald-500">Sent. Thank you.</div> : null}
+            {sent ? <div className="text-sm text-emerald-500">{t('sent')}</div> : null}
             {submitError ? <div className="text-sm text-red-400">{submitError}</div> : null}
 
             <button
               type="button"
               onClick={() => {
-                if (!category) { setSubmitError('Please select a category.'); return; }
+                if (!category) { setSubmitError(t('selectCategory')); return; }
                 setSubmitting(true); setSubmitError(null);
                 fetch('/api/guest/work-order', {
                   method: 'POST',
@@ -490,10 +492,10 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
                       setSent(true);
                       window.setTimeout(() => { setCategory(''); setOtherMessage(''); setDescription(''); setSent(false); onClose(); }, 850);
                     } else {
-                      setSubmitError(d.error ?? 'Something went wrong. Please try again.');
+                      setSubmitError(d.error ?? t('somethingWentWrong'));
                     }
                   })
-                  .catch(() => setSubmitError('Network error. Please try again.'))
+                  .catch(() => setSubmitError(t('networkError')))
                   .finally(() => setSubmitting(false));
               }}
               disabled={submitting}
@@ -505,7 +507,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
               }}
             >
               <PaperPlaneIcon className="h-4 w-4" />
-              {submitting ? 'Sending…' : 'Send'}
+              {submitting ? t('sending') : t('send')}
             </button>
           </div>
 
@@ -515,7 +517,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
             <div className="mt-5">
               {lateCheckoutSent ? (
                 <div className="rounded-2xl px-4 py-3.5 text-sm leading-relaxed" style={{ background: inputBg, border: `1px solid ${borderCol}`, color: mutedCol }}>
-                  Your request has been submitted. We will contact you shortly with an update.
+                  {t('lateCheckoutSent')}
                 </div>
               ) : (
                 <button
@@ -537,7 +539,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
                   className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
                   style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 >
-                  {lateCheckoutLoading ? 'Sending…' : 'Request Late Checkout'}
+                  {lateCheckoutLoading ? t('sending') : t('requestLateCheckout')}
                 </button>
               )}
             </div>
@@ -548,7 +550,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
             <>
               <div className="mt-5 h-px" style={{ backgroundColor: dividerCol }} />
               <div className="mt-5 flex flex-col items-center gap-3 text-center">
-                <p className="text-sm font-semibold" style={{ color: textCol }}>Urgent? Call the Property Manager Now!</p>
+                <p className="text-sm font-semibold" style={{ color: textCol }}>{t('urgentCall')}</p>
                 <a
                   href={tel ? `tel:${tel}` : undefined}
                   className="flex h-10 w-10 items-center justify-center rounded-full shadow-[0_6px_24px_rgba(239,68,68,0.45)] transition-transform duration-200 active:scale-90"
@@ -570,6 +572,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
 }
 
 function CheckoutModal({ open, onClose, instructions, dark, lightTheme: modalTheme }: { open: boolean; onClose: () => void; instructions: string; dark: boolean; lightTheme?: LightTheme }) {
+  const t = useTranslations('guest');
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -617,8 +620,8 @@ function CheckoutModal({ open, onClose, instructions, dark, lightTheme: modalThe
         <div className="max-h-[75vh] overflow-y-auto px-6 pb-7 pt-6">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="lux-title text-2xl" style={{ color: textCol }}>Checkout Instructions</h2>
-              <p className="mt-1 text-sm" style={{ color: mutedCol }}>From your property manager.</p>
+              <h2 className="lux-title text-2xl" style={{ color: textCol }}>{t('checkoutInstructions')}</h2>
+              <p className="mt-1 text-sm" style={{ color: mutedCol }}>{t('fromManager')}</p>
             </div>
             <button
               type="button"
@@ -797,26 +800,26 @@ function isAttachmentArray(v: unknown): v is Array<Record<string, unknown>> {
   return Array.isArray(v) && v.every((x) => x && typeof x === 'object');
 }
 
-function renderWindowContent(w: AmenityWindow): ReactNode {
+function renderWindowContent(w: AmenityWindow, t: (key: string) => string): ReactNode {
   if (w.type === 'text') {
     return w.body
       ? <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--body-color)' }}>{w.body}</p>
-      : <p className="text-sm text-white/35">No content added yet.</p>;
+      : <p className="text-sm text-white/35">{t('noContentAdded')}</p>;
   }
   if (w.type === 'pdf') {
     return w.url
-      ? <a href={w.url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>Open PDF</a>
-      : <p className="text-sm text-white/35">No PDF uploaded yet.</p>;
+      ? <a href={w.url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: SANDY, textDecorationColor: `rgba(${SANDY_RGB},0.40)` }}>{t('openPdf')}</a>
+      : <p className="text-sm text-white/35">{t('noPdfUploaded')}</p>;
   }
   if (w.type === 'image') {
     return w.url
       // eslint-disable-next-line @next/next/no-img-element
       ? <img src={w.url} alt={w.title} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
-      : <p className="text-sm text-white/35">No image uploaded yet.</p>;
+      : <p className="text-sm text-white/35">{t('noImageUploaded')}</p>;
   }
   return w.url
-    ? <div className="overflow-hidden rounded-xl border border-white/[0.07]"><video controls className="w-full" preload="metadata"><source src={w.url} />Your browser does not support the video tag.</video></div>
-    : <p className="text-sm text-white/35">No video uploaded yet.</p>;
+    ? <div className="overflow-hidden rounded-xl border border-white/[0.07]"><video controls className="w-full" preload="metadata"><source src={w.url} />{t('browserNoVideo')}</video></div>
+    : <p className="text-sm text-white/35">{t('noVideoUploaded')}</p>;
 }
 
 function guessAttachmentKind(url: string): 'image' | 'video' | 'other' {
@@ -847,6 +850,7 @@ export default function PropertyExperience({
   onRemoveWindow?: (index: number) => void;
   onReorderWindows?: (fromIndex: number, toIndex: number) => void;
 }) {
+  const t = useTranslations('guest');
   const PREVIEW_FADE_MS = 450;
   const FULL_VIEW_FADE_MS = 450;
 
@@ -1066,16 +1070,16 @@ export default function PropertyExperience({
       {editableCustomWindows ? (
         <div className="pointer-events-none fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-md px-6 pt-4">
           <div className="pointer-events-auto flex items-center justify-between rounded-2xl border border-white/[0.07] bg-black/55/80 px-4 py-2.5 text-white backdrop-blur-md">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">Edit mode</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">{t('editMode')}</div>
             <div className="flex items-center gap-3">
-              <div className="text-[11px] text-white/40">Reorder: drag or ↑↓</div>
+              <div className="text-[11px] text-white/40">{t('reorderHint')}</div>
               <button
                 type="button"
                 onClick={onAddWindow}
                 className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-semibold text-white/70 transition-all duration-200 hover:bg-white/10"
               >
                 <span className="text-base leading-none">+</span>
-                Add window
+                {t('addWindow')}
               </button>
             </div>
           </div>
@@ -1095,7 +1099,7 @@ export default function PropertyExperience({
           }}
           className={'fixed inset-0 w-full text-left transition-opacity ease-in-out ' + (isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100')}
           style={{ transitionDuration: `${PREVIEW_FADE_MS}ms` }}
-          aria-label="Open full property details"
+          aria-label={t('openFullDetails')}
         >
           {/* Soft gradient — transparent top, gentle dark fade at bottom */}
           <div
@@ -1120,7 +1124,7 @@ export default function PropertyExperience({
               </p>
             ) : null}
             <div className="mt-6 flex items-center justify-end gap-1.5 text-white/75">
-              <span className="text-[10px] font-medium uppercase tracking-[0.3em]">Explore</span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.3em]">{t('explore')}</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </div>
           </div>
@@ -1138,7 +1142,7 @@ export default function PropertyExperience({
             onClick={() => setDark((d) => !d)}
             className="fixed top-5 right-5 z-20 transition-opacity duration-200 hover:opacity-70"
             style={{ color: dark ? 'rgba(255,255,255,0.45)' : lightTheme.toggleColor }}
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={dark ? t('switchToLight') : t('switchToDark')}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
           </button>
@@ -1206,12 +1210,12 @@ export default function PropertyExperience({
                       <HomeIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Home Amenities</div>
+                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>{t('homeAmenities')}</div>
                       <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>
                         {(() => {
-                          const all = ['WiFi', property.GarageCode ? 'Garage Code' : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
+                          const all = [t('wifi'), property.GarageCode ? t('garageCode') : null, ...(property.windows ?? []).map((w) => w.title)].filter(Boolean) as string[];
                           const preview = all.slice(0, 2);
-                          return preview.join(', ') + (all.length > 2 ? ', and more!' : '');
+                          return preview.join(', ') + (all.length > 2 ? t('andMore') : '');
                         })()}
                       </div>
                     </div>
@@ -1249,7 +1253,7 @@ export default function PropertyExperience({
                   }}>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="lux-title text-[1.1rem]" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Amenities</p>
+                        <p className="lux-title text-[1.1rem]" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>{t('amenities')}</p>
                         {editableCustomWindows ? (
                           <button
                             type="button"
@@ -1277,7 +1281,7 @@ export default function PropertyExperience({
                             if (typeof value === 'string') {
                               return value.trim()
                                 ? <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.72)' : 'rgba(30,41,59,0.75)' }}>{value}</p>
-                                : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(empty)</p>;
+                                : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>{t('empty')}</p>;
                             }
                             if (typeof value === 'number' || typeof value === 'boolean') {
                               return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.72)' : 'rgba(30,41,59,0.75)' }}>{String(value)}</p>;
@@ -1285,11 +1289,11 @@ export default function PropertyExperience({
                             if (isAttachmentArray(value)) {
                               const first = value[0] as { url?: unknown };
                               const url = typeof first?.url === 'string' ? first.url : '';
-                              if (!url) return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(no attachment)</p>;
+                              if (!url) return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>{t('noAttachment')}</p>;
                               const kind = guessAttachmentKind(url);
                               if (kind === 'video') return (
                                 <div className="overflow-hidden rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}>
-                                  <video controls className="w-full" preload="metadata"><source src={url} />Your browser does not support the video tag.</video>
+                                  <video controls className="w-full" preload="metadata"><source src={url} />{t('browserNoVideo')}</video>
                                 </div>
                               );
                               if (kind === 'image') return (
@@ -1298,11 +1302,11 @@ export default function PropertyExperience({
                               );
                               return (
                                 <a href={url} target="_blank" rel="noreferrer" className="text-sm font-medium underline underline-offset-4 transition-all duration-200" style={{ color: dark ? SANDY : 'rgba(100,80,40,0.85)', textDecorationColor: dark ? `rgba(${SANDY_RGB},0.40)` : 'rgba(100,80,40,0.30)' }}>
-                                  Open attachment
+                                  {t('openAttachment')}
                                 </a>
                               );
                             }
-                            return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>(no content)</p>;
+                            return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>{t('noContent')}</p>;
                           };
 
                           return (
@@ -1358,8 +1362,8 @@ export default function PropertyExperience({
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>Need Help?</div>
-                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>Contact your property manager</div>
+                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>{t('needHelp')}</div>
+                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>{t('contactManager')}</div>
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : lightTheme.chevronColor }} />
@@ -1374,7 +1378,7 @@ export default function PropertyExperience({
                       className="text-[11px] uppercase tracking-[0.22em] transition-opacity duration-200 hover:opacity-80"
                       style={{ color: dark ? 'rgba(245,237,213,0.32)' : `rgba(${lightTheme.accentRGB},0.38)` }}
                     >
-                      Checkout Instructions
+                      {t('checkoutInstructions')}
                     </button>
                   </div>
                 ) : null}
@@ -1410,11 +1414,11 @@ export default function PropertyExperience({
                       border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
                       color: dark ? 'rgba(255,255,255,0.80)' : lightTheme.titleText,
                     }}
-                    aria-label="Back"
+                    aria-label={t('back')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <div className="lux-title flex-1 text-center text-3xl tracking-[0.04em]" style={{ color: dark ? '#ffffff' : lightTheme.headingColor }}>Home Amenities</div>
+                  <div className="lux-title flex-1 text-center text-3xl tracking-[0.04em]" style={{ color: dark ? '#ffffff' : lightTheme.headingColor }}>{t('homeAmenities')}</div>
                   <div className="h-9 w-9 flex-none" />
                 </div>
 
@@ -1475,7 +1479,7 @@ export default function PropertyExperience({
                               className="h-full flex-none bg-cover bg-center"
                               style={{ width: `${100 / photos.length}%`, backgroundImage: `url(${url})` }}
                               onClick={() => { if (!carouselDragged) { setLightboxIdx(idx); setLightboxOpen(true); } }}
-                              aria-label={`View photo ${idx + 1}`}
+                              aria-label={t('viewPhoto', { n: idx + 1 })}
                             />
                           ))}
                         </div>
@@ -1531,11 +1535,11 @@ export default function PropertyExperience({
 
                           {/* General — WiFi + Garage + unassigned windows */}
                           <div>
-                            <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>General</p>
+                            <p className="lux-title mb-4 text-2xl" style={{ color: titleColor }}>{t('general')}</p>
                             <div style={rowStyle}>
-                              <AmenitySquare id="wifi" iconKey="wifi" title="WiFi" selected={openAmenityId === 'wifi'} onToggle={() => openAmenity('wifi')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
+                              <AmenitySquare id="wifi" iconKey="wifi" title={t('wifi')} selected={openAmenityId === 'wifi'} onToggle={() => openAmenity('wifi')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                               {property.GarageCode ? (
-                                <AmenitySquare id="garage" iconKey="key" title="Garage Code" selected={openAmenityId === 'garage'} onToggle={() => openAmenity('garage')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
+                                <AmenitySquare id="garage" iconKey="key" title={t('garageCode')} selected={openAmenityId === 'garage'} onToggle={() => openAmenity('garage')} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
                               ) : null}
                               {unassigned.map((w) => (
                                 <AmenitySquare key={w.id} id={w.id} iconKey={w.icon} title={w.title} selected={openAmenityId === w.id} onToggle={() => openAmenity(w.id)} dark={dark} themeAccentRGB={!dark ? lightTheme.accentRGB : undefined} />
@@ -1575,7 +1579,7 @@ export default function PropertyExperience({
               ? (property.windows ?? []).find((x) => x.id === openAmenityId)
               : null;
             const overlayIconKey = openAmenityId === 'wifi' ? 'wifi' : openAmenityId === 'garage' ? 'key' : aw?.icon;
-            const overlayTitle = openAmenityId === 'wifi' ? 'WiFi' : openAmenityId === 'garage' ? 'Garage Code' : (aw?.title ?? '');
+            const overlayTitle = openAmenityId === 'wifi' ? t('wifi') : openAmenityId === 'garage' ? t('garageCode') : (aw?.title ?? '');
             const overlayIconColor = dark ? 'rgba(255,255,255,0.75)' : 'rgba(30,41,59,0.65)';
             return (
               <div
@@ -1642,12 +1646,12 @@ export default function PropertyExperience({
                     {openAmenityId === 'wifi' ? (
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Network</p>
+                          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>{t('network')}</p>
                           <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.WiFiName}</p>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Password</p>
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>{t('password')}</p>
                             <p className="font-mono text-sm" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.WiFiPassword}</p>
                           </div>
                           <CopyPasswordButton password={property.WiFiPassword} />
@@ -1656,11 +1660,11 @@ export default function PropertyExperience({
                     ) : openAmenityId === 'garage' ? (
                       property.GarageCode
                         ? <div className="space-y-1">
-                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>Code</p>
+                            <p className="text-xs uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.50)` : 'rgba(100,80,40,0.60)' }}>{t('code')}</p>
                             <p className="font-mono text-sm whitespace-pre-wrap" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>{property.GarageCode}</p>
                           </div>
-                        : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)' }}>Garage code not provided.</p>
-                    ) : aw ? renderWindowContent(aw) : null}
+                        : <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)' }}>{t('garageCodeNotProvided')}</p>
+                    ) : aw ? renderWindowContent(aw, t) : null}
                   </div>
 
                 </div>
@@ -1724,7 +1728,7 @@ export default function PropertyExperience({
                   className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-3 pb-8"
                   style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)' }}
                 >
-                  <span className="text-xs font-semibold text-white/55">{lightboxIdx + 1} / {photos.length}</span>
+                  <span className="text-xs font-semibold text-white/55">{t('photoCounter', { current: lightboxIdx + 1, total: photos.length })}</span>
                   <button
                     type="button"
                     onClick={() => setLightboxOpen(false)}
@@ -1743,7 +1747,7 @@ export default function PropertyExperience({
                     type="button"
                     onClick={() => setLightboxIdx((i) => i - 1)}
                     className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-white/15 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
-                    aria-label="Previous photo"
+                    aria-label={t('previousPhoto')}
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -1755,7 +1759,7 @@ export default function PropertyExperience({
                     type="button"
                     onClick={() => setLightboxIdx((i) => i + 1)}
                     className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-white/15 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
-                    aria-label="Next photo"
+                    aria-label={t('nextPhoto')}
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -1769,7 +1773,7 @@ export default function PropertyExperience({
                 onClick={(e) => e.stopPropagation()}
                 style={{ background: 'rgba(20,20,20,0.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.09)' }}
               >
-                <p className="text-sm font-medium text-white/70">Share your Experience with Others!</p>
+                <p className="text-sm font-medium text-white/70">{t('shareExperience')}</p>
                 <button
                   type="button"
                   onClick={() => void sharePhotoWithLogo(photos[lightboxIdx])}

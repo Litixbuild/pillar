@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ function MoonIcon() {
 }
 
 export default function ManagerLoginPage() {
+  const t = useTranslations("manager");
   const [dark, setDark] = useState(false);
   const [step, setStep] = useState<"login" | "mfa">("login");
   const [emailHint, setEmailHint] = useState("");
@@ -83,7 +85,7 @@ export default function ManagerLoginPage() {
     const res = await fetch("/api/manager/resend-mfa", { method: "POST" });
     if (!res.ok) {
       const d = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(d.error ?? "Failed to resend. Please try again.");
+      setError(d.error ?? t("failedResend"));
     }
   }
 
@@ -94,13 +96,13 @@ export default function ManagerLoginPage() {
 
       {/* Back arrow */}
       {step === "login" ? (
-        <Link href="/" className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label="Back to home">
+        <Link href="/" className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label={t("backToHome")}>
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
             <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
       ) : (
-        <button type="button" onClick={() => { setStep("login"); setError(null); }} className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label="Back to login">
+        <button type="button" onClick={() => { setStep("login"); setError(null); }} className="absolute top-5 left-5 z-20 transition-opacity duration-200 hover:opacity-70" style={{ color: backArrowColor }} aria-label={t("backToLogin")}>
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
             <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -108,18 +110,18 @@ export default function ManagerLoginPage() {
       )}
 
       {/* Dark mode toggle */}
-      <button type="button" onClick={toggleMode} className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200" style={toggleStyle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+      <button type="button" onClick={toggleMode} className="absolute top-5 right-5 z-20 flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200" style={toggleStyle} title={dark ? t("switchToLight") : t("switchToDark")}>
         {dark ? <SunIcon /> : <MoonIcon />}
       </button>
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
         <Image src={logoSrc} alt="Pillar" width={300} height={200} className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56" priority />
 
-        {/* â”€â”€ Step 1: Email / Password â”€â”€ */}
+        {/* ── Step 1: Email / Password ── */}
         {step === "login" ? (
           <>
             <div className="mb-7 text-center">
-              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>Manager Login</h1>
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>{t("login")}</h1>
               <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
             </div>
 
@@ -139,7 +141,7 @@ export default function ManagerLoginPage() {
                 });
                 const data = (await res.json().catch(() => ({}))) as { ok?: boolean; mfa_required?: boolean; phone_hint?: string; error?: string };
                 if (!res.ok) {
-                  setError(data.error ?? "Login failed. Please try again.");
+                  setError(data.error ?? t("loginFailed"));
                   setLoading(false);
                   return;
                 }
@@ -154,38 +156,38 @@ export default function ManagerLoginPage() {
               }}
             >
               <div className="space-y-1.5">
-                <label htmlFor="login-email" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Email</label>
-                <input id="login-email" name="email" type="email" autoComplete="username" required placeholder="manager@domain.com" className={inputCls} />
+                <label htmlFor="login-email" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>{t("email")}</label>
+                <input id="login-email" name="email" type="email" autoComplete="username" required placeholder={t("emailPlaceholder")} className={inputCls} />
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="login-password" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Password</label>
+                <label htmlFor="login-password" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>{t("password")}</label>
                 <input id="login-password" name="password" type="password" autoComplete="current-password" required placeholder="••••••••" className={inputCls} />
               </div>
               <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
-                {loading ? "Signing in…" : "Sign In"}
+                {loading ? t("signingIn") : t("signIn")}
               </button>
               <div className="pt-1 flex flex-col items-center gap-3 text-center">
                 <Link href="/manager/forgot-password" className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80" style={{ color: forgotColor }}>
-                  Forgot Password?
+                  {t("forgotPassword")}
                 </Link>
                 <Link href="/manager/signup" className="group flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-300" style={signupStyle}>
-                  Don&apos;t have an account?
-                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">Sign up →</span>
+                  {t("noAccount")}
+                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">{t("signUp")}</span>
                 </Link>
               </div>
             </form>
           </>
         ) : null}
 
-        {/* â”€â”€ Step 2: MFA code â”€â”€ */}
+        {/* ── Step 2: MFA code ── */}
         {step === "mfa" ? (
           <>
             <div className="mb-7 text-center">
-              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>Verify Your Identity</h1>
+              <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>{t("verifyIdentity")}</h1>
               <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
               {emailHint ? (
                 <p className="mt-4 text-sm" style={{ color: dark ? "rgba(255,255,255,0.60)" : "rgba(100,80,40,0.60)" }}>
-                  A code was sent to <span style={{ color: dark ? "rgba(255,255,255,0.85)" : "#111111" }}>{emailHint}</span>
+                  {t("codeSentTo", { email: emailHint })}
                 </p>
               ) : null}
             </div>
@@ -206,7 +208,7 @@ export default function ManagerLoginPage() {
                 });
                 const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
                 if (!res.ok) {
-                  setError(data.error ?? "Verification failed.");
+                  setError(data.error ?? t("verificationFailed"));
                   setLoading(false);
                   return;
                 }
@@ -214,7 +216,7 @@ export default function ManagerLoginPage() {
               }}
             >
               <div className="space-y-1.5">
-                <label htmlFor="mfa-code" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>6-Digit Code</label>
+                <label htmlFor="mfa-code" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>{t("sixDigitCode")}</label>
                 <input
                   id="mfa-code"
                   ref={codeRef}
@@ -225,13 +227,13 @@ export default function ManagerLoginPage() {
                   maxLength={6}
                   autoComplete="one-time-code"
                   required
-                  placeholder="000000"
+                  placeholder={t("codePlaceholder")}
                   className={inputCls + " tracking-[0.5em] text-center"}
                 />
               </div>
 
               <button type="submit" disabled={loading} className="mt-1 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60" style={submitStyle}>
-                {loading ? "Verifying…" : "Verify"}
+                {loading ? t("verifying") : t("verify")}
               </button>
 
               <div className="pt-1 text-center">
@@ -242,7 +244,7 @@ export default function ManagerLoginPage() {
                   className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80 disabled:opacity-40"
                   style={{ color: forgotColor }}
                 >
-                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend Code"}
+                  {resendCooldown > 0 ? t("resendCodeIn", { seconds: resendCooldown }) : t("resendCode")}
                 </button>
               </div>
             </form>
