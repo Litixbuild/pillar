@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -57,22 +57,25 @@ export default function ManagerLoginPage() {
     localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
-  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.80)";
+  const logoSrc = dark ? "/images/pillarlogowhite.png" : "/images/pillarlogoblack.png";
+  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(100,80,40,0.55)";
   const toggleStyle = dark
     ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
-    : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
+    : { borderColor: "rgba(100,80,40,0.20)", background: "rgba(255,255,255,0.80)", color: "rgba(100,80,40,0.70)" };
 
-  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
-  const headingColor = "#ffffff";
-  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
-  const inputCls = "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
+  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(100,80,40,0.65)";
+  const headingColor = dark ? "#ffffff" : "#111111";
+  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(100,80,40,0.25)";
+  const inputCls = dark
+    ? "h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/[0.12]"
+    : "h-11 w-full rounded-xl border border-[rgba(100,80,40,0.18)] bg-[rgba(100,80,40,0.04)] px-4 text-sm text-[#111111] outline-none transition-all duration-200 placeholder:text-[rgba(100,80,40,0.30)] focus:border-[rgba(100,80,40,0.35)]";
   const submitStyle = dark
     ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
-    : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
-  const forgotColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.55)";
+    : { background: "#111111", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
+  const forgotColor = dark ? "rgba(245,237,213,0.50)" : "rgba(100,80,40,0.55)";
   const signupStyle = dark
     ? { borderColor: "rgba(245,237,213,0.30)", backgroundColor: "rgba(245,237,213,0.08)", color: "rgba(245,237,213,0.85)" }
-    : { borderColor: "rgba(255,255,255,0.30)", backgroundColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.85)" };
+    : { borderColor: "rgba(100,80,40,0.20)", backgroundColor: "rgba(100,80,40,0.05)", color: "rgba(100,80,40,0.75)" };
 
   async function handleResend() {
     if (resendCooldown > 0) return;
@@ -87,7 +90,7 @@ export default function ManagerLoginPage() {
   return (
     <div className="relative flex flex-col items-center justify-center overflow-hidden px-5" style={{ height: "100dvh" }}>
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
-      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/White.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
       {/* Back arrow */}
       {step === "login" ? (
@@ -110,9 +113,9 @@ export default function ManagerLoginPage() {
       </button>
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
-        <Image src="/images/pillarlogowhite.png" alt="Pillar" width={300} height={200} className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56" priority />
+        <Image src={logoSrc} alt="Pillar" width={300} height={200} className="mb-6 h-auto w-44 opacity-90 sm:mb-8 sm:w-56" priority />
 
-        {/* ── Step 1: Email / Password ── */}
+        {/* â”€â”€ Step 1: Email / Password â”€â”€ */}
         {step === "login" ? (
           <>
             <div className="mb-7 text-center">
@@ -174,15 +177,15 @@ export default function ManagerLoginPage() {
           </>
         ) : null}
 
-        {/* ── Step 2: MFA code ── */}
+        {/* â”€â”€ Step 2: MFA code â”€â”€ */}
         {step === "mfa" ? (
           <>
             <div className="mb-7 text-center">
               <h1 className="text-xl font-light tracking-tight sm:text-2xl" style={{ color: headingColor }}>Verify Your Identity</h1>
               <div className="mx-auto mt-3 h-px w-8" style={{ background: `linear-gradient(to right, ${dividerColor}, transparent)` }} />
               {emailHint ? (
-                <p className="mt-4 text-sm" style={{ color: "rgba(255,255,255,0.60)" }}>
-                  A code was sent to <span style={{ color: "rgba(255,255,255,0.85)" }}>{emailHint}</span>
+                <p className="mt-4 text-sm" style={{ color: dark ? "rgba(255,255,255,0.60)" : "rgba(100,80,40,0.60)" }}>
+                  A code was sent to <span style={{ color: dark ? "rgba(255,255,255,0.85)" : "#111111" }}>{emailHint}</span>
                 </p>
               ) : null}
             </div>

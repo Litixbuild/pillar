@@ -194,8 +194,8 @@ function AmenityIconSvg({ iconKey, className }: { iconKey: string; className?: s
 
 /* ─── Icon picker modal ───────────────────────────────── */
 
-function IconPickerModal({ current, onSelect, onClose }: {
-  current: string; onSelect: (key: string) => void; onClose: () => void;
+function IconPickerModal({ current, onSelect, onClose, dark }: {
+  current: string; onSelect: (key: string) => void; onClose: () => void; dark: boolean;
 }) {
   const [query, setQuery] = useState('');
   const results = searchIcons(query);
@@ -203,19 +203,22 @@ function IconPickerModal({ current, onSelect, onClose }: {
   return (
     <div className="fixed inset-0 z-60 flex items-end justify-center px-4 pb-6 sm:items-center">
       <button type="button" onClick={onClose} className="absolute inset-0 bg-black/85 backdrop-blur-sm" aria-label="Close icon picker" />
-      <div className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.9)]" style={{ maxHeight: '80vh' }}>
+      <div
+        className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.9)]"
+        style={{ maxHeight: '80vh', background: dark ? '#141414' : '#ffffff', border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)' }}
+      >
         <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.22), transparent)` }} />
-        <div className="flex items-center justify-between gap-3 border-b border-white/6 px-5 py-4">
-          <h3 className="text-sm font-semibold text-white">Pick an Icon</h3>
-          <button type="button" onClick={onClose} className="text-white/35 transition-colors hover:text-white/65">
+        <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: dark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)' }}>
+          <h3 className="text-sm font-semibold" style={{ color: dark ? '#ffffff' : '#1e293b' }}>Pick an Icon</h3>
+          <button type="button" onClick={onClose} style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.40)' }} className="transition-colors">
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
         </div>
-        <div className="border-b border-white/5 px-5 py-3">
+        <div className="px-5 py-3" style={{ borderBottom: dark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.06)' }}>
           <div className="relative">
-            <svg viewBox="0 0 24 24" fill="none" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.35)' }} aria-hidden="true">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" />
               <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
@@ -223,14 +226,17 @@ function IconPickerModal({ current, onSelect, onClose }: {
               autoFocus type="text" value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search icons…"
-              className="h-10 w-full rounded-xl border border-white/8 bg-[#1e1e1e]/80 pl-10 pr-4 text-sm text-white placeholder:text-white/25 outline-none transition-all focus:border-[#F5EDD5]/25 focus:ring-1 focus:ring-[#F5EDD5]/12"
+              className="h-10 w-full rounded-xl pl-10 pr-4 text-sm outline-none transition-all focus:ring-1"
+              style={dark
+                ? { background: 'rgba(30,30,30,0.80)', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff', caretColor: SANDY }
+                : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)', color: '#1e293b' }}
             />
           </div>
-          <p className="mt-1.5 text-[10px] text-white/25">{results.length} icon{results.length !== 1 ? 's' : ''} found</p>
+          <p className="mt-1.5 text-[10px]" style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(30,41,59,0.40)' }}>{results.length} icon{results.length !== 1 ? 's' : ''} found</p>
         </div>
         <div className="overflow-y-auto p-4">
           {results.length === 0 ? (
-            <p className="py-6 text-center text-sm text-white/30">No icons match &ldquo;{query}&rdquo;</p>
+            <p className="py-6 text-center text-sm" style={{ color: dark ? 'rgba(255,255,255,0.30)' : 'rgba(30,41,59,0.40)' }}>No icons match &ldquo;{query}&rdquo;</p>
           ) : (
             <div className="grid grid-cols-5 gap-2">
               {results.map((icon) => {
@@ -243,7 +249,9 @@ function IconPickerModal({ current, onSelect, onClose }: {
                     className="group flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all duration-150"
                     style={isSelected
                       ? { borderColor: `rgba(${SANDY_RGB},0.45)`, background: `rgba(${SANDY_RGB},0.12)`, color: SANDY }
-                      : { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.45)' }
+                      : dark
+                        ? { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.45)' }
+                        : { borderColor: 'rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.55)' }
                     }
                   >
                     <AmenityIconSvg iconKey={icon.key} className="h-5 w-5 flex-none" />
@@ -1057,7 +1065,7 @@ function PropertyInfoView({
           className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 disabled:opacity-50"
           style={dark
             ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
-            : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
+            : { background: '#111111', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
         >
           {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Changes'}
         </button>
@@ -1260,7 +1268,7 @@ function AmenitiesView({
               />
               <button type="button" disabled={!roomInput.trim() || rooms.includes(roomInput.trim())} onClick={() => { addRoom(roomInput); setRoomInput(''); }}
                 className="inline-flex h-9 items-center justify-center rounded-xl px-3 text-xs font-semibold transition-all disabled:opacity-40"
-                style={dark ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` } : { background: 'rgba(15,23,42,0.88)', color: '#fff' }}>
+                style={dark ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` } : { background: '#111111', color: '#fff' }}>
                 Add
               </button>
             </div>
@@ -1428,7 +1436,7 @@ function AmenitiesView({
           className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 disabled:opacity-50"
           style={dark
             ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
-            : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
+            : { background: '#111111', color: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.14)' }}
         >
           {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Changes'}
         </button>
@@ -1476,6 +1484,7 @@ function AmenitiesView({
       {/* Icon picker */}
       {iconPickerFor ? (
         <IconPickerModal
+          dark={dark}
           current={iconPickerFor === 'new' ? newIcon : (windows.find((w) => w.id === iconPickerFor)?.icon ?? DEFAULT_ICON_KEY)}
           onSelect={(key) => { if (iconPickerFor === 'new') setNewIcon(key); else setWindowIcon(iconPickerFor, key); }}
           onClose={() => setIconPickerFor(null)}
@@ -1551,7 +1560,7 @@ function AmenitiesView({
                 className="inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold transition-all disabled:opacity-50"
                 style={dark
                   ? { background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, border: `1px solid rgba(${SANDY_RGB},0.20)` }
-                  : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.14)' }}
+                  : { background: '#111111', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.14)' }}
               >{addSaving ? 'Creating…' : 'Add Window'}</button>
             </div>
           </div>
@@ -1609,7 +1618,7 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
         {regenSuccess ? (
           <p className="mt-3 text-center text-sm font-semibold text-amber-400">New QR code generated ✓</p>
         ) : (
-          <p className="mt-3 max-w-65 text-center text-sm leading-relaxed text-white/85">
+          <p className="mt-3 max-w-65 text-center text-sm leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.85)' : 'rgba(30,41,59,0.70)' }}>
             Place this QR code at the property — tenants scan to access WiFi, house rules, and more.
           </p>
         )}
@@ -1630,7 +1639,10 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
             href={`/manager/properties/${encodeURIComponent(slug)}/qr`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white/85"
+            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border text-sm font-semibold transition-all duration-200"
+            style={dark
+              ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.60)' }
+              : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)', color: 'rgba(30,41,59,0.65)' }}
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
               <path d="M6 9V2h12v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1647,17 +1659,20 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
             style={{ background: 'rgba(0,0,0,0.72)' }}
             onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
           >
-            <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+            <div
+              className="w-full max-w-sm overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+              style={dark ? { background: '#141414', border: '1px solid rgba(255,255,255,0.10)' } : { background: '#ffffff', border: '1px solid rgba(0,0,0,0.09)' }}
+            >
               <div className="h-1 w-full bg-amber-400" />
               <div className="p-6">
-                <h2 className="text-base font-bold tracking-tight text-white">Regenerate QR Code?</h2>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">
+                <h2 className="text-base font-bold tracking-tight" style={{ color: dark ? '#ffffff' : '#1e293b' }}>Regenerate QR Code?</h2>
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(30,41,59,0.60)' }}>
                   This creates a new unique link for this property.{' '}
-                  <span className="font-semibold text-white/75">Any previously printed QR codes will stop working</span>{' '}
+                  <span className="font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.75)' : '#1e293b' }}>Any previously printed QR codes will stop working</span>{' '}
                   and will need to be reprinted.
                 </p>
                 <div className="mt-5 space-y-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(30,41,59,0.45)' }}>
                     Type <span className="text-amber-400">Generate</span> to confirm
                   </p>
                   <input
@@ -1665,7 +1680,10 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
                     onChange={(e) => setConfirmText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') void handleRegenerate(); }}
                     placeholder="Generate"
-                    className="h-11 w-full rounded-xl border border-white/10 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all placeholder:text-white/20 focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/25"
+                    className="h-11 w-full rounded-xl px-4 text-sm outline-none transition-all focus:ring-1 focus:ring-amber-400/25"
+                    style={dark
+                      ? { background: 'rgba(30,30,30,0.80)', border: '1px solid rgba(255,255,255,0.10)', color: '#ffffff' }
+                      : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)', color: '#1e293b' }}
                   />
                 </div>
                 {regenError ? <p className="mt-3 text-xs text-red-400">{regenError}</p> : null}
@@ -1679,7 +1697,10 @@ function QRView({ slug: initialSlug, dark }: { slug: string; dark: boolean }) {
                   </button>
                   <button
                     type="button" onClick={() => setShowModal(false)}
-                    className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/75"
+                    className="h-10 rounded-xl border px-4 text-sm font-semibold transition"
+                    style={dark
+                      ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.50)' }
+                      : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.55)' }}
                   >
                     Cancel
                   </button>
@@ -1749,7 +1770,6 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const photoFileRef = useRef<HTMLInputElement>(null);
 
   // Touch swipe state for photo carousel
   const [swipeDragStart, setSwipeDragStart] = useState<number | null>(null);
@@ -1773,13 +1793,13 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   }, [sub]);
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const fileArray = Array.from(e.target.files ?? []);
     e.target.value = '';
+    if (fileArray.length === 0) return;
     setUploadingPhoto(true);
     setPhotoError(null);
     try {
-      for (const file of Array.from(files)) {
+      for (const file of fileArray) {
         const form = new FormData();
         form.append('file', file);
         const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/photos`, {
@@ -1866,13 +1886,13 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
     const current = photos[photoIdx];
     return (
       <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
-        <h2 className="lux-title mb-6 w-full text-3xl font-light tracking-wide" style={{ color: '#ffffff' }}>
+        <h2 className="lux-title mb-6 w-full text-3xl font-light tracking-wide" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
           Property Photos
         </h2>
 
         {photosLoading ? (
           <div className="flex items-center justify-center pt-10">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2" style={{ borderColor: dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.12)', borderTopColor: dark ? 'rgba(255,255,255,0.70)' : 'rgba(0,0,0,0.50)' }} />
           </div>
         ) : photos.length === 0 ? (
           <div className="flex w-full flex-col items-center gap-4 pt-6">
@@ -1993,29 +2013,30 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
 
         {photoError && <p className="mt-3 text-xs text-red-400">{photoError}</p>}
 
-        {/* Upload */}
-        <input
-          ref={photoFileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => void handlePhotoUpload(e)}
-        />
-        <button
-          type="button"
-          onClick={() => photoFileRef.current?.click()}
-          disabled={uploadingPhoto}
-          className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition-all duration-200 disabled:opacity-50"
-          style={dark
-            ? { borderColor: `rgba(${SANDY_RGB},0.30)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }
-            : { border: '1px solid rgba(0,0,0,0.12)', background: 'rgba(15,23,42,0.88)', color: '#fff' }}
+        {/* Upload — input overlays the label so clicks always hit the input directly */}
+        <label
+          className="relative mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold"
+          style={{
+            cursor: uploadingPhoto ? 'not-allowed' : 'pointer',
+            opacity: uploadingPhoto ? 0.5 : 1,
+            ...(dark
+              ? { border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }
+              : { border: '1px solid rgba(0,0,0,0.12)', background: '#111111', color: '#fff' }),
+          }}
         >
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            disabled={uploadingPhoto}
+            onChange={(e) => void handlePhotoUpload(e)}
+            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+          />
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           {uploadingPhoto ? 'Uploading…' : 'Upload Photos'}
-        </button>
+        </label>
       </div>
     );
   }
@@ -2024,7 +2045,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
     const whiteAlpha = currentBg === 'bg4' ? 0.60 : 0.55;
     return (
       <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
-        <h2 className="lux-title mb-5 w-full text-3xl font-light tracking-wide" style={{ color: '#ffffff' }}>
+        <h2 className="lux-title mb-5 w-full text-3xl font-light tracking-wide" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
           Choose a Theme
         </h2>
 
@@ -2187,7 +2208,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
             ? { background: 'rgba(52,211,153,0.15)', color: 'rgb(52,211,153)' }
             : dark
               ? { borderColor: `rgba(${SANDY_RGB},0.30)`, border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY, boxShadow: `0 0 20px rgba(${SANDY_RGB},0.10)` }
-              : { border: '1px solid rgba(0,0,0,0.12)', background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.10)' }
+              : { border: '1px solid rgba(0,0,0,0.12)', background: '#111111', color: '#fff', boxShadow: '0 0 12px rgba(0,0,0,0.10)' }
           }
         >
           {themeSaving ? 'Applying…' : themeSaved ? 'Theme Applied ✓' : `Apply ${palette.label} Theme`}
@@ -2200,7 +2221,9 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           className="mt-2.5 h-10 w-full rounded-2xl text-sm font-medium transition-all duration-200 disabled:opacity-40"
           style={resetDone
             ? { background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgb(52,211,153)' }
-            : { background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.38)', color: 'rgba(255,255,255,0.85)' }
+            : dark
+              ? { background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.38)', color: 'rgba(255,255,255,0.85)' }
+              : { background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.14)', color: 'rgba(30,41,59,0.65)' }
           }
         >
           {resetSaving ? 'Resetting…' : resetDone ? 'Reset to Default ✓' : 'Reset to Default'}
@@ -2218,7 +2241,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const settingTitle = dark ? '#ffffff' : '#1e293b';
   const settingSub = dark ? 'rgba(255,255,255,0.65)' : 'rgba(30,41,59,0.50)';
   const dividerColor = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)';
-  const resetDesc = 'rgba(255,255,255,0.55)';
+  const resetDesc = dark ? 'rgba(255,255,255,0.55)' : 'rgba(30,41,59,0.50)';
   const swatchBorder = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
 
   return (
@@ -2278,7 +2301,7 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
             className={`h-10 w-full rounded-xl border text-sm font-semibold transition-all duration-200 disabled:opacity-40 ${resetDone ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-400' : ''}`}
             style={!resetDone ? (dark
               ? { borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)' }
-              : { borderColor: 'rgba(255,255,255,0.30)', background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.70)' }
+              : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.45)' }
             ) : undefined}
           >
             {resetSaving ? 'Resetting…' : resetDone ? 'Reset ✓' : 'Reset to Defaults'}
@@ -2407,7 +2430,7 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
   if (loading) {
     return (
       <div className="flex items-center justify-center pt-20">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2" style={{ borderColor: dark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.12)', borderTopColor: dark ? 'rgba(255,255,255,0.70)' : 'rgba(0,0,0,0.50)' }} />
       </div>
     );
   }
@@ -2418,7 +2441,7 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
         <p className="text-sm text-red-400">{loadError}</p>
       ) : null}
 
-      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+      <p className="text-xs leading-relaxed" style={{ color: dark ? 'rgba(255,255,255,0.75)' : 'rgba(30,41,59,0.60)' }}>
         Assign a phone or email to each work order type so tenant requests are routed to the right contact. Tenants only see the category name — your contact info stays private.
       </p>
 
@@ -2448,7 +2471,7 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                         className="h-7 rounded-lg px-3 text-xs font-semibold transition-all disabled:opacity-50"
                         style={dark
                           ? { background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', color: '#ffffff' }
-                          : { background: 'rgba(15,23,42,0.88)', border: '1px solid transparent', color: '#fff' }}
+                          : { background: '#111111', border: '1px solid transparent', color: '#fff' }}
                       >
                         {saving ? 'Saving…' : 'Save'}
                       </button>
@@ -2739,7 +2762,7 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
             style={tab === t.id
               ? dark
                 ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 14px rgba(245,237,213,0.18)' }
-                : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.14)' }
+                : { background: '#111111', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.14)' }
               : { color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(44,44,44,0.50)' }}
           >
             {t.label}
@@ -2930,7 +2953,7 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
                 className="flex items-center justify-center gap-2 h-11 w-full rounded-xl text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
                 style={dark
                   ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: '#3d2a0a', boxShadow: '0 0 20px rgba(245,237,213,0.22)' }
-                  : { background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 0 16px rgba(0,0,0,0.14)' }}
+                  : { background: '#111111', color: '#fff', boxShadow: '0 0 16px rgba(0,0,0,0.14)' }}
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
                   <path d="M22 2L11 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -3132,30 +3155,37 @@ export default function ManagerPropertyEditorClient({
     : ''
   ) : '';
 
-  const toggleStyle: React.CSSProperties = {
+  const toggleStyle: React.CSSProperties = dark ? {
     borderColor: 'rgba(255,255,255,0.25)',
     background: 'rgba(255,255,255,0.10)',
     color: 'rgba(255,255,255,0.85)',
+  } : {
+    borderColor: 'rgba(0,0,0,0.12)',
+    background: 'rgba(0,0,0,0.05)',
+    color: '#475569',
   };
 
   const completion = calcCompletion(core, windows, prefetchedWOCategories);
   const missingItems = getMissingItems(core, windows, prefetchedWOCategories);
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative min-h-screen dark:text-white text-slate-800">
       {/* Fixed background layers — driven by CSS dark class to avoid flash */}
       <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
-      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/White.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
       {/* View-specific glow overlay — React-state driven (subtle, no flash concern) */}
       {dark && glowGradient && (
         <div className="fixed inset-0 -z-10 pointer-events-none transition-opacity duration-500" style={{ backgroundImage: glowGradient.replace(/,$/, ''), backgroundSize: 'cover', backgroundPosition: 'center top' }} />
       )}
 
       {/* Header */}
-      <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: 'rgba(255,255,255,0.12)', background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.10)', backdropFilter: 'blur(16px)' }}>
+      <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)', background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.80)', backdropFilter: 'blur(16px)' }}>
         <button
           type="button" onClick={goBack}
-          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-white/20 bg-white/12 text-white/75 transition-all hover:bg-white/20 hover:text-white"
+          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border transition-all"
+          style={dark
+            ? { borderColor: 'rgba(255,255,255,0.20)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)' }
+            : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.05)', color: '#475569' }}
           aria-label={view === 'grid' ? 'Back to dashboard' : 'Back to menu'}
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
@@ -3164,11 +3194,9 @@ export default function ManagerPropertyEditorClient({
         </button>
 
         <div className="flex-1 min-w-0">
-          {view !== 'grid' ? (
-            <h1 className="truncate text-sm font-semibold text-white/80">{VIEW_TITLES[view]}</h1>
-          ) : (
-            <h1 className="truncate text-sm font-semibold text-white/80">{core.PropertyName || 'Property'}</h1>
-          )}
+          <h1 className="truncate text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>
+            {view !== 'grid' ? VIEW_TITLES[view] : (core.PropertyName || 'Property')}
+          </h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -3187,7 +3215,9 @@ export default function ManagerPropertyEditorClient({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-all"
-              style={{ borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.90)' }}
+              style={dark
+                ? { borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.90)' }
+                : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.06)', color: '#1e293b' }}
             >
               View live
             </a>

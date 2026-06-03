@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
 import { createProperty, slugExists, getPropertiesByManagerId } from "@/lib/properties";
 import { createServiceClient } from "@/lib/supabase";
+import { applyTemplateToProperty } from "@/lib/propertyTemplates";
 
 export async function POST(req: Request) {
   const jar = await cookies();
@@ -13,8 +14,9 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => null)) as { name?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { name?: unknown; templateId?: unknown } | null;
   const name = typeof body?.name === "string" ? body.name.trim() : "";
+  const templateId = typeof body?.templateId === "string" ? body.templateId.trim() : "blank";
 
   if (!name) {
     return Response.json({ error: "Property name is required" }, { status: 400 });
@@ -43,6 +45,14 @@ export async function POST(req: Request) {
   }
 
   await createProperty(session.userId, name, slug);
+
+  if (templateId && templateId !== "blank") {
+    try {
+      await applyTemplateToProperty(slug, templateId);
+    } catch {
+      // Template application failure is non-fatal — property still created
+    }
+  }
 
   return Response.json({ slug }, { status: 200 });
 }

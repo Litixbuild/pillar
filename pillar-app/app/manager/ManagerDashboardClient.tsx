@@ -1,9 +1,14 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Property } from '@/lib/types';
+import type { DashboardStats } from '@/lib/propertyEvents';
+import ManagerBottomNav from './ManagerBottomNav';
+import DuplicatePropertyModal from './DuplicatePropertyModal';
+import HomeStats from './HomeStats';
+import { PROPERTY_TEMPLATES } from '@/lib/propertyTemplates';
 
 const SANDY = '#F5EDD5';
 const SANDY_RGB = '245,237,213';
@@ -43,6 +48,7 @@ export default function ManagerDashboardClient({
   referralDiscountCents,
   activeReferralCount,
   propertySlots,
+  dashboardStats,
 }: {
   properties: Property[];
   isSubscribed: boolean;
@@ -53,13 +59,17 @@ export default function ManagerDashboardClient({
   referralDiscountCents: number;
   activeReferralCount: number;
   propertySlots: number;
+  dashboardStats: DashboardStats;
 }) {
   const [dark, setDark] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [createStep, setCreateStep] = useState<'name' | 'template'>('name');
+  const [selectedTemplate, setSelectedTemplate] = useState('blank');
   const [propertyName, setPropertyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Property | null>(null);
+  const [duplicateTarget, setDuplicateTarget] = useState<Property | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -109,7 +119,7 @@ export default function ManagerDashboardClient({
     const res = await fetch('/api/manager/properties', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, templateId: selectedTemplate }),
     });
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -138,11 +148,11 @@ export default function ManagerDashboardClient({
     setBillingLoading(true);
     setBillingError(null);
     const res = await fetch('/api/manager/billing/portal', { method: 'POST' });
-    if (res.ok) {
-      const { url } = (await res.json()) as { url: string };
-      window.location.href = url;
+    const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+    if (res.ok && data.url) {
+      window.location.href = data.url;
     } else {
-      setBillingError('Unable to open billing portal. Please try again or contact support.');
+      setBillingError(data.error || 'Unable to open billing portal. Please try again or contact support.');
       setBillingLoading(false);
     }
   }
@@ -172,62 +182,90 @@ export default function ManagerDashboardClient({
 
   const card = dark
     ? { background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
-    : { background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.07)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' };
+    : { background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(100,80,40,0.12)', backdropFilter: 'blur(20px)', boxShadow: '0 4px 20px rgba(100,80,40,0.08)' };
 
   const cardHeader = dark
     ? { borderBottom: '1px solid rgba(255,255,255,0.07)' }
-    : { borderBottom: '1px solid rgba(0,0,0,0.06)' };
+    : { borderBottom: '1px solid rgba(100,80,40,0.09)' };
 
-  const labelColor = dark ? 'rgba(255,255,255,0.50)' : '#64748b';
-  const mutedColor = dark ? 'rgba(255,255,255,0.55)' : 'rgba(30,41,59,0.55)';
-  const headingColor = '#ffffff';
+  const labelColor = dark ? 'rgba(255,255,255,0.50)' : 'rgba(100,80,40,0.60)';
+  const mutedColor = dark ? 'rgba(255,255,255,0.55)' : 'rgba(100,80,40,0.55)';
+  const headingColor = dark ? '#ffffff' : '#1e293b';
 
-  const badgeBg = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  const badgeBorder = dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.10)';
-  const badgeText = dark ? 'rgba(255,255,255,0.60)' : '#64748b';
+  const badgeBg = dark ? 'rgba(255,255,255,0.07)' : 'rgba(100,80,40,0.06)';
+  const badgeBorder = dark ? 'rgba(255,255,255,0.14)' : 'rgba(100,80,40,0.14)';
+  const badgeText = dark ? 'rgba(255,255,255,0.60)' : 'rgba(100,80,40,0.60)';
 
   const propCardStyle = dark
     ? { background: 'rgba(0,0,0,0.40)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)' }
-    : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' };
+    : { background: 'rgba(100,80,40,0.04)', border: '1px solid rgba(100,80,40,0.10)' };
 
   const propNameColor = dark ? 'rgba(255,255,255,0.90)' : '#1e293b';
 
   const addBtnStyle = dark
     ? { borderColor: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.08)', color: '#ffffff', boxShadow: '0 0 14px rgba(255,255,255,0.18), 0 0 4px rgba(255,255,255,0.10)' }
-    : { borderColor: 'rgba(0,0,0,0.16)', background: 'rgba(15,23,42,0.88)', color: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.14)' };
+    : { borderColor: 'rgba(0,0,0,0.16)', background: '#111111', color: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.14)' };
 
   const viewLinkStyle = dark
     ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.85)' }
-    : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.06)', color: '#1e293b' };
+    : { borderColor: 'rgba(100,80,40,0.20)', background: 'rgba(100,80,40,0.06)', color: 'rgba(61,42,10,0.85)' };
 
   const editLinkStyle = dark
     ? { borderColor: 'rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.55)' }
-    : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.65)' };
+    : { borderColor: 'rgba(100,80,40,0.12)', background: 'rgba(100,80,40,0.03)', color: 'rgba(100,80,40,0.65)' };
 
   const signOutStyle = dark
     ? { borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.80)' }
-    : { borderColor: 'rgba(0,0,0,0.14)', background: 'rgba(15,23,42,0.88)', color: '#fff' };
+    : { borderColor: 'rgba(0,0,0,0.14)', background: '#111111', color: '#fff' };
 
   const toggleStyle = dark
     ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.80)' }
-    : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(255,255,255,0.80)', color: '#475569', backdropFilter: 'blur(8px)' };
+    : { borderColor: 'rgba(100,80,40,0.18)', background: 'rgba(255,255,255,0.80)', color: 'rgba(100,80,40,0.70)', backdropFilter: 'blur(8px)' };
+
+  /* ── Modal theme helpers ── */
+  const modalOverlayBg = dark ? 'rgba(5,10,16,0.88)' : 'rgba(0,0,0,0.40)';
+  const modalCardStyle = dark
+    ? { background: '#141414', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 80px rgba(0,0,0,0.7)' }
+    : { background: 'rgba(255,252,245,0.98)', border: '1px solid rgba(100,80,40,0.14)', boxShadow: '0 24px 80px rgba(100,80,40,0.14)' };
+  const modalGradientLine = dark
+    ? `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.25), transparent)`
+    : `linear-gradient(to right, transparent, rgba(212,175,106,0.50), transparent)`;
+  const modalHeadingCls = dark ? 'text-white' : 'text-[#1a1a1a]';
+  const modalSubtextColor = dark ? 'rgba(255,255,255,0.40)' : 'rgba(100,80,40,0.55)';
+  const modalLabelClr = dark ? `rgba(${SANDY_RGB},0.65)` : 'rgba(100,80,40,0.65)';
+  const modalInputCls = dark
+    ? 'h-11 w-full rounded-xl border border-white/8 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all placeholder:text-white/20 focus:border-white/20 focus:ring-1 focus:ring-white/10'
+    : 'h-11 w-full rounded-xl border border-[rgba(100,80,40,0.15)] bg-[rgba(100,80,40,0.04)] px-4 text-sm text-[#1a1a1a] outline-none transition-all placeholder:text-[rgba(100,80,40,0.30)] focus:border-[rgba(100,80,40,0.28)]';
+  const modalPrimaryBtnStyle = dark
+    ? { background: '#111111', boxShadow: '0 0 20px rgba(0,0,0,0.30)', color: '#fff' }
+    : { background: '#111111', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', color: '#fff' };
+  const modalSecondaryBtnCls = dark
+    ? 'h-10 rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 text-sm font-semibold text-white/50 transition-all duration-200 hover:bg-white/[0.07] hover:text-white/75'
+    : 'h-10 rounded-xl border border-[rgba(100,80,40,0.14)] bg-[rgba(100,80,40,0.04)] px-4 text-sm font-semibold text-[rgba(100,80,40,0.60)] transition-all duration-200 hover:bg-[rgba(100,80,40,0.08)]';
+  const tplCardStyle = (selected: boolean) => selected
+    ? (dark ? { borderColor: `rgba(${SANDY_RGB},0.35)`, background: `rgba(${SANDY_RGB},0.08)` } : { borderColor: 'rgba(100,80,40,0.35)', background: 'rgba(100,80,40,0.07)' })
+    : (dark ? { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' } : { borderColor: 'rgba(100,80,40,0.10)', background: 'rgba(100,80,40,0.02)' });
+  const tplNameColor = dark ? 'rgba(255,255,255,0.90)' : '#1e293b';
+  const tplDescColor = dark ? 'rgba(255,255,255,0.40)' : 'rgba(100,80,40,0.55)';
+  const tplPreviewColor = dark ? 'rgba(255,255,255,0.25)' : 'rgba(100,80,40,0.40)';
+  const tplCheckColor = dark ? `rgba(${SANDY_RGB},0.7)` : '#7A5A1E';
 
   return (
     <div className="relative min-h-screen">
       {/* Fixed background layers */}
       <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: 'url(/images/bg3.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
-      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+      <div className="fixed inset-0 -z-10 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/White.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
 
-      <div className="relative mx-auto max-w-2xl px-5 pb-24 pt-8 sm:px-8">
+      <div className="relative mx-auto max-w-2xl px-5 pb-32 pt-8 sm:px-8">
 
-        {/* Header */}
-        <div className="mb-8 flex items-start justify-between">
+        {/* Header row — greeting left, controls right */}
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: dark ? 'rgba(255,255,255,0.50)' : 'rgba(100,80,40,0.55)' }}>
               Manager Portal
             </p>
             <h1 className="mt-1 text-[1.75rem] font-light leading-tight tracking-tight" style={{ color: headingColor }}>
-              Hello, {managerName}
+              Hey, {managerName.split(' ')[0] || managerName}
             </h1>
           </div>
           <div className="flex items-center gap-2 pt-1">
@@ -253,9 +291,9 @@ export default function ManagerDashboardClient({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <HomeStats stats={dashboardStats} managerName={managerName} />
 
-          {/* Properties card */}
+        <div className="hidden">
           <div className="overflow-hidden rounded-2xl" style={card}>
             <div className="flex items-center justify-between px-6 py-4" style={cardHeader}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
@@ -345,6 +383,16 @@ export default function ManagerDashboardClient({
                               Edit property
                             </Link>
                           ) : null}
+                          {slug ? (
+                            <button
+                              type="button"
+                              onClick={() => setDuplicateTarget(p)}
+                              className="inline-flex h-8 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition-all duration-200"
+                              style={editLinkStyle}
+                            >
+                              Duplicate
+                            </button>
+                          ) : null}
                           {!slug ? <span className="text-xs text-rose-400/55">Missing slug — add one in Supabase</span> : null}
                         </div>
                       </div>
@@ -395,7 +443,7 @@ export default function ManagerDashboardClient({
                     className="inline-flex h-9 items-center rounded-xl border px-4 text-xs font-semibold transition-all duration-200 disabled:opacity-40"
                     style={dark
                       ? { borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)' }
-                      : { borderColor: 'rgba(0,0,0,0.12)', background: 'rgba(0,0,0,0.04)', color: '#1e293b' }}
+                      : { borderColor: 'rgba(100,80,40,0.18)', background: 'rgba(100,80,40,0.05)', color: 'rgba(61,42,10,0.85)' }}
                   >
                     {billingLoading ? 'Opening…' : 'Manage billing →'}
                   </button>
@@ -473,7 +521,7 @@ export default function ManagerDashboardClient({
                     className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200"
                     style={dark
                       ? { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.12)' }
-                      : { background: 'rgba(15,23,42,0.88)', color: '#fff' }}
+                      : { background: '#111111', color: '#fff' }}
                   >
                     {referralCopied ? 'Copied!' : 'Copy'}
                   </button>
@@ -497,7 +545,7 @@ export default function ManagerDashboardClient({
             </div>
           ) : null}
 
-        </div>
+        </div>{/* end hidden */}
 
         {/* Sign out */}
         <div className="mt-8 flex flex-col items-center gap-2">
@@ -513,6 +561,8 @@ export default function ManagerDashboardClient({
           <Image src="/images/pillarlogowhite.png" alt="Pillar" width={48} height={32} className="mt-2 opacity-20" />
         </div>
       </div>
+
+      <ManagerBottomNav />
 
       {/* Delete modal — always dark */}
       {deleteTarget ? (
@@ -540,32 +590,70 @@ export default function ManagerDashboardClient({
         </div>
       ) : null}
 
-      {/* Add Property modal — always dark */}
+      {/* Add Property modal — two-step, light/dark aware */}
       {showModal ? (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center px-5" style={{ background: 'rgba(5,10,16,0.82)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/8 bg-[#141414] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
-            <div className="h-px w-full" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.25), transparent)` }} />
+        <div className="fixed inset-0 z-9999 flex items-center justify-center px-5" style={{ background: modalOverlayBg }} onClick={(e) => { if (e.target === e.currentTarget && !isCreating) { setShowModal(false); setCreateStep('name'); setSelectedTemplate('blank'); } }}>
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl" style={modalCardStyle}>
+            <div className="h-px w-full" style={{ background: modalGradientLine }} />
             <div className="p-6">
-              <h2 className="text-base font-semibold tracking-tight text-white">New Property</h2>
-              <p className="mt-1 text-xs text-white/40">Enter a name to get started. You can change everything after.</p>
-              <div className="mt-5 space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: `rgba(${SANDY_RGB},0.65)` }}>Property Name</p>
-                <input autoFocus type="text" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate(); }} placeholder="e.g. Oceanfront Villa" className="h-11 w-full rounded-xl border border-white/8 bg-[#1e1e1e]/80 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/22 focus:border-white/20 focus:ring-1 focus:ring-white/10" />
-              </div>
-              {createError ? <p className="mt-3 text-xs text-rose-400/80">{createError}</p> : null}
-              <div className="mt-5 flex gap-2">
-                <button type="button" onClick={() => void handleCreate()} disabled={!propertyName.trim() || isCreating}
-                  className="h-10 flex-1 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50"
-                  style={{ background: 'rgba(15,23,42,0.92)', boxShadow: '0 0 20px rgba(0,0,0,0.30)' }}>
-                  {isCreating ? 'Creating…' : 'Create Property'}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="h-10 rounded-xl border border-white/[0.07] bg-white/3 px-4 text-sm font-semibold text-white/50 transition-all duration-200 hover:bg-white/[0.07] hover:text-white/75">
-                  Cancel
-                </button>
-              </div>
+
+              {createStep === 'name' ? (
+                <>
+                  <h2 className={`text-base font-semibold tracking-tight ${modalHeadingCls}`}>New Property</h2>
+                  <p className="mt-1 text-xs" style={{ color: modalSubtextColor }}>Enter a name to get started. You can change everything after.</p>
+                  <div className="mt-5 space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: modalLabelClr }}>Property Name</p>
+                    <input autoFocus type="text" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && propertyName.trim()) setCreateStep('template'); }} placeholder="e.g. Oceanfront Villa" className={modalInputCls} />
+                  </div>
+                  <div className="mt-5 flex gap-2">
+                    <button type="button" onClick={() => { if (propertyName.trim()) setCreateStep('template'); }} disabled={!propertyName.trim()} className="h-10 flex-1 rounded-xl text-sm font-semibold transition-all duration-300 disabled:opacity-50" style={modalPrimaryBtnStyle}>
+                      Continue →
+                    </button>
+                    <button type="button" onClick={() => { setShowModal(false); setCreateStep('name'); setSelectedTemplate('blank'); }} className={modalSecondaryBtnCls}>
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className={`text-base font-semibold tracking-tight ${modalHeadingCls}`}>Choose a Template</h2>
+                  <p className="mt-1 text-xs" style={{ color: modalSubtextColor }}>Pick a starting point. You can add, edit, or remove anything after.</p>
+                  <div className="mt-4 max-h-72 space-y-2 overflow-y-auto pr-1">
+                    {PROPERTY_TEMPLATES.map((tpl) => (
+                      <button key={tpl.id} type="button" onClick={() => setSelectedTemplate(tpl.id)} className="flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-150" style={tplCardStyle(selectedTemplate === tpl.id)}>
+                        <span className="mt-0.5 text-xl leading-none">{tpl.emoji}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold" style={{ color: tplNameColor }}>{tpl.name}</p>
+                          <p className="text-[11px]" style={{ color: tplDescColor }}>{tpl.description}</p>
+                          {tpl.preview.length > 0 && <p className="mt-0.5 text-[10px]" style={{ color: tplPreviewColor }}>{tpl.preview.join(' Â· ')}</p>}
+                        </div>
+                        {selectedTemplate === tpl.id && <span className="ml-auto mt-0.5 flex-none text-xs" style={{ color: tplCheckColor }}>âœ“</span>}
+                      </button>
+                    ))}
+                  </div>
+                  {createError ? <p className="mt-3 text-xs text-rose-400/80">{createError}</p> : null}
+                  <div className="mt-4 flex gap-2">
+                    <button type="button" onClick={() => void handleCreate()} disabled={isCreating} className="h-10 flex-1 rounded-xl text-sm font-semibold transition-all duration-300 disabled:opacity-50" style={modalPrimaryBtnStyle}>
+                      {isCreating ? 'Creating…' : 'Create Property'}
+                    </button>
+                    <button type="button" onClick={() => setCreateStep('name')} disabled={isCreating} className={modalSecondaryBtnCls}>
+                      ← Back
+                    </button>
+                  </div>
+                </>
+              )}
+
             </div>
           </div>
         </div>
+      ) : null}
+
+      {duplicateTarget ? (
+        <DuplicatePropertyModal
+          dark={dark}
+          sourceProperty={duplicateTarget}
+          onClose={() => setDuplicateTarget(null)}
+        />
       ) : null}
     </div>
   );

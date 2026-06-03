@@ -212,6 +212,7 @@ function takeUniquePlaces(
 }
 
 import { getPropertyBySlug } from "@/lib/properties";
+import { logPropertyEvent } from "@/lib/propertyEvents";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1096,6 +1097,9 @@ export async function POST(req: Request) {
 
     const property = await getPropertyBySlug(slug);
     if (!property) return Response.json({ error: "Property not found" }, { status: 404 });
+
+    // Fire-and-forget — each message = one potential call the manager didn't have to take
+    void logPropertyEvent(slug, "concierge_message");
 
     const near = `${property.PropertyZipCode || ""} ${property.PropertyAddress || ""}`.trim();
     const geminiKey = requireGeminiApiKey();

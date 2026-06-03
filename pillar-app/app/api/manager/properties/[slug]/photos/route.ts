@@ -15,6 +15,14 @@ async function requireSession() {
   return token ? verifyManagerSession(token) : null;
 }
 
+async function ensureBucket(supabase: ReturnType<typeof createServiceClient>) {
+  const { error: getError } = await supabase.storage.getBucket(BUCKET);
+  if (!getError) return; // bucket exists
+  // Bucket doesn't exist — create it
+  const { error: createError } = await supabase.storage.createBucket(BUCKET, { public: true });
+  if (createError) throw new Error(`Could not create storage bucket: ${createError.message}`);
+}
+
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ slug: string }> }
@@ -51,25 +59,20 @@ export async function POST(
     if (!file) return Response.json({ error: 'Missing file' }, { status: 400 });
 
     const rawExt = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'jpg';
+    const contentType = file.type || `image/${rawExt === 'jpg' ? 'jpeg' : rawExt}`;
     const photoId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const path = `${session.userId}/${slug}/photos/${photoId}.${rawExt}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const supabase = createServiceClient();
 
-    // Upload file
-    let { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, buffer, { contentType: file.type, upsert: true });
+    // Ensure the bucket exists before uploading
+    await ensureBucket(supabase);
 
-    if (uploadError) {
-      // Ensure bucket exists and retry
-      await supabase.storage.updateBucket(BUCKET, { public: true, fileSizeLimit: null })
-        .catch(() => supabase.storage.createBucket(BUCKET, { public: true, fileSizeLimit: null }));
-      ({ error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, buffer, { contentType: file.type, upsert: true }));
-    }
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, buffer, { contentType, upsert: true });
+
     if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
@@ -79,6 +82,7 @@ export async function POST(
 
     return Response.json({ photo }, { status: 200 });
   } catch (e) {
+    console.error('[photos POST]', e);
     return Response.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -44,21 +44,24 @@ export default function ManagerSignupPage() {
     localStorage.setItem("pillar-theme", next ? "dark" : "light");
   }
 
-  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(255,255,255,0.80)";
+  const logoSrc = dark ? "/images/pillarlogowhite.png" : "/images/pillarlogoblack.png";
+  const backArrowColor = dark ? "rgba(245,237,213,0.50)" : "rgba(100,80,40,0.55)";
   const toggleStyle = dark
     ? { borderColor: "rgba(245,237,213,0.28)", background: "rgba(245,237,213,0.08)", color: SANDY }
-    : { borderColor: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.90)" };
+    : { borderColor: "rgba(100,80,40,0.20)", background: "rgba(255,255,255,0.80)", color: "rgba(100,80,40,0.70)" };
 
-  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(255,255,255,0.65)";
-  const headingColor = "#ffffff";
-  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(255,255,255,0.35)";
-  const signInColor = dark ? "rgba(245,237,213,0.55)" : "rgba(255,255,255,0.55)";
+  const labelColor = dark ? `rgba(${SANDY_RGB},0.65)` : "rgba(100,80,40,0.65)";
+  const headingColor = dark ? "#ffffff" : "#111111";
+  const dividerColor = dark ? "rgba(245,237,213,0.5)" : "rgba(100,80,40,0.25)";
+  const signInColor = dark ? "rgba(245,237,213,0.55)" : "rgba(100,80,40,0.55)";
 
-  const inputCls = "h-10 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/12";
+  const inputCls = dark
+    ? "h-10 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/30 focus:border-white/25 focus:ring-1 focus:ring-white/[0.12]"
+    : "h-10 w-full rounded-xl border border-[rgba(100,80,40,0.18)] bg-[rgba(100,80,40,0.04)] px-4 text-sm text-[#111111] outline-none transition-all duration-200 placeholder:text-[rgba(100,80,40,0.30)] focus:border-[rgba(100,80,40,0.35)]";
 
   const submitStyle = dark
     ? { background: `linear-gradient(to right, ${SANDY}, #e8d9b8)`, color: "#3d2a0a", boxShadow: "0 0 20px rgba(245,237,213,0.25)" }
-    : { background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
+    : { background: "#111111", color: "#fff", boxShadow: "0 2px 16px rgba(0,0,0,0.14)" };
 
   return (
     <div
@@ -66,7 +69,7 @@ export default function ManagerSignupPage() {
       style={{ minHeight: "100dvh" }}
     >
       <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 dark:opacity-100" style={{ backgroundImage: "url(/images/bg3.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
-      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/mainbackground.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
+      <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: "url(/images/White.png)", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
       {/* Back arrow — top left */}
       <Link
@@ -96,7 +99,7 @@ export default function ManagerSignupPage() {
 
         {/* Logo */}
         <Image
-          src="/images/pillarlogowhite.png"
+          src={logoSrc}
           alt="Pillar"
           width={300}
           height={200}
@@ -201,7 +204,7 @@ export default function ManagerSignupPage() {
 
           <div className="space-y-1.5">
             <label htmlFor="signup-confirm" className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>Confirm Password</label>
-            <input id="signup-confirm" name="confirmPassword" type="password" autoComplete="new-password" required placeholder="••••••••" className={inputCls} />
+            <input id="signup-confirm" name="confirmPassword" type="password" autoComplete="new-password" required placeholder="Min. 8 characters" className={inputCls} />
           </div>
 
           <button

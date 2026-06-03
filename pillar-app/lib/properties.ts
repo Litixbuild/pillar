@@ -320,4 +320,24 @@ export async function requirePropertyAccess(managerId: string, slug: string): Pr
   return !error && !!data;
 }
 
+export async function getPropertyAccessWithName(
+  managerId: string,
+  slug: string
+): Promise<{ allowed: boolean; propertyName: string | null }> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('properties')
+    .select('id, name')
+    .eq('slug', slug.trim())
+    .eq('manager_id', managerId)
+    .single();
+
+  if (error || !data) return { allowed: false, propertyName: null };
+  const row = data as Record<string, unknown>;
+  return {
+    allowed: true,
+    propertyName: typeof row.name === 'string' && row.name ? row.name : null,
+  };
+}
+
 export type { FieldValue, PropertyFields, ManagerLayoutItem, Property, AmenityWindow };

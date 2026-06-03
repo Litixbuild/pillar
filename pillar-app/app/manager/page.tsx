@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getPropertiesByManagerId } from "@/lib/properties";
 import { getManagerCookieName, verifyManagerSession } from "@/lib/managerAuth";
 import { createServiceClient } from "@/lib/supabase";
+import { getDashboardStats } from "@/lib/propertyEvents";
 import ManagerDashboardClient from "./ManagerDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export default async function ManagerDashboardPage() {
   }
 
   const supabase = createServiceClient();
-  const [properties, profileResult, referralCountResult] = await Promise.all([
+  const [properties, profileResult, referralCountResult, dashboardStats] = await Promise.all([
     getPropertiesByManagerId(session.userId),
     supabase
       .from("profiles")
@@ -29,6 +30,7 @@ export default async function ManagerDashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("referred_by", session.userId)
       .eq("is_subscribed", true),
+    getDashboardStats(session.userId),
   ]);
 
   const profile = profileResult.data;
@@ -43,6 +45,7 @@ export default async function ManagerDashboardPage() {
 
   return (
     <ManagerDashboardClient
+      dashboardStats={dashboardStats}
       properties={properties}
       isSubscribed={isSubscribed}
       subscriptionStatus={subscriptionStatus}

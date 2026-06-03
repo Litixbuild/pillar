@@ -24,6 +24,8 @@ export interface WorkOrder {
   other_message: string | null;
   status: string;
   created_at: string;
+  resolved_at: string | null;
+  resolved_note: string | null;
 }
 
 const BUILTIN_CATEGORIES = [
@@ -181,7 +183,10 @@ export async function submitWorkOrder(
     .single();
 
   if (error || !data) throw new Error(error?.message ?? 'Failed to submit work order');
-  const row = data as Row;
+  return rowToWorkOrder(data as Row);
+}
+
+function rowToWorkOrder(row: Row): WorkOrder {
   return {
     id: String(row.id),
     property_slug: String(row.property_slug),
@@ -190,7 +195,91 @@ export async function submitWorkOrder(
     other_message: typeof row.other_message === 'string' ? row.other_message : null,
     status: String(row.status),
     created_at: String(row.created_at),
+    resolved_at: typeof row.resolved_at === 'string' ? row.resolved_at : null,
+    resolved_note: typeof row.resolved_note === 'string' ? row.resolved_note : null,
   };
+}
+
+export async function getWorkOrdersByProperty(slug: string): Promise<WorkOrder[]> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from('work_orders')
+    .select('*')
+    .eq('property_slug', slug)
+    .order('created_at', { ascending: false });
+  return (data as Row[] | null)?.map(rowToWorkOrder) ?? [];
+}
+
+export async function getOpenWorkOrderCounts(slugs: string[]): Promise<Record<string, number>> {
+  if (slugs.length === 0) return {};
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from('work_orders')
+    .select('property_slug')
+    .in('property_slug', slugs)
+    .eq('status', 'open');
+
+  const counts: Record<string, number> = {};
+  for (const slug of slugs) counts[slug] = 0;
+  for (const row of (data as Row[] | null) ?? []) {
+    const s = String(row.property_slug);
+    counts[s] = (counts[s] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export async function getTotalOpenCountByManager(managerId: string): Promise<number> {
+  const supabase = createServiceClient();
+  const { data: props } = await supabase
+    .from('properties')
+    .select('slug')
+    .eq('manager_id', managerId);
+
+  const slugs = ((props as Row[] | null) ?? []).map((r) => String(r.slug)).filter(Boolean);
+  if (slugs.length === 0) return 0;
+
+  const { count } = await supabase
+    .from('work_orders')
+    .select('id', { count: 'exact', head: true })
+    .in('property_slug', slugs)
+    .eq('status', 'open');
+
+  return count ?? 0;
+}
+
+export async function resolveWorkOrder(
+  id: string,
+  managerId: string,
+  note?: string | null
+): Promise<void> {
+  const supabase = createServiceClient();
+
+  // Verify ownership
+  const { data: wo } = await supabase
+    .from('work_orders')
+    .select('property_slug')
+    .eq('id', id)
+    .single();
+  if (!wo) throw new Error('Work order not found');
+
+  const { data: prop } = await supabase
+    .from('properties')
+    .select('slug')
+    .eq('slug', (wo as Row).property_slug)
+    .eq('manager_id', managerId)
+    .single();
+  if (!prop) throw new Error('Forbidden');
+
+  const { error } = await supabase
+    .from('work_orders')
+    .update({
+      status: 'resolved',
+      resolved_at: new Date().toISOString(),
+      resolved_note: note?.trim() || null,
+    })
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
 }
 
 export async function getRoutingContactForCategory(

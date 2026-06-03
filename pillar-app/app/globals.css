@@ -94,3 +94,5 @@ nextjs-turbopack-devtools,
 nextjs-portal {
   display: none !important;
 }
+
+/* Manager portal — page transition handled by PageFader (layout.tsx) */

@@ -1,6 +1,7 @@
 import { submitWorkOrder, getRoutingContactForCategory } from '@/lib/workOrders';
 import { sendSms } from '@/lib/twilio';
 import { sendWorkOrderEmail } from '@/lib/mailer';
+import { logPropertyEvent } from '@/lib/propertyEvents';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,7 @@ export async function POST(req: Request) {
     const otherMessage = typeof body.other_message === 'string' ? body.other_message.trim() || null : null;
 
     const workOrder = await submitWorkOrder(slug, categoryName, description, otherMessage);
+    void logPropertyEvent(slug, 'work_order_submitted');
     const routing = await getRoutingContactForCategory(slug, categoryName);
 
     const smsError: string[] = [];

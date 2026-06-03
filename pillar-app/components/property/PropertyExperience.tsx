@@ -547,11 +547,19 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
           {phone ? (
             <>
               <div className="mt-5 h-px" style={{ backgroundColor: dividerCol }} />
-              <div className="text-center">
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.28em]" style={{ color: mutedCol }}>Property Manager</p>
-                <a href={tel ? `tel:${tel}` : undefined} className="text-sm transition-colors duration-200" style={{ color: mutedCol }}>
-                  {phone}
+              <div className="mt-5 flex flex-col items-center gap-3 text-center">
+                <p className="text-sm font-semibold" style={{ color: textCol }}>Urgent? Call the Property Manager Now!</p>
+                <a
+                  href={tel ? `tel:${tel}` : undefined}
+                  className="flex h-10 w-10 items-center justify-center rounded-full shadow-[0_6px_24px_rgba(239,68,68,0.45)] transition-transform duration-200 active:scale-90"
+                  style={{ background: '#ef4444' }}
+                  aria-label="Call property manager"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </a>
+                <span className="text-sm" style={{ color: mutedCol }}>{phone}</span>
               </div>
             </>
           ) : null}
@@ -961,8 +969,8 @@ export default function PropertyExperience({
     '--accent-50': `rgba(${SANDY_RGB},0.50)`,
     '--btn-bg-from': `rgba(${SANDY_RGB},0.22)`,
     '--btn-bg-to': `rgba(${SANDY_RGB},0.14)`,
-    '--heading-color': property.HeadingColor || 'rgba(255,255,255,0.9)',
-    '--body-color': property.TextColor || 'rgba(255,255,255,0.75)',
+    '--heading-color': property.HeadingColor || (dark ? 'rgba(255,255,255,0.9)' : lightTheme.headingColor),
+    '--body-color': property.TextColor || (dark ? 'rgba(255,255,255,0.75)' : lightTheme.titleText),
     '--panel-deep': 'rgba(12,12,12,0.92)',
     '--panel-mid': 'rgba(18,18,18,0.55)',
     '--panel-card': 'rgba(18,18,18,0.88)',
@@ -1033,20 +1041,24 @@ export default function PropertyExperience({
       />
 
       {/* ── Logo — visible on content view only, not amenities list ── */}
-      {expanded && fullView !== 'amenities' && property.LogoUrl ? (
-        <div
-          className="pointer-events-none fixed inset-x-0 top-0 z-10 flex justify-center pt-6 transition-opacity duration-700 ease-in-out"
-          style={{ opacity: isTransitioning || isFullViewTransitioning ? 0 : 1 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={dark ? property.LogoUrl : (property.LogoUrlDark ?? property.LogoUrl)}
-            alt="Property logo"
-            className="object-contain drop-shadow-lg"
-            style={{ width: `${property.LogoSize ?? 100}px`, maxHeight: `${property.LogoSize ?? 100}px` }}
-          />
-        </div>
-      ) : null}
+      {(() => {
+        const logoSrc = dark ? property.LogoUrl : (property.LogoUrlDark ?? null);
+        if (!expanded || fullView === 'amenities' || !logoSrc) return null;
+        return (
+          <div
+            className="pointer-events-none fixed inset-x-0 top-0 z-10 flex justify-center pt-6 transition-opacity duration-700 ease-in-out"
+            style={{ opacity: isTransitioning || isFullViewTransitioning ? 0 : 1 }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoSrc}
+              alt="Property logo"
+              className="object-contain drop-shadow-lg"
+              style={{ width: `${property.LogoSize ?? 100}px`, maxHeight: `${property.LogoSize ?? 100}px` }}
+            />
+          </div>
+        );
+      })()}
 
       {/* ── Dark mode toggle — top right, visible when expanded ── */}
 
@@ -1175,6 +1187,7 @@ export default function PropertyExperience({
                     setIsFullViewTransitioning(true);
                     window.setTimeout(() => { setFullView('amenities'); }, FULL_VIEW_FADE_MS);
                     window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
+                    fetch('/api/guest/track-event', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ slug, event_type: 'amenity_view' }) }).catch(() => {});
                   }}
                   className="group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-3xl px-6 py-5 text-left transition-all duration-300"
                   style={{
@@ -1211,7 +1224,7 @@ export default function PropertyExperience({
                   slug={slug}
                   placement="inline"
                   dark={dark}
-                  inlineLightTheme={isLightThemed ? {
+                  inlineLightTheme={!dark ? {
                     accentRGB: lightTheme.accentRGB,
                     panelDeepBg: lightTheme.buttonBg.replace(',0.88)', ',0.96)'),
                     buttonBg: lightTheme.buttonBg,

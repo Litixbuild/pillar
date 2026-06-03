@@ -18,12 +18,12 @@ function rowToPhoto(r: Row): PropertyPhoto {
 
 export async function getPropertyPhotos(slug: string): Promise<PropertyPhoto[]> {
   const supabase = createServiceClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('property_photos')
     .select('id, url, display_order')
     .eq('property_slug', slug.trim())
-    .order('display_order', { ascending: true })
-    .order('created_at', { ascending: true });
+    .order('display_order', { ascending: true });
+  if (error) console.error('[getPropertyPhotos]', error.message);
   return (data as Row[] | null)?.map(rowToPhoto) ?? [];
 }
 
