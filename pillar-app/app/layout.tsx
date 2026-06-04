@@ -57,8 +57,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronously apply saved theme + dark background before first paint to prevent flash */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var r=document.documentElement;r.style.backgroundColor='#0a0908';if(localStorage.getItem('pillar-theme')==='dark')r.classList.add('dark')}catch(e){}})()` }} />
+        {/* Synchronously apply saved theme before first paint to prevent flash */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('pillar-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>

@@ -2740,38 +2740,49 @@ const HOWTO_ICON_COLORS: Record<string, { bg: string; border: string; color: str
 const HOWTO_STEPS: Record<string, { title: string; desc: string }[]> = {
   'property-info': [
     { title: 'Open Property Info', desc: 'Tap the orange Property Info tile on your dashboard to enter the editor.' },
-    { title: 'Fill in the basics', desc: 'Enter your property name and address. These appear in your guest guide header.' },
+    { title: 'Fill in the basics', desc: 'Enter your property name, address, and ZIP code. These appear in your guest guide header.' },
     { title: 'Write your welcome message', desc: 'Add a House Bio — a warm introduction guests see when they first open the guide.' },
-    { title: 'Add Wi-Fi & access codes', desc: 'Enter your Wi-Fi name, password, and any garage or door codes so guests can find them instantly.' },
-    { title: 'Save your changes', desc: 'Tap Save at the bottom of the form. Changes go live immediately in the guest guide.' },
+    { title: 'Add checkout instructions', desc: 'Enter your checkout steps here. Guests can tap a dedicated button in their guide to read them.' },
+    { title: 'Add Wi-Fi & access codes', desc: 'Enter your Wi-Fi network name, password, and any garage or door codes so guests can find them instantly in the Amenities tab.' },
+    { title: 'Add your phone number', desc: 'Enter your manager phone number. Guests see it in the Need Help panel and can call you directly.' },
+    { title: 'Upload your branding', desc: 'Add a logo for light mode and a separate version for dark mode if needed. Use the size slider to scale it. Both logos appear at the top of the guest guide.' },
+    { title: 'Upload a cover photo', desc: 'Add a hero image that displays at the top of the guest guide. Choose something that represents your property well.' },
+    { title: 'Save your changes', desc: 'Tap Save at the bottom of the screen. Changes go live in the guest guide immediately.' },
   ],
   amenities: [
-    { title: 'Open Amenities', desc: 'Tap the purple Amenities tile to manage your content windows.' },
-    { title: 'Add a window', desc: 'Tap Add Window, give it a title, choose a type (Image, Video, PDF, or Text), and attach your file or paste your text.' },
-    { title: 'Reorder windows', desc: 'Use the up and down arrows on the bottom-right of each card to change display order.' },
-    { title: 'Preview attachments', desc: "Tap the attachment tag (e.g. 'Image — tap to preview') to open a full preview of the file." },
-    { title: 'Replace a file', desc: 'Open a window card and tap Replace File to upload a new version without changing the title.' },
-    { title: 'Delete a window', desc: 'Tap the trash icon on the top-right of a card. Confirm deletion with Yes when prompted.' },
+    { title: 'Open Amenities', desc: 'Tap the blue Amenities tile on your dashboard to manage your content windows.' },
+    { title: 'Add a window', desc: 'Tap + Add Window at the bottom. Give it a title, then choose a type: Text, Image, Video, or PDF.' },
+    { title: 'Pick an icon', desc: 'Tap the icon button to open the icon picker. Search by name (e.g. "pool", "coffee") and tap one to assign it. The icon appears on the card in the guest guide.' },
+    { title: 'Assign a room', desc: 'Use the Room dropdown to group the window under a room (e.g. Kitchen, Entrance, Master Bedroom). Guests see amenities sorted by room in the guide.' },
+    { title: 'Add content', desc: 'For Text windows, type directly in the body field. For Image, Video, or PDF windows, tap Upload to attach your file.' },
+    { title: 'Manage rooms', desc: 'Tap the Rooms button to add or remove custom room labels. You can type a new name or pick from the suggested list.' },
+    { title: 'Reorder windows', desc: 'Use the up and down arrows on each card to change the display order guests see.' },
+    { title: 'Replace a file', desc: 'Open any window card and tap Replace File to swap in a new version without losing the title or room assignment.' },
+    { title: 'Delete a window', desc: 'Tap the trash icon on the top-right of a card and confirm. This immediately removes it from the guest guide.' },
   ],
   qr: [
     { title: 'Open QR Code', desc: 'Tap the yellow QR Code tile on your dashboard.' },
-    { title: 'Download the QR code', desc: "Tap Download to save a high-resolution PNG of your property's unique QR code." },
-    { title: 'Print and display', desc: 'Print the code and place it in a visible spot — near the entrance or on the fridge works well.' },
-    { title: 'Test it', desc: 'Scan the code with your phone camera to confirm it opens your guest guide correctly.' },
+    { title: 'Download the QR code', desc: "Tap Download to save a high-resolution PNG of your property's unique QR code to your device." },
+    { title: 'Print and display', desc: 'Print the code and place it somewhere visible — near the entrance, on the kitchen counter, or on the fridge works well.' },
+    { title: 'Test it', desc: 'Point your phone camera at the code to confirm it opens the correct guest guide.' },
+    { title: 'Regenerate if needed', desc: 'If you ever need a fresh QR code (e.g. after changing the property slug), use the Regenerate option in the QR tab. Your old code will stop working.' },
   ],
   settings: [
-    { title: 'Open Design', desc: 'Tap the green Design tile to customise how your guest guide looks.' },
-    { title: 'Choose a background', desc: 'Browse the available background images and tap one to apply it.' },
-    { title: 'Upload your logo', desc: 'Add a property or brand logo that appears at the top of your guest guide.' },
-    { title: 'Adjust logo size', desc: 'Use the size slider to scale the logo to your preference.' },
-    { title: 'Save', desc: 'Tap Save to publish your design changes instantly.' },
+    { title: 'Open Design & Settings', desc: 'Tap the green Design tile on your dashboard.' },
+    { title: 'Manage property photos', desc: 'Tap Property Photos to upload images guests can swipe through in the Amenities view. Add as many as you like — they display in a swipeable carousel.' },
+    { title: 'Choose a theme', desc: 'Tap Themes & Colors to browse the available background scenes. Swipe or tap the dots to cycle through them and see a live preview.' },
+    { title: 'Apply the theme', desc: 'Once you find a background you like, tap Apply Theme. This sets the background and a matching accent colour, heading colour, and text colour all at once.' },
+    { title: 'Add a review link', desc: 'Paste your Google or Airbnb review URL into the Review Link field and tap Save Review Link. After a guest closes the Amenities tab, a soft banner will slide up inviting them to leave a review — once per session.' },
+    { title: 'Reset to defaults', desc: 'Tap Reset to Defaults at the bottom of the page to remove all theme customisations and return the guide to its original appearance.' },
   ],
   'work-orders': [
-    { title: 'Open Work Orders', desc: 'Tap the Work Orders tile on your dashboard.' },
-    { title: 'Review open requests', desc: 'All maintenance and guest requests appear here sorted by date. Tap any card to see full details.' },
-    { title: 'Update status', desc: 'Mark requests as In Progress or Resolved to keep your records clean.' },
-    { title: 'Add categories', desc: 'Create custom maintenance categories so guests can route requests to the right place.' },
-    { title: 'Contact tenant', desc: 'Tap the phone or email icon on a request card to reach the guest directly.' },
+    { title: 'Open Work Orders', desc: 'Tap the Work Orders tile on your dashboard to manage maintenance categories and view incoming requests.' },
+    { title: 'Add a category', desc: 'Tap + Add Category and give it a name (e.g. "Plumbing", "Electrical", "General Maintenance"). Categories appear as options when guests submit a request.' },
+    { title: 'Set up SMS notifications', desc: 'Enter a phone number on any category to receive an instant SMS when a guest submits a request in that category. Leave it blank to skip SMS for that category.' },
+    { title: 'Set up email notifications', desc: 'Enter an email address on a category to receive email alerts for that category in addition to, or instead of, SMS.' },
+    { title: 'Review incoming requests', desc: 'On your main manager dashboard, open the Work Orders section for any property to see all requests sorted by date. Each card shows the category, description, and submission time.' },
+    { title: 'Track resolution time', desc: 'Your dashboard stats show your average resolution time this month compared to last month. Resolving requests promptly improves your property health score.' },
+    { title: 'Delete a category', desc: 'Tap the trash icon next to any custom category to remove it. Built-in categories cannot be deleted.' },
   ],
 };
 
@@ -2928,28 +2939,33 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
         <div className="space-y-3">
           <div className="rounded-2xl px-5 py-4" style={cardStyle}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-1" style={{ color: labelColor }}>For Managers</p>
-            <FaqItem dark={dark} q="How do guests access the guide?" a="Guests scan the QR code you display at the property. It opens directly in their mobile browser — no app download needed." />
-            <FaqItem dark={dark} q="Can I have multiple properties?" a="Yes. Each property gets its own guide, QR code, and dashboard. Use the property selector to switch between them." />
-            <FaqItem dark={dark} q="Do changes go live immediately?" a="Yes. Any edit you save is reflected in the guest guide in real time, including property info, amenities, and design." />
-            <FaqItem dark={dark} q="What file types can I upload for amenities?" a="You can upload images (JPG, PNG, WebP), videos (MP4, MOV), and PDF documents. Maximum file size is 50 MB." />
-            <FaqItem dark={dark} q="Can I customise the look for each property?" a="Yes. The Design section lets you set a unique background image and logo per property." />
-            <FaqItem dark={dark} q="How do I add a new property?" a="Go back to the main manager dashboard and use the Add Property option. You'll be guided through the setup." />
-            <FaqItem dark={dark} q="What happens if a guest submits a work order?" a="The request appears in your Work Orders section with the guest's contact info and a description of the issue." />
-            <FaqItem dark={dark} q="Can I change my login email or password?" a="Yes. Go to your account settings, or use the Forgot Password flow on the login page to reset your password." />
-            <FaqItem dark={dark} q="Is the guest guide mobile-optimised?" a="Yes. The guide is built for mobile browsers and looks great on all screen sizes without any extra setup." />
-            <FaqItem dark={dark} q="How do I delete a property?" a="Contact support@pmpillar.com with your property ID and we'll process the deletion securely." />
+            <FaqItem dark={dark} q="How do guests access the guide?" a="Guests scan the QR code you display at the property. It opens directly in their mobile browser — no app download or account needed." />
+            <FaqItem dark={dark} q="Can I have multiple properties?" a="Yes. Each property gets its own guide, QR code, and settings. Manage all of them from your main dashboard." />
+            <FaqItem dark={dark} q="Do changes go live immediately?" a="Yes. Every save is reflected in the guest guide in real time — property info, amenities, photos, themes, and the review link all update instantly." />
+            <FaqItem dark={dark} q="What file types can I upload for amenities?" a="Images (JPG, PNG, WebP), videos (MP4, MOV), and PDF documents. Each window supports one file. Maximum file size is 50 MB." />
+            <FaqItem dark={dark} q="How does the review link work?" a="Paste your Google or Airbnb review URL in the Design tab under Review Link. After a guest closes the Amenities view, a soft banner slides up inviting them to leave a review. It only shows once per session." />
+            <FaqItem dark={dark} q="How do I get notified about maintenance requests?" a="In the Work Orders tab, add a phone number or email to each category. You'll receive an SMS or email the moment a guest submits a request in that category." />
+            <FaqItem dark={dark} q="How do I add property photos for guests to browse?" a="Go to the Design tab and tap Property Photos. Upload as many images as you like — they appear in a swipeable carousel in the guest's Amenities view." />
+            <FaqItem dark={dark} q="How do I add a new property?" a="From the main manager dashboard, tap Add Property. Give it a name and you'll be taken straight to the editor to set it up." />
+            <FaqItem dark={dark} q="How do I duplicate a property?" a="On the Properties page, tap the Duplicate option on any property card. This copies all settings so you can quickly set up a similar listing." />
+            <FaqItem dark={dark} q="Can I customise the look for each property?" a="Yes. Each property has its own Design tab where you can set a background theme, logo, and matching colour palette independently." />
+            <FaqItem dark={dark} q="How do I delete a property?" a="On the Properties page, tap the delete icon on the property card and confirm. This is permanent and cannot be undone." />
+            <FaqItem dark={dark} q="Can I change my login email or password?" a="Use the Forgot Password flow on the login page to reset your password. To change your email, contact support@pmpillar.com." />
           </div>
 
           <div className="rounded-2xl px-5 py-4" style={cardStyle}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-1" style={{ color: labelColor }}>For Tenants &amp; Guests</p>
-            <FaqItem dark={dark} q="How do I access the property guide?" a="Scan the QR code displayed at the property with your phone camera. It will open the guide automatically in your browser." />
-            <FaqItem dark={dark} q="Where do I find the Wi-Fi password?" a="Open the guide and look in the Property Info or Amenities section — your host has added it there for you." />
-            <FaqItem dark={dark} q="How do I report a maintenance issue?" a="Find the Work Orders or Maintenance section in the guide and tap Submit Request. Describe the issue and your contact info." />
-            <FaqItem dark={dark} q="Do I need to download an app?" a="No. The guide opens directly in your phone's web browser when you scan the QR code." />
-            <FaqItem dark={dark} q="The QR code isn't working — what do I do?" a="Make sure your camera app is pointing at the full QR code in good lighting. If it still doesn't work, ask your host for the direct link." />
-            <FaqItem dark={dark} q="Can I access the guide again after check-out?" a="The link stays active as long as your host keeps the property listed. Bookmark the page during your stay for easy access." />
-            <FaqItem dark={dark} q="Who do I contact for urgent issues?" a="Your host's phone number is listed in the Property Info section of the guide. For emergencies always call 911." />
-            <FaqItem dark={dark} q="The guide isn't loading — what should I try?" a="Try refreshing the page, switching between Wi-Fi and mobile data, or clearing your browser cache. If the issue persists, contact your host." />
+            <FaqItem dark={dark} q="How do I access the property guide?" a="Scan the QR code displayed at the property with your phone camera. It opens automatically in your browser — no app download or account needed." />
+            <FaqItem dark={dark} q="Where do I find the Wi-Fi password and access codes?" a="Tap the Home Amenities button on the guide's main screen. The Wi-Fi network, password, and any garage or door codes are listed there. Tap the copy icon to copy the password instantly." />
+            <FaqItem dark={dark} q="How do I browse property photos?" a="Inside the Amenities view, swipe through the photo carousel at the top. Tap any photo to open it full-screen. You can swipe left and right through the full gallery." />
+            <FaqItem dark={dark} q="What is the AI Concierge?" a="The AI Concierge is your on-demand digital host. Tap it on the main screen and ask anything — restaurant recommendations, local attractions, things to do, how appliances work, or anything else about your stay. It's available 24/7." />
+            <FaqItem dark={dark} q="How do I report a maintenance issue?" a="Tap the Need Help button at the bottom of the guide. Choose the category that best matches your issue, describe it in the text box, and submit. Your host will be notified immediately." />
+            <FaqItem dark={dark} q="How do I request a late checkout?" a="Tap Need Help, then tap the Late Checkout button inside the panel. Your host will receive the request directly." />
+            <FaqItem dark={dark} q="How do I see checkout instructions?" a="If your host has added checkout steps, a Checkout Instructions button will appear on the main guide screen. Tap it to read the full instructions." />
+            <FaqItem dark={dark} q="Do I need to download an app?" a="No. The guide runs entirely in your phone's web browser. Nothing to install, no account to create." />
+            <FaqItem dark={dark} q="The QR code isn't working — what do I do?" a="Make sure your camera is pointed at the full code in good lighting. If it still doesn't scan, ask your host for the direct link." />
+            <FaqItem dark={dark} q="Who do I contact for urgent issues?" a="Your host's phone number is shown inside the Need Help panel. Tap it to call directly. For emergencies always call 911." />
+            <FaqItem dark={dark} q="The guide isn't loading — what should I try?" a="Try refreshing the page, toggling between Wi-Fi and mobile data, or opening the link in a different browser. If it still won't load, contact your host." />
           </div>
         </div>
       )}
@@ -2999,9 +3015,12 @@ function HelpView({ dark, slug, propertyName }: { dark: boolean; slug: string; p
                   <option value="Account & Billing">Account &amp; Billing</option>
                   <option value="Property Info">Property Info</option>
                   <option value="Amenities">Amenities</option>
+                  <option value="Property Photos">Property Photos</option>
                   <option value="QR Code">QR Code</option>
-                  <option value="Design">Design</option>
+                  <option value="Design & Themes">Design &amp; Themes</option>
+                  <option value="Review Link">Review Link</option>
                   <option value="Work Orders">Work Orders</option>
+                  <option value="AI Concierge">AI Concierge</option>
                   <option value="Guest Guide">Guest Guide</option>
                   <option value="Technical Issue">Technical Issue</option>
                   <option value="Other">Other</option>
