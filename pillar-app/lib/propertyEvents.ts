@@ -42,7 +42,7 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
   const slugs = properties.map((p) => String(p.slug)).filter(Boolean);
 
   if (slugs.length === 0) {
-    return { avgResolutionHours: null, avgResolutionHoursPrev: null, issueBreakdown: [], savedCallsThisMonth: 0, propertyHealth: [] };
+    return { avgResolutionHours: null, avgResolutionHoursPrev: null, issueBreakdown: [], savedCallsThisMonth: 0, propertyHealth: [], monthlyResolution: [] };
   }
 
   const now = new Date();
