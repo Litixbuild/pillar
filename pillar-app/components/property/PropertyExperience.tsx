@@ -1357,36 +1357,34 @@ export default function PropertyExperience({
                 ) : null}
 
                 {/* Need Help button */}
-                {property.ManagerPhone ? (
-                  <button
-                    type="button"
-                    onClick={() => setNeedHelpOpen(true)}
-                    className="group flex w-full items-center justify-between gap-4 rounded-3xl px-6 py-5 text-left transition-all duration-300"
-                    style={{
-                      background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
-                      boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
-                    }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
-                        background: dark ? 'rgba(245,237,213,0.10)' : lightTheme.iconBg,
-                        color: dark ? `rgba(${SANDY_RGB},0.85)` : lightTheme.iconColor,
-                      }}>
-                        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>{t('needHelp')}</div>
-                        <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>{t('contactManager')}</div>
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setNeedHelpOpen(true)}
+                  className="group flex w-full items-center justify-between gap-4 rounded-3xl px-6 py-5 text-left transition-all duration-300"
+                  style={{
+                    background: dark ? 'rgba(10,10,10,0.82)' : lightTheme.buttonBg,
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: dark ? '1px solid rgba(255,255,255,0.07)' : `1px solid ${lightTheme.buttonBorder}`,
+                    boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.40)' : lightTheme.buttonShadow,
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl" style={{
+                      background: dark ? 'rgba(245,237,213,0.10)' : lightTheme.iconBg,
+                      color: dark ? `rgba(${SANDY_RGB},0.85)` : lightTheme.iconColor,
+                    }}>
+                      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81 19.79 19.79 0 01.07 2.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </div>
-                    <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : lightTheme.chevronColor }} />
-                  </button>
-                ) : null}
+                    <div>
+                      <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : lightTheme.titleText }}>{t('needHelp')}</div>
+                      <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : lightTheme.subtitleText }}>{t('contactManager')}</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 flex-none transition-transform duration-300 group-hover:translate-x-0.5" style={{ color: dark ? `rgba(${SANDY_RGB},0.35)` : lightTheme.chevronColor }} />
+                </button>
 
                 {property.CheckoutInstructions ? (
                   <div className="flex justify-center pt-3 pb-2">
