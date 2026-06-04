@@ -24,6 +24,7 @@ export default function IntroSplash() {
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center"
       style={{
+        backgroundColor: "#0a0908",
         backgroundImage: "url(/images/mainbackground.png)",
         backgroundSize: "cover",
         backgroundPosition: "center top",

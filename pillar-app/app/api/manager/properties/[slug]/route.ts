@@ -45,6 +45,7 @@ const CORE_EDITABLE_FIELDS = [
   'HeadingColor',
   'TextColor',
   'CheckoutInstructions',
+  'ReviewUrl',
 ] as const;
 
 const NUMERIC_EDITABLE_FIELDS = ['LogoSize'] as const;

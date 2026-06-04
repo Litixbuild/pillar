@@ -5,7 +5,6 @@ import Link from 'next/link';
 import type { Property } from '@/lib/types';
 import ManagerBottomNav from '@/app/manager/ManagerBottomNav';
 import DuplicatePropertyModal from '@/app/manager/DuplicatePropertyModal';
-import { PROPERTY_TEMPLATES } from '@/lib/propertyTemplates';
 
 const SANDY_RGB = '245,237,213';
 
@@ -69,8 +68,6 @@ export default function PropertiesClient({
 }) {
   const [dark, setDark] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [createStep, setCreateStep] = useState<'name' | 'template'>('name');
-  const [selectedTemplate, setSelectedTemplate] = useState('blank');
   const [propertyName, setPropertyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -122,7 +119,7 @@ export default function PropertiesClient({
     const res = await fetch('/api/manager/properties', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name, templateId: selectedTemplate }),
+      body: JSON.stringify({ name }),
     });
     if (!res.ok) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -147,7 +144,7 @@ export default function PropertiesClient({
     }
   }
 
-  /* â”€â”€ Theme helpers â”€â”€ */
+  /* â"€â"€ Theme helpers â"€â"€ */
   const card = dark
     ? { background: 'rgba(8,8,8,0.95)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 2px 16px rgba(0,0,0,0.40)' }
     : { background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(100,80,40,0.12)', backdropFilter: 'blur(20px)', boxShadow: '0 4px 20px rgba(100,80,40,0.08)' };
@@ -346,9 +343,9 @@ export default function PropertiesClient({
         </div>
       ) : null}
 
-      {/* Add Property modal — two-step */}
+      {/* Add Property modal */}
       {showModal ? (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5" style={{ background: 'rgba(5,10,16,0.82)' }} onClick={(e) => { if (e.target === e.currentTarget && !isCreating) { setShowModal(false); setCreateStep('name'); setSelectedTemplate('blank'); } }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5" style={{ background: 'rgba(5,10,16,0.82)' }} onClick={(e) => { if (e.target === e.currentTarget && !isCreating) { setShowModal(false); setPropertyName(''); } }}>
           <div
             className="w-full max-w-sm overflow-hidden rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
             style={dark
@@ -357,78 +354,32 @@ export default function PropertiesClient({
           >
             <div className="h-px w-full" style={{ background: `linear-gradient(to right, transparent, rgba(${SANDY_RGB},0.30), transparent)` }} />
             <div className="p-6">
-
-              {createStep === 'name' ? (
-                <>
-                  <h2 className="text-base font-semibold tracking-tight" style={{ color: dark ? 'rgba(255,255,255,0.95)' : '#1e293b' }}>New Property</h2>
-                  <p className="mt-1 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.55)' }}>Enter a name to get started. You can change everything after.</p>
-                  <div className="mt-5 space-y-1.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.65)` : '#64748b' }}>Property Name</p>
-                    <input
-                      autoFocus
-                      type="text"
-                      value={propertyName}
-                      onChange={(e) => setPropertyName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' && propertyName.trim()) setCreateStep('template'); }}
-                      placeholder="e.g. Oceanfront Villa"
-                      className="h-11 w-full rounded-xl px-4 text-sm outline-none transition-all"
-                      style={dark
-                        ? { background: 'rgba(30,30,30,0.80)', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }
-                        : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)', color: '#1e293b' }}
-                    />
-                  </div>
-                  <div className="mt-5 flex gap-2">
-                    <button type="button" onClick={() => { if (propertyName.trim()) setCreateStep('template'); }} disabled={!propertyName.trim()} className="h-10 flex-1 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50" style={{ background: '#111111', boxShadow: '0 0 20px rgba(0,0,0,0.25)' }}>
-                      Continue →
-                    </button>
-                    <button type="button" onClick={() => { setShowModal(false); setCreateStep('name'); setSelectedTemplate('blank'); }} className="h-10 rounded-xl border px-4 text-sm font-semibold transition-all duration-200" style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.50)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.55)' }}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-base font-semibold tracking-tight" style={{ color: dark ? 'rgba(255,255,255,0.95)' : '#1e293b' }}>Choose a Template</h2>
-                  <p className="mt-1 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.55)' }}>Pick a starting point. You can add, edit, or remove anything after.</p>
-                  <div className="mt-4 max-h-72 space-y-2 overflow-y-auto pr-1">
-                    {PROPERTY_TEMPLATES.map((tpl) => (
-                      <button
-                        key={tpl.id}
-                        type="button"
-                        onClick={() => setSelectedTemplate(tpl.id)}
-                        className="flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-150"
-                        style={selectedTemplate === tpl.id
-                          ? { borderColor: `rgba(${SANDY_RGB},0.40)`, background: `rgba(${SANDY_RGB},0.09)` }
-                          : dark
-                            ? { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }
-                            : { borderColor: 'rgba(0,0,0,0.07)', background: 'rgba(0,0,0,0.02)' }}
-                      >
-                        <span className="mt-0.5 text-xl leading-none">{tpl.emoji}</span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.90)' : '#1e293b' }}>{tpl.name}</p>
-                          <p className="text-[11px]" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.55)' }}>{tpl.description}</p>
-                          {tpl.preview.length > 0 && (
-                            <p className="mt-0.5 text-[10px]" style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(30,41,59,0.38)' }}>{tpl.preview.join(' Â· ')}</p>
-                          )}
-                        </div>
-                        {selectedTemplate === tpl.id && (
-                          <span className="ml-auto mt-0.5 flex-none text-xs" style={{ color: `rgba(${SANDY_RGB},0.7)` }}>âœ“</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  {createError ? <p className="mt-3 text-xs text-rose-400/80">{createError}</p> : null}
-                  <div className="mt-4 flex gap-2">
-                    <button type="button" onClick={() => void handleCreate()} disabled={isCreating} className="h-10 flex-1 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50" style={{ background: '#111111', boxShadow: '0 0 20px rgba(0,0,0,0.25)' }}>
-                      {isCreating ? 'Creating…' : 'Create Property'}
-                    </button>
-                    <button type="button" onClick={() => setCreateStep('name')} disabled={isCreating} className="h-10 rounded-xl border px-4 text-sm font-semibold transition-all duration-200" style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.50)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.55)' }}>
-                      ← Back
-                    </button>
-                  </div>
-                </>
-              )}
-
+              <h2 className="text-base font-semibold tracking-tight" style={{ color: dark ? 'rgba(255,255,255,0.95)' : '#1e293b' }}>New Property</h2>
+              <p className="mt-1 text-xs" style={{ color: dark ? 'rgba(255,255,255,0.40)' : 'rgba(30,41,59,0.55)' }}>Enter a name to get started. You can change everything after.</p>
+              <div className="mt-5 space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: dark ? `rgba(${SANDY_RGB},0.65)` : '#64748b' }}>Property Name</p>
+                <input
+                  autoFocus
+                  type="text"
+                  value={propertyName}
+                  onChange={(e) => setPropertyName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && propertyName.trim()) void handleCreate(); }}
+                  placeholder="e.g. Oceanfront Villa"
+                  className="h-11 w-full rounded-xl px-4 text-sm outline-none transition-all"
+                  style={dark
+                    ? { background: 'rgba(30,30,30,0.80)', border: '1px solid rgba(255,255,255,0.08)', color: '#ffffff' }
+                    : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)', color: '#1e293b' }}
+                />
+              </div>
+              {createError ? <p className="mt-3 text-xs text-rose-400/80">{createError}</p> : null}
+              <div className="mt-5 flex gap-2">
+                <button type="button" onClick={() => void handleCreate()} disabled={!propertyName.trim() || isCreating} className="h-10 flex-1 rounded-xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50" style={{ background: '#111111', boxShadow: '0 0 20px rgba(0,0,0,0.25)' }}>
+                  {isCreating ? 'Creating…' : 'Create Property'}
+                </button>
+                <button type="button" onClick={() => { setShowModal(false); setPropertyName(''); }} disabled={isCreating} className="h-10 rounded-xl border px-4 text-sm font-semibold transition-all duration-200" style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.50)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.55)' }}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

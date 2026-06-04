@@ -13,12 +13,20 @@ export async function logPropertyEvent(slug: string, eventType: EventType): Prom
   }
 }
 
+export interface MonthlyResolutionPoint {
+  year: number;
+  month: number; // 1–12
+  avgHours: number;
+  count: number;
+}
+
 export interface DashboardStats {
   avgResolutionHours: number | null;
   avgResolutionHoursPrev: number | null;
   issueBreakdown: { category: string; count: number }[];
   savedCallsThisMonth: number;
   propertyHealth: { slug: string; name: string; heroImage: string | null; openCount: number }[];
+  monthlyResolution: MonthlyResolutionPoint[];
 }
 
 export async function getDashboardStats(managerId: string): Promise<DashboardStats> {
@@ -42,7 +50,7 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const endOfLastMonth = startOfThisMonth;
 
-  const [resolvedThis, resolvedPrev, openOrders, breakdownData, eventsData, workOrderEvents] = await Promise.all([
+  const [resolvedThis, resolvedPrev, openOrders, breakdownData, eventsData, workOrderEvents, allResolved] = await Promise.all([
     // Resolved this month — for avg resolution time
     supabase
       .from('work_orders')
@@ -88,6 +96,14 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
       .select('id', { count: 'exact', head: true })
       .in('property_slug', slugs)
       .gte('created_at', startOfThisMonth),
+
+    // All resolved orders (all time) — for monthly history chart
+    supabase
+      .from('work_orders')
+      .select('created_at, resolved_at')
+      .in('property_slug', slugs)
+      .eq('status', 'resolved')
+      .not('resolved_at', 'is', null),
   ]);
 
   // Avg resolution time
@@ -134,5 +150,29 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
   // Saved calls = amenity/concierge events + work orders submitted
   const savedCallsThisMonth = (eventsData.count ?? 0) + (workOrderEvents.count ?? 0);
 
-  return { avgResolutionHours, avgResolutionHoursPrev, issueBreakdown, savedCallsThisMonth, propertyHealth };
+  // Monthly resolution history — group all resolved orders by year + month of resolved_at
+  const monthlyMap = new Map<string, { totalHours: number; count: number }>();
+  for (const row of (allResolved.data as Row[] | null) ?? []) {
+    const created = new Date(String(row.created_at)).getTime();
+    const resolved = new Date(String(row.resolved_at)).getTime();
+    if (isNaN(created) || isNaN(resolved) || resolved < created) continue;
+    const hours = (resolved - created) / 3_600_000;
+    const d = new Date(String(row.resolved_at));
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const existing = monthlyMap.get(key) ?? { totalHours: 0, count: 0 };
+    monthlyMap.set(key, { totalHours: existing.totalHours + hours, count: existing.count + 1 });
+  }
+  const monthlyResolution: MonthlyResolutionPoint[] = [...monthlyMap.entries()]
+    .map(([key, val]) => {
+      const [yearStr, monthStr] = key.split('-');
+      return {
+        year: Number(yearStr),
+        month: Number(monthStr),
+        avgHours: Math.round((val.totalHours / val.count) * 10) / 10,
+        count: val.count,
+      };
+    })
+    .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
+
+  return { avgResolutionHours, avgResolutionHoursPrev, issueBreakdown, savedCallsThisMonth, propertyHealth, monthlyResolution };
 }

@@ -1344,7 +1344,7 @@ function AmenitiesView({
                 <div className="flex items-center gap-1.5 px-4 pb-3 border-t border-slate-100 dark:border-white/5 pt-2.5">
                   {w.type !== 'text' && (
                     <button type="button" disabled={w._uploading} onClick={() => fileRefs.current[w.id]?.click()}
-                      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/6 px-2.5 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/12 disabled:opacity-40"
+                      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/6 px-2.5 text-xs font-semibold text-slate-600 dark:text-white/55 transition-all hover:bg-slate-100 dark:hover:bg-white/12 disabled:opacity-40 whitespace-nowrap"
                     >
                       <UploadIcon />
                       {w._uploading ? 'Uploading…' : w.url ? 'Replace file' : 'Upload file'}
@@ -1743,7 +1743,7 @@ function SubBackButton({ onClick, dark }: { onClick: () => void; dark?: boolean 
 
 interface PhotoItem { id: string; url: string }
 
-function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey?: string; dark: boolean }) {
+function SettingsView({ slug, initialBgKey, initialReviewUrl, dark }: { slug: string; initialBgKey?: string; initialReviewUrl?: string; dark: boolean }) {
   const [sub, setSub] = useState<'grid' | 'backgrounds' | 'photos'>('grid');
   const [subFading, setSubFading] = useState(false);
 
@@ -1761,6 +1761,28 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
   const [themeError, setThemeError] = useState<string | null>(null);
   const [resetSaving, setResetSaving] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+
+  const [reviewUrl, setReviewUrl] = useState(initialReviewUrl ?? '');
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewSaved, setReviewSaved] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  async function handleSaveReviewUrl() {
+    setReviewSaving(true); setReviewSaved(false); setReviewError(null);
+    const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fields: { ReviewUrl: reviewUrl } }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      setReviewError(data.error || 'Save failed.');
+    } else {
+      setReviewSaved(true);
+      setTimeout(() => setReviewSaved(false), 2500);
+    }
+    setReviewSaving(false);
+  }
 
   // Photos state
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
@@ -2292,6 +2314,63 @@ function SettingsView({ slug, initialBgKey, dark }: { slug: string; initialBgKey
           ))}
         </div>
       </button>
+
+      {/* Review Link */}
+      <div className="w-full rounded-2xl p-5" style={settingCard}>
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style={settingIconStyle}>
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: settingTitle }}>Review Link</p>
+            <p className="mt-0.5 text-xs" style={{ color: settingSub }}>Google or Airbnb review URL for guests</p>
+            <input
+              type="url"
+              value={reviewUrl}
+              onChange={(e) => setReviewUrl(e.target.value)}
+              placeholder="https://g.page/r/…"
+              className="mt-3 w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+              style={{
+                background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                border: dark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.10)',
+                color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b',
+              }}
+            />
+            {reviewError && <p className="mt-1.5 text-xs text-red-400">{reviewError}</p>}
+            <button
+              type="button"
+              onClick={() => void handleSaveReviewUrl()}
+              disabled={reviewSaving}
+              className="mt-2.5 h-9 w-full rounded-xl text-xs font-semibold transition-all duration-200 disabled:opacity-50"
+              style={reviewSaved
+                ? { background: 'rgba(52,211,153,0.15)', color: 'rgb(52,211,153)' }
+                : dark
+                  ? { border: `1px solid rgba(${SANDY_RGB},0.30)`, background: `rgba(${SANDY_RGB},0.10)`, color: SANDY }
+                  : { border: '1px solid rgba(0,0,0,0.12)', background: '#111111', color: '#fff' }
+              }
+            >
+              {reviewSaving ? 'Saving…' : reviewSaved ? 'Saved ✓' : 'Save Review Link'}
+            </button>
+            {reviewUrl.trim() && (
+              <a
+                href={reviewUrl.trim()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex items-center gap-1.5 truncate text-xs"
+                style={{ color: dark ? 'rgba(245,237,213,0.50)' : 'rgba(30,41,59,0.45)' }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3 shrink-0" aria-hidden="true">
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="truncate">{reviewUrl.trim()}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="mt-6">
         <div className="h-px" style={{ background: dividerColor }} />
@@ -3246,7 +3325,7 @@ export default function ManagerPropertyEditorClient({
           />
         )}
         {view === 'qr' && <QRView slug={slug} dark={dark} />}
-        {view === 'settings' && <SettingsView slug={slug} initialBgKey={property.BackgroundKey} dark={dark} />}
+        {view === 'settings' && <SettingsView slug={slug} initialBgKey={property.BackgroundKey} initialReviewUrl={property.ReviewUrl} dark={dark} />}
         {view === 'work-orders' && <WorkOrdersView slug={slug} dark={dark} initialCategories={prefetchedWOCategories} onCategoriesChange={setPrefetchedWOCategories} />}
         {view === 'help' && <HelpView dark={dark} slug={slug} propertyName={core.PropertyName} />}
       </div>

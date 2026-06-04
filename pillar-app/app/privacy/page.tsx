@@ -137,8 +137,14 @@ export default function PrivacyPage() {
       </div>
 
       <div className="border-t border-slate-100 px-6 py-6 text-center text-xs text-slate-400">
-        &copy; {new Date().getFullYear()} Pillar. All rights reserved. &nbsp;·&nbsp;{' '}
-        <Link href="/terms" className="hover:text-slate-600">Terms</Link>
+        &copy; 2026 Pillar. All rights reserved. &nbsp;·&nbsp;{' '}
+        <Link href="/terms" className="hover:text-slate-600">Terms of Service</Link>
+        {' '}&nbsp;·&nbsp;{' '}
+        <Link href="/refund" className="hover:text-slate-600">Refund Policy</Link>
+        {' '}&nbsp;·&nbsp;{' '}
+        <Link href="/cookies" className="hover:text-slate-600">Cookie Policy</Link>
+        {' '}&nbsp;·&nbsp;{' '}
+        <Link href="/contact" className="hover:text-slate-600">Contact</Link>
       </div>
     </div>
   );

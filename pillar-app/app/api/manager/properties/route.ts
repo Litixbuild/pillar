@@ -46,12 +46,10 @@ export async function POST(req: Request) {
 
   await createProperty(session.userId, name, slug);
 
-  if (templateId && templateId !== "blank") {
-    try {
-      await applyTemplateToProperty(slug, templateId);
-    } catch {
-      // Template application failure is non-fatal — property still created
-    }
+  try {
+    await applyTemplateToProperty(slug, templateId || 'blank');
+  } catch {
+    // Template application failure is non-fatal — property still created
   }
 
   return Response.json({ slug }, { status: 200 });

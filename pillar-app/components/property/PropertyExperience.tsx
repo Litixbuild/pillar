@@ -325,6 +325,72 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-base font-semibold tracking-wide text-white/90" style={{ color: 'var(--heading-color)' }}>{children}</h2>;
 }
 
+function ReviewPromptBanner({ reviewUrl, onDismiss }: { reviewUrl: string; onDismiss: () => void }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  function dismiss() {
+    setVisible(false);
+    setTimeout(onDismiss, 380);
+  }
+
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 flex items-end justify-center px-4 pb-8"
+      style={{
+        transform: visible ? 'translateY(0)' : 'translateY(110%)',
+        transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+    >
+      <div
+        className="flex w-full max-w-md items-center gap-4 rounded-3xl px-5 py-4"
+        style={{
+          background: 'linear-gradient(135deg, #F5EDD5 0%, #E8D5A0 100%)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.20)',
+          border: '1px solid rgba(200,175,120,0.35)',
+        }}
+      >
+        <a
+          href={reviewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={dismiss}
+          className="flex flex-1 items-center gap-3"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'rgba(180,145,70,0.18)' }}>
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" style={{ color: '#A07830' }} aria-hidden="true">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold leading-tight" style={{ color: '#4A3510' }}>Enjoying your stay?</p>
+            <p className="mt-0.5 text-xs" style={{ color: '#7A6035' }}>Leave a review — it means a lot</p>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" style={{ color: '#9A7840' }} aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+        <button
+          type="button"
+          onClick={dismiss}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-opacity"
+          style={{ background: 'rgba(0,0,0,0.07)', color: '#7A6035' }}
+          aria-label="Dismiss"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalTheme }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string; lightTheme?: LightTheme }) {
   const t = useTranslations('guest');
   const [visible, setVisible] = useState(false);
@@ -888,6 +954,7 @@ export default function PropertyExperience({
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [carouselDragStart, setCarouselDragStart] = useState<number | null>(null);
   const [carouselDragOffset, setCarouselDragOffset] = useState(0);
+  const [showReviewBanner, setShowReviewBanner] = useState(false);
   const [carouselDragged, setCarouselDragged] = useState(false);
   const [sharing, setSharing] = useState(false);
   const photos = property.photos ?? [];
@@ -1421,6 +1488,12 @@ export default function PropertyExperience({
                       setIsFullViewTransitioning(true);
                       window.setTimeout(() => { setFullView('content'); }, FULL_VIEW_FADE_MS);
                       window.setTimeout(() => { setIsFullViewTransitioning(false); }, FULL_VIEW_FADE_MS * 2);
+                      if (property.ReviewUrl) {
+                        const key = `pillar_review_shown_${slug}`;
+                        if (!sessionStorage.getItem(key)) {
+                          window.setTimeout(() => setShowReviewBanner(true), FULL_VIEW_FADE_MS * 2 + 150);
+                        }
+                      }
                     }}
                     className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-2xl transition-all duration-200"
                     style={{
@@ -1704,6 +1777,16 @@ export default function PropertyExperience({
               instructions={property.CheckoutInstructions}
               dark={dark}
               lightTheme={isLightThemed ? lightTheme : undefined}
+            />
+          ) : null}
+
+          {showReviewBanner && property.ReviewUrl ? (
+            <ReviewPromptBanner
+              reviewUrl={property.ReviewUrl}
+              onDismiss={() => {
+                sessionStorage.setItem(`pillar_review_shown_${slug}`, '1');
+                setShowReviewBanner(false);
+              }}
             />
           ) : null}
 

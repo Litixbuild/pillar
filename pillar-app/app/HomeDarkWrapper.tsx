@@ -28,13 +28,10 @@ const THEME_KEY = 'pillar-theme';
 
 export default function HomeDarkWrapper() {
   const [dark, setDark] = useState(false);
-  const [showToggle, setShowToggle] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === 'dark') setDark(true);
-    const t = setTimeout(() => setShowToggle(true), 3700);
-    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -62,8 +59,6 @@ export default function HomeDarkWrapper() {
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           className="flex h-8 w-8 items-center justify-center rounded-xl border transition-opacity duration-500"
           style={{
-            opacity: showToggle ? 1 : 0,
-            pointerEvents: showToggle ? 'auto' : 'none',
             borderColor: dark ? 'rgba(245,237,213,0.28)' : 'rgba(255,255,255,0.35)',
             background: dark ? 'rgba(245,237,213,0.08)' : 'rgba(255,255,255,0.15)',
             color: dark ? SANDY : 'rgba(255,255,255,0.90)',
@@ -279,17 +274,47 @@ export default function HomeDarkWrapper() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-8 lg:py-10 text-center">
-        <Image
-          src="/images/pillarlogowhite.png"
-          alt="Pillar"
-          width={100}
-          height={66}
-          className="mx-auto mb-3 lg:mb-4 opacity-30"
-        />
-        <p className="text-[10px] lg:text-xs uppercase tracking-[0.35em]" style={{ color: 'rgba(255,255,255,0.50)' }}>
-          Luxury Property Hospitality Management
-        </p>
+      <footer className="pt-10 pb-12 lg:pt-12 lg:pb-16">
+        {/* Divider */}
+        <div className="max-w-7xl mx-auto px-8 lg:px-16 mb-10 lg:mb-12">
+          <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(245,237,213,0.18), transparent)' }} />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 lg:px-16 flex flex-col items-center gap-8">
+          {/* Logo + tagline */}
+          <Image
+            src="/images/pillarlogowhite.png"
+            alt="Pillar"
+            width={80}
+            height={53}
+            className="opacity-25"
+          />
+
+          {/* Policy links */}
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {[
+              { href: '/privacy', label: 'Privacy Policy' },
+              { href: '/terms', label: 'Terms of Service' },
+              { href: '/refund', label: 'Refund Policy' },
+              { href: '/cookies', label: 'Cookie Policy' },
+              { href: '/contact', label: 'Contact Us' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-[10px] uppercase tracking-[0.20em] transition-opacity duration-200 hover:opacity-80"
+                style={{ color: 'rgba(245,237,213,0.45)' }}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Copyright */}
+          <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            &copy; 2026 Pillar. All rights reserved.
+          </p>
+        </div>
       </footer>
     </main>
     </>

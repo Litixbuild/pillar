@@ -10,10 +10,21 @@ import { AMENITY_ICONS_MAP, DEFAULT_ICON_KEY, searchIcons } from '@/lib/amenityI
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 const DEFAULT_WINDOWS: AmenityWindow[] = [
-  { id: 'pool-heater', title: 'Pool Heater', type: 'video' },
-  { id: 'television', title: 'Television', type: 'video' },
-  { id: 'coffee-machine', title: 'Coffee Machine', type: 'video' },
+  { id: 'default-wifi', title: 'WiFi', type: 'text', icon: 'wifi' },
+  { id: 'default-television', title: 'Television', type: 'text', icon: 'tv' },
+  { id: 'default-coffee', title: 'Coffee Machine', type: 'text', icon: 'coffee' },
+  { id: 'default-thermostat', title: 'Thermostat', type: 'text', icon: 'thermometer' },
 ];
+
+async function deleteWindowFromDb(slug: string, windowId: string) {
+  const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ id: windowId }),
+  });
+  const data = (await res.json().catch(() => null)) as { error?: string } | null;
+  if (!res.ok) throw new Error(data?.error ?? `Delete failed (HTTP ${res.status})`);
+}
 
 /* ── Design tokens ──────────────────────────────────────────────────── */
 const card =
@@ -700,7 +711,7 @@ export default function ManagerPropertyDetailsClient({
     setSaveState('saving');
     setErrorMsg('');
     try {
-      const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}`, {
+      const fieldsRes = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -715,11 +726,23 @@ export default function ManagerPropertyDetailsClient({
             ManagerPhone: draft.phone,
           },
           customFields: draft.custom,
-          windows,
         }),
       });
-      const json = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(json.error || `Save failed (HTTP ${res.status})`);
+      const json = (await fieldsRes.json().catch(() => null)) as { error?: string } | null;
+      if (!fieldsRes.ok) throw new Error(json?.error ?? `Save failed (HTTP ${fieldsRes.status})`);
+
+      if (windows.length > 0) {
+        const winRes = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/windows`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            windows: windows.map(({ id, title, type, icon, body, url, room }) => ({ id, title, type, icon, body, url, room })),
+          }),
+        });
+        const wJson = (await winRes.json().catch(() => null)) as { error?: string } | null;
+        if (!winRes.ok) throw new Error(wJson?.error ?? `Window save failed (HTTP ${winRes.status})`);
+      }
+
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch (e) {
@@ -870,7 +893,10 @@ export default function ManagerPropertyDetailsClient({
                 slug={slug}
                 disabled={isSaving}
                 onUpdate={(next) => setWindows((ws) => ws.map((x, i) => (i === idx ? next : x)))}
-                onDelete={() => setWindows((ws) => ws.filter((_, i) => i !== idx))}
+                onDelete={async () => {
+                  try { await deleteWindowFromDb(slug, w.id); } catch { /* no-op if not yet in DB */ }
+                  setWindows((ws) => ws.filter((_, i) => i !== idx));
+                }}
               />
             ))}
           </div>

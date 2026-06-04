@@ -44,6 +44,7 @@ export interface Property {
   HeadingColor?: string;
   TextColor?: string;
   CheckoutInstructions?: string;
+  ReviewUrl?: string;
   windows?: AmenityWindow[];
   rooms?: string[];
   photos?: string[];
