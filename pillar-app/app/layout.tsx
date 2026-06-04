@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Montserrat, Cormorant_Garamond } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -29,6 +29,11 @@ const cormorant = Cormorant_Garamond({
   style: ["normal", "italic"],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Pillar — Guest Experience for Property Managers",
   description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
@@ -52,7 +57,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Synchronously apply saved theme before first paint to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('pillar-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>

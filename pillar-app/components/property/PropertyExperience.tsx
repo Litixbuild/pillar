@@ -327,6 +327,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalTheme }: { open: boolean; onClose: () => void; phone: string; dark: boolean; slug: string; lightTheme?: LightTheme }) {
   const t = useTranslations('guest');
+  const [visible, setVisible] = useState(false);
   const [category, setCategory] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [otherMessage, setOtherMessage] = useState('');
@@ -337,6 +338,12 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
   const [lateCheckoutSent, setLateCheckoutSent] = useState(false);
   const [lateCheckoutLoading, setLateCheckoutLoading] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!open) { setVisible(false); return; }
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -385,11 +392,21 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
 
   return (
     <div className="fixed inset-0 z-60 flex items-end justify-center px-6 pb-6">
-      <button type="button" onClick={onClose} className="absolute inset-0 backdrop-blur-sm" style={{ background: overlayBg }} aria-label="Close" />
-
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute inset-0"
+        style={{ background: overlayBg, opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease-out' }}
+        aria-label="Close"
+      />
       <div
         className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
-        style={{ background: panelBg, border: `1px solid ${borderCol}` }}
+        style={{
+          background: panelBg,
+          border: `1px solid ${borderCol}`,
+          transform: visible ? 'translateY(0)' : 'translateY(110%)',
+          transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
       >
         <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${accentGlowRGB},0.25), transparent)` }} />
 
@@ -814,11 +831,14 @@ function renderWindowContent(w: AmenityWindow, t: (key: string) => string): Reac
   if (w.type === 'image') {
     return w.url
       // eslint-disable-next-line @next/next/no-img-element
-      ? <img src={w.url} alt={w.title} className="w-full rounded-xl border border-white/[0.07]" loading="lazy" />
+      ? <img src={w.url} alt={w.title} className="w-full rounded-xl border border-white/[0.07]" loading="eager" />
       : <p className="text-sm text-white/35">{t('noImageUploaded')}</p>;
   }
+  const videoMime = /\.webm(\?|$)/i.test(w.url ?? '') ? 'video/webm'
+    : /\.mov(\?|$)/i.test(w.url ?? '') ? 'video/mp4'
+    : 'video/mp4';
   return w.url
-    ? <div className="overflow-hidden rounded-xl border border-white/[0.07]"><video controls className="w-full" preload="metadata"><source src={w.url} />{t('browserNoVideo')}</video></div>
+    ? <div className="rounded-xl border border-white/[0.07]"><video controls playsInline className="w-full rounded-xl" preload="auto" style={{ display: 'block' }}><source src={w.url} type={videoMime} />{t('browserNoVideo')}</video></div>
     : <p className="text-sm text-white/35">{t('noVideoUploaded')}</p>;
 }
 
@@ -851,8 +871,8 @@ export default function PropertyExperience({
   onReorderWindows?: (fromIndex: number, toIndex: number) => void;
 }) {
   const t = useTranslations('guest');
-  const PREVIEW_FADE_MS = 450;
-  const FULL_VIEW_FADE_MS = 450;
+  const PREVIEW_FADE_MS = 220;
+  const FULL_VIEW_FADE_MS = 220;
 
   const [expanded, setExpanded] = useState(editableCustomWindows ? true : false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -885,22 +905,17 @@ export default function PropertyExperience({
   }, [openAmenityId]);
 
   // Prevent iOS from scrolling the background when any overlay modal is open.
-  // Without this, the keyboard opening inside the modal scrolls the window and
-  // the position never restores, making content appear shifted toward the logo.
+  // overflow:hidden on <html> blocks scrolling without shifting layout — avoids
+  // the position:fixed+scrollTo approach which could leave the page stuck shifted.
   useEffect(() => {
     const isAnyModalOpen = needHelpOpen || checkoutOpen || !!openAmenityId || lightboxOpen;
     if (!isAnyModalOpen) return;
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
+      document.documentElement.style.overflow = prev;
     };
-  }, [needHelpOpen, openAmenityId, lightboxOpen]);
+  }, [needHelpOpen, checkoutOpen, openAmenityId, lightboxOpen]);
 
   function openAmenity(id: string) {
     setAmenityAnimating(false);
@@ -1050,7 +1065,7 @@ export default function PropertyExperience({
         if (!expanded || fullView === 'amenities' || !logoSrc) return null;
         return (
           <div
-            className="pointer-events-none fixed inset-x-0 top-0 z-10 flex justify-center pt-6 transition-opacity duration-700 ease-in-out"
+            className="pointer-events-none fixed inset-x-0 top-0 z-10 flex justify-center pt-6 transition-opacity duration-[220ms] ease-in-out"
             style={{ opacity: isTransitioning || isFullViewTransitioning ? 0 : 1 }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1291,11 +1306,14 @@ export default function PropertyExperience({
                               const url = typeof first?.url === 'string' ? first.url : '';
                               if (!url) return <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.28)' : 'rgba(30,41,59,0.30)' }}>{t('noAttachment')}</p>;
                               const kind = guessAttachmentKind(url);
-                              if (kind === 'video') return (
-                                <div className="overflow-hidden rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}>
-                                  <video controls className="w-full" preload="metadata"><source src={url} />{t('browserNoVideo')}</video>
-                                </div>
-                              );
+                              if (kind === 'video') {
+                                const vmime = /\.webm(\?|$)/i.test(url) ? 'video/webm' : 'video/mp4';
+                                return (
+                                  <div className="rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }}>
+                                    <video controls playsInline className="w-full rounded-xl" preload="auto" style={{ display: 'block' }}><source src={url} type={vmime} />{t('browserNoVideo')}</video>
+                                  </div>
+                                );
+                              }
                               if (kind === 'image') return (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={url} alt={key} className="w-full rounded-xl" style={{ border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' }} loading="lazy" />
