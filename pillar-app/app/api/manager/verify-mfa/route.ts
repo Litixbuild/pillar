@@ -9,6 +9,8 @@ import {
   verifyTempToken,
   hashOtp,
 } from "@/lib/managerAuth";
+import { logAuditEvent, getClientIp } from "@/lib/auditLog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +34,11 @@ export async function POST(req: Request) {
     return Response.json({ error: "Session expired. Please sign in again." }, { status: 401 });
   }
 
+  const allowed = await checkRateLimit(`mfa:${pending.userId}`, 5, 900);
+  if (!allowed) {
+    return Response.json({ error: 'Too many incorrect attempts. Please wait 15 minutes and sign in again.' }, { status: 429 });
+  }
+
   // Constant-time comparison of hashed codes
   const submittedHash = hashOtp(code);
   const storedHash = pending.codeHash;
@@ -43,6 +50,7 @@ export async function POST(req: Request) {
   }
 
   if (!match) {
+    await logAuditEvent({ userId: pending.userId, eventType: 'manager.mfa', status: 'failure', ipAddress: getClientIp(req) });
     return Response.json({ error: "Incorrect code. Please try again." }, { status: 401 });
   }
 
@@ -70,5 +78,6 @@ export async function POST(req: Request) {
   const sessionToken = signManagerSession({ email: pending.email, name: pending.name, userId: pending.userId, iat: Date.now() });
   jar.set({ name: getManagerCookieName(), value: sessionToken, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
 
+  await logAuditEvent({ userId: pending.userId, eventType: 'manager.mfa', status: 'success', ipAddress: getClientIp(req) });
   return Response.json({ ok: true }, { status: 200 });
 }

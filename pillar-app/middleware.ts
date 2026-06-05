@@ -24,13 +24,56 @@ function detectLocale(req: NextRequest): string {
   return "en";
 }
 
-export function middleware(req: NextRequest) {
+// Verify HMAC-SHA256 signature using Web Crypto (Edge Runtime compatible)
+async function verifyHmac(token: string, secret: string): Promise<boolean> {
+  try {
+    const lastDot = token.lastIndexOf('.');
+    if (lastDot === -1) return false;
+    const b64 = token.slice(0, lastDot);
+    const sig = token.slice(lastDot + 1);
+    if (!b64 || !sig) return false;
+
+    const key = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const rawSig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(b64));
+
+    // Convert to base64url
+    let binary = '';
+    new Uint8Array(rawSig).forEach((b) => { binary += String.fromCharCode(b); });
+    const expected = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    // Timing-safe comparison
+    if (sig.length !== expected.length) return false;
+    let diff = 0;
+    for (let i = 0; i < sig.length; i++) diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
+    return diff === 0;
+  } catch { return false; }
+}
+
+// Parse iat from token payload and check against max age
+function isTokenExpired(token: string, maxAgeMs: number): boolean {
+  try {
+    const lastDot = token.lastIndexOf('.');
+    if (lastDot === -1) return true;
+    const b64url = token.slice(0, lastDot);
+    const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded)) as { iat?: unknown };
+    if (typeof payload.iat !== 'number') return true;
+    return Date.now() - payload.iat > maxAgeMs;
+  } catch { return true; }
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // --- Admin auth ---
   if (pathname !== "/admin/login" && pathname.startsWith("/admin")) {
     const token = req.cookies.get("pillar_admin")?.value || "";
-    if (!token) {
+    const secret = process.env.ADMIN_SESSION_SECRET || "";
+    if (!token || !secret || isTokenExpired(token, 8 * 60 * 60 * 1000) || !(await verifyHmac(token, secret))) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
@@ -40,7 +83,8 @@ export function middleware(req: NextRequest) {
   // --- Manager auth ---
   if (!MANAGER_PUBLIC.has(pathname) && pathname.startsWith("/manager")) {
     const token = req.cookies.get("pillar_manager")?.value || "";
-    if (!token) {
+    const secret = process.env.MANAGER_SESSION_SECRET || "";
+    if (!token || !secret || isTokenExpired(token, 24 * 60 * 60 * 1000) || !(await verifyHmac(token, secret))) {
       const url = req.nextUrl.clone();
       url.pathname = "/manager/login";
       return NextResponse.redirect(url);

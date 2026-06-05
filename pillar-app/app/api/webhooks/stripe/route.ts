@@ -51,6 +51,18 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Idempotency: skip events already processed (handles Stripe retries)
+  const supabase = createServiceClient();
+  const { data: alreadyProcessed } = await supabase
+    .from('stripe_processed_events')
+    .select('event_id')
+    .eq('event_id', event.id)
+    .maybeSingle();
+
+  if (alreadyProcessed) {
+    return Response.json({ received: true });
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -150,6 +162,12 @@ export async function POST(req: Request) {
       break;
     }
   }
+
+  // Mark event as processed (best-effort — don't fail the webhook if this insert fails)
+  await supabase
+    .from('stripe_processed_events')
+    .insert({ event_id: event.id })
+    .then(() => null, () => null);
 
   return Response.json({ received: true });
 }

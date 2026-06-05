@@ -9,6 +9,18 @@ export const dynamic = 'force-dynamic';
 
 const BUCKET = 'property-media';
 
+const MAX_PHOTO_SIZE = 50 * 1024 * 1024; // 50 MB
+
+function detectImageMime(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'image/jpeg';
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return 'image/png';
+  if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return 'image/webp';
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return 'image/gif';
+  return null;
+}
+
 async function requireSession() {
   const jar = await cookies();
   const token = jar.get(getManagerCookieName())?.value || '';
@@ -59,10 +71,17 @@ export async function POST(
     if (!file) return Response.json({ error: 'Missing file' }, { status: 400 });
 
     const rawExt = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : 'jpg';
-    const contentType = file.type || `image/${rawExt === 'jpg' ? 'jpeg' : rawExt}`;
     const photoId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const path = `${session.userId}/${slug}/photos/${photoId}.${rawExt}`;
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (buffer.length > MAX_PHOTO_SIZE) {
+      return Response.json({ error: 'File too large. Maximum size is 50 MB.' }, { status: 400 });
+    }
+    const detectedMime = detectImageMime(buffer);
+    if (!detectedMime) {
+      return Response.json({ error: 'Only JPEG, PNG, WebP, and GIF images are accepted.' }, { status: 400 });
+    }
 
     const supabase = createServiceClient();
 
@@ -71,7 +90,7 @@ export async function POST(
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, buffer, { contentType, upsert: true });
+      .upload(path, buffer, { contentType: detectedMime, upsert: true });
 
     if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 

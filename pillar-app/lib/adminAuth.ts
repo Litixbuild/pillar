@@ -46,6 +46,7 @@ export function verifyAdminSession(token: string): { email: string; userId: stri
       iat?: unknown;
     };
     if (typeof data.email !== "string" || typeof data.userId !== "string" || typeof data.iat !== "number") return null;
+    if (Date.now() - data.iat > 8 * 60 * 60 * 1000) return null; // 8-hour expiry
     return { email: data.email, userId: data.userId, iat: data.iat };
   } catch {
     return null;

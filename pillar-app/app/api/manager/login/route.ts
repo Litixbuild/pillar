@@ -10,6 +10,8 @@ import {
   hashOtp,
 } from "@/lib/managerAuth";
 import { sendOtpEmail } from "@/lib/mailer";
+import { logAuditEvent, getClientIp } from "@/lib/auditLog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { email?: unknown; password?: unknown } | null;
@@ -20,11 +22,17 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing email or password" }, { status: 400 });
   }
 
+  const allowed = await checkRateLimit(`login:${email}`, 5, 900);
+  if (!allowed) {
+    return Response.json({ error: 'Too many login attempts. Please wait 15 minutes before trying again.' }, { status: 429 });
+  }
+
   const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
     const msg = error?.message ?? "Invalid credentials";
+    await logAuditEvent({ eventType: 'manager.login', status: 'failure', ipAddress: getClientIp(req) });
     if (msg.toLowerCase().includes("email not confirmed")) {
       return Response.json({ error: "Please verify your email before signing in. Check your inbox for a confirmation link." }, { status: 401 });
     }
@@ -56,6 +64,7 @@ export async function POST(req: Request) {
     if (device && new Date(device.expires_at) > new Date()) {
       const token = signManagerSession({ email, name: managerName, userId: data.user.id, iat: Date.now() });
       jar.set({ name: getManagerCookieName(), value: token, httpOnly: true, sameSite: "lax", secure: isProd, path: "/" });
+      await logAuditEvent({ userId: data.user.id, eventType: 'manager.login', status: 'success', ipAddress: getClientIp(req), metadata: { method: 'trusted_device' } });
       return Response.json({ ok: true }, { status: 200 });
     }
     if (device) await service.from("mfa_trusted_devices").delete().eq("id", device.id);
@@ -78,5 +87,6 @@ export async function POST(req: Request) {
 
   const [local, domain] = email.split('@');
   const masked = `${local[0]}${'*'.repeat(Math.max(2, (local?.length ?? 1) - 1))}@${domain}`;
+  await logAuditEvent({ userId: data.user.id, eventType: 'manager.login', status: 'success', ipAddress: getClientIp(req), metadata: { method: 'otp_required' } });
   return Response.json({ mfa_required: true, email_hint: masked }, { status: 200 });
 }

@@ -12,7 +12,17 @@ const BUCKET = "qr-codes";
 async function requireAdminSession() {
   const jar = await cookies();
   const token = jar.get(getAdminCookieName())?.value ?? "";
-  return token ? verifyAdminSession(token) : null;
+  if (!token) return null;
+  const session = verifyAdminSession(token);
+  if (!session) return null;
+  const supabase = createServiceClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", session.userId)
+    .single();
+  if (profile?.role !== "admin") return null;
+  return session;
 }
 
 async function ensureBucket(supabase: SupabaseClient): Promise<void> {

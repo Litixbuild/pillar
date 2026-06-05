@@ -105,6 +105,7 @@ export function verifyManagerSession(token: string): { email: string; name?: str
     const json = Buffer.from(b64, "base64url").toString("utf8");
     const data = JSON.parse(json) as { email?: unknown; name?: unknown; userId?: unknown; iat?: unknown };
     if (typeof data.email !== "string" || typeof data.iat !== "number") return null;
+    if (Date.now() - data.iat > 24 * 60 * 60 * 1000) return null; // 24-hour expiry
     return {
       email: data.email,
       name: typeof data.name === "string" && data.name.trim() ? data.name.trim() : undefined,

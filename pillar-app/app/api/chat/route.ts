@@ -213,6 +213,7 @@ function takeUniquePlaces(
 
 import { getPropertyBySlug } from "@/lib/properties";
 import { logPropertyEvent } from "@/lib/propertyEvents";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1097,6 +1098,11 @@ export async function POST(req: Request) {
 
     const property = await getPropertyBySlug(slug);
     if (!property) return Response.json({ error: "Property not found" }, { status: 404 });
+
+    const chatAllowed = await checkRateLimit(`chat:${slug}`, 30, 3600);
+    if (!chatAllowed) {
+      return Response.json({ error: 'Too many messages. Please try again in an hour.' }, { status: 429 });
+    }
 
     // Fire-and-forget — each message = one potential call the manager didn't have to take
     void logPropertyEvent(slug, "concierge_message");

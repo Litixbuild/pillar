@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createClient, createServiceClient } from "@/lib/supabase";
 import { getAdminCookieName, signAdminSession } from "@/lib/adminAuth";
+import { logAuditEvent, getClientIp } from "@/lib/auditLog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
   // Step 1: verify the password with Supabase
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.user) {
+    await logAuditEvent({ eventType: 'admin.login', status: 'failure', ipAddress: getClientIp(req), metadata: { reason: 'invalid_credentials' } });
     return Response.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
@@ -32,6 +34,7 @@ export async function POST(req: Request) {
     .single();
 
   if (profile?.role !== "admin") {
+    await logAuditEvent({ userId: data.user.id, eventType: 'admin.login', status: 'failure', ipAddress: getClientIp(req), metadata: { reason: 'not_admin' } });
     return Response.json({ error: "Not authorised" }, { status: 403 });
   }
 
@@ -48,5 +51,6 @@ export async function POST(req: Request) {
     path: "/",
   });
 
+  await logAuditEvent({ userId: data.user.id, eventType: 'admin.login', status: 'success', ipAddress: getClientIp(req) });
   return Response.json({ ok: true }, { status: 200 });
 }

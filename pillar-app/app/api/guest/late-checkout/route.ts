@@ -1,6 +1,8 @@
 import { createServiceClient } from '@/lib/supabase';
 import { sendSms } from '@/lib/twilio';
 import { sendLateCheckoutEmail } from '@/lib/mailer';
+import { getClientIp } from '@/lib/auditLog';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +12,12 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as { slug?: unknown } | null;
     const slug = typeof body?.slug === 'string' ? body.slug.trim() : '';
     if (!slug) return Response.json({ error: 'slug is required' }, { status: 400 });
+
+    const ip = getClientIp(req) ?? 'unknown';
+    const allowed = await checkRateLimit(`late-checkout:${slug}:${ip}`, 3, 3600);
+    if (!allowed) {
+      return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
 
     const service = createServiceClient();
     const { data: property } = await service

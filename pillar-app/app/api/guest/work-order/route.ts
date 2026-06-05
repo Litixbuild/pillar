@@ -2,6 +2,8 @@ import { submitWorkOrder, getRoutingContactForCategory } from '@/lib/workOrders'
 import { sendSms } from '@/lib/twilio';
 import { sendWorkOrderEmail } from '@/lib/mailer';
 import { logPropertyEvent } from '@/lib/propertyEvents';
+import { getClientIp } from '@/lib/auditLog';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,6 +34,12 @@ export async function POST(req: Request) {
 
     if (!slug) return Response.json({ error: 'slug is required' }, { status: 400 });
     if (!categoryName) return Response.json({ error: 'category_name is required' }, { status: 400 });
+
+    const ip = getClientIp(req) ?? 'unknown';
+    const allowed = await checkRateLimit(`work-order:${slug}:${ip}`, 5, 3600);
+    if (!allowed) {
+      return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
 
     const description = typeof body.description === 'string' ? body.description.trim() || null : null;
     const otherMessage = typeof body.other_message === 'string' ? body.other_message.trim() || null : null;

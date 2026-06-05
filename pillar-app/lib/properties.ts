@@ -10,6 +10,7 @@ import {
   type AmenityWindow,
 } from '@/lib/types';
 import { getPropertyPhotos } from '@/lib/propertyPhotos';
+import { encryptField, decryptField } from '@/lib/fieldEncryption';
 
 type SupabaseRow = Record<string, unknown>;
 
@@ -33,10 +34,10 @@ function rowToProperty(row: SupabaseRow, windows: AmenityWindow[] = [], photos: 
     PropertyZipCode: (row.property_zip_code as string) || 'Not provided',
     DetailedHouseBio: (row.description as string) || 'Not provided',
     WiFiName: (row.wifi_name as string) || '',
-    WiFiPassword: (row.wifi_password as string) || '',
-    GarageCode: (row.garage_code as string) || '',
+    WiFiPassword: decryptField((row.wifi_password as string) || ''),
+    GarageCode: decryptField((row.garage_code as string) || ''),
     HouseRules: (row.house_rules as string) || '',
-    ManagerPhone: (row.manager_phone as string) || '',
+    ManagerPhone: decryptField((row.manager_phone as string) || ''),
     ManagerName: (row.manager_name as string) || undefined,
     HeroImage: (row.hero_image_url as string) || undefined,
     LogoUrl: (row.logo_url as string) || undefined,
@@ -60,7 +61,7 @@ function rowToPropertyFields(row: SupabaseRow): PropertyFields {
   const out: Record<string, FieldValue> = {};
   for (const [k, v] of Object.entries(row)) {
     if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-      out[k] = v;
+      out[k] = typeof v === 'string' && SENSITIVE_COLUMNS.has(k) ? decryptField(v) : v;
     }
   }
   return out;
@@ -85,6 +86,8 @@ const COLUMN_MAP: Record<string, string> = {
   CheckoutInstructions: 'checkout_instructions',
   ReviewUrl: 'review_url',
 };
+
+const SENSITIVE_COLUMNS = new Set(['wifi_password', 'garage_code', 'manager_phone']);
 
 async function fetchWindowsBySlug(slug: string): Promise<AmenityWindow[]> {
   const supabase = createServiceClient();
@@ -168,7 +171,11 @@ export async function updatePropertyFieldsBySlug(
   const updateData: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(fields)) {
     const col = COLUMN_MAP[key];
-    if (col !== undefined) updateData[col] = value;
+    if (col !== undefined) {
+      updateData[col] = typeof value === 'string' && value && SENSITIVE_COLUMNS.has(col)
+        ? encryptField(value)
+        : value;
+    }
   }
 
   if (!Object.keys(updateData).length) return;
