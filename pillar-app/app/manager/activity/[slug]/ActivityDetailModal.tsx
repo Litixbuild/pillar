@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { WorkOrder } from '@/lib/workOrders';
 import type { LateCheckoutRequest } from '@/lib/lateCheckouts';
 
@@ -16,7 +17,7 @@ function formatDateTime(iso: string) {
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-4 border-b border-[rgba(100,80,40,0.07)] py-3 last:border-b-0 dark:border-white/[0.055]">
+    <div className="flex items-start gap-4 border-b border-[rgba(100,80,40,0.07)] py-3 last:border-b-0 dark:border-white/5.5">
       <span className="mt-0.5 w-28 flex-none text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(100,80,40,0.42)] dark:text-white/35">
         {label}
       </span>
@@ -45,7 +46,7 @@ export default function ActivityDetailModal(props: Props) {
   const headerDivider = isCheckout ? 'rgba(212,175,55,0.14)' : 'rgba(100,80,40,0.09)';
   const innerDivider  = isCheckout ? 'rgba(212,175,55,0.12)' : 'rgba(100,80,40,0.08)';
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-5"
       role="dialog"
@@ -110,7 +111,8 @@ export default function ActivityDetailModal(props: Props) {
             : <WorkOrderFields order={props.item} />}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
