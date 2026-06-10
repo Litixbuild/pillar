@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { WorkOrder } from '@/lib/workOrders';
+import ActivityDetailModal from './ActivityDetailModal';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -22,17 +23,11 @@ function CheckIcon() {
   );
 }
 
-function OrderRow({
-  order,
-  mode,
-}: {
-  order: WorkOrder;
-  mode: 'open' | 'resolved';
-}) {
+function OpenOrderRow({ order }: { order: WorkOrder }) {
   const router = useRouter();
-  const [resolving, setResolving] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState('');
+  const [resolving, setResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleResolve() {
@@ -53,10 +48,9 @@ function OrderRow({
   }
 
   return (
-    <div className="border-b border-[rgba(100,80,40,0.07)] px-6 py-4 last:border-b-0 dark:border-white/[0.05]">
+    <div className="border-b border-[rgba(100,80,40,0.07)] px-6 py-4 last:border-b-0 dark:border-white/5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          {/* Category + date */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-md border border-[rgba(100,80,40,0.14)] bg-[rgba(100,80,40,0.06)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(100,80,40,0.70)] dark:border-white/10 dark:bg-white/5 dark:text-white/55">
               {order.category_name}
@@ -65,34 +59,15 @@ function OrderRow({
               {formatDate(order.created_at)}
             </span>
           </div>
-
-          {/* Description */}
           {order.description && (
-            <p className="mt-2 text-sm text-[#1e293b] dark:text-white/80">
-              {order.description}
-            </p>
+            <p className="mt-2 text-sm text-[#1e293b] dark:text-white/80">{order.description}</p>
           )}
           {order.other_message && (
-            <p className="mt-1 text-xs text-[rgba(100,80,40,0.65)] dark:text-white/45">
-              {order.other_message}
-            </p>
-          )}
-
-          {/* Resolved note */}
-          {mode === 'resolved' && order.resolved_note && (
-            <p className="mt-2 text-xs italic text-[rgba(100,80,40,0.55)] dark:text-white/35">
-              Note: {order.resolved_note}
-            </p>
-          )}
-          {mode === 'resolved' && order.resolved_at && (
-            <p className="mt-1 text-[10px] text-[rgba(100,80,40,0.40)] dark:text-white/25">
-              Resolved {formatDate(order.resolved_at)}
-            </p>
+            <p className="mt-1 text-xs text-[rgba(100,80,40,0.65)] dark:text-white/45">{order.other_message}</p>
           )}
         </div>
 
-        {/* Resolve button (open mode only) */}
-        {mode === 'open' && !showNote && (
+        {!showNote && (
           <button
             type="button"
             onClick={() => setShowNote(true)}
@@ -104,8 +79,7 @@ function OrderRow({
         )}
       </div>
 
-      {/* Inline resolve confirmation */}
-      {mode === 'open' && showNote && (
+      {showNote && (
         <div className="mt-3 space-y-2">
           <input
             type="text"
@@ -141,21 +115,60 @@ function OrderRow({
   );
 }
 
+function ResolvedOrderRow({ order, onDetail }: { order: WorkOrder; onDetail: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onDetail}
+      className="flex w-full items-center gap-3 border-b border-[rgba(100,80,40,0.07)] px-5 py-2.5 text-left transition-colors hover:bg-[rgba(100,80,40,0.025)] last:border-b-0 dark:border-white/5 dark:hover:bg-white/2"
+    >
+      <div className="h-1.5 w-1.5 flex-none rounded-full bg-emerald-400" />
+      <span className="min-w-0 flex-1 truncate text-[11px] text-[#1e293b] dark:text-white/65">
+        {order.category_name}
+      </span>
+      <span className="flex-none text-[10px] text-[rgba(100,80,40,0.38)] dark:text-white/25">
+        {formatDate(order.created_at)}
+      </span>
+      <span className="flex-none rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-400">
+        Resolved
+      </span>
+    </button>
+  );
+}
+
 export default function WorkOrderList({
   orders,
   slug,
   mode,
+  propertyName = '',
 }: {
   orders: WorkOrder[];
   slug: string;
   mode: 'open' | 'resolved';
+  propertyName?: string;
 }) {
   void slug;
+  const [selected, setSelected] = useState<WorkOrder | null>(null);
+
   return (
-    <div>
-      {orders.map((o) => (
-        <OrderRow key={o.id} order={o} mode={mode} />
-      ))}
-    </div>
+    <>
+      <div>
+        {orders.map((o) =>
+          mode === 'resolved' ? (
+            <ResolvedOrderRow key={o.id} order={o} onDetail={() => setSelected(o)} />
+          ) : (
+            <OpenOrderRow key={o.id} order={o} />
+          )
+        )}
+      </div>
+      {selected && (
+        <ActivityDetailModal
+          type="workorder"
+          item={selected}
+          propertyName={propertyName}
+          onClose={() => setSelected(null)}
+        />
+      )}
+    </>
   );
 }

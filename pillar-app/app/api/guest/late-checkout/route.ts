@@ -3,6 +3,7 @@ import { sendSms } from '@/lib/twilio';
 import { sendLateCheckoutEmail } from '@/lib/mailer';
 import { getClientIp } from '@/lib/auditLog';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { createLateCheckoutRequest } from '@/lib/lateCheckouts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -62,8 +63,9 @@ export async function POST(req: Request) {
       }
     }
 
+    const request = await createLateCheckoutRequest(slug).catch(() => null);
     await Promise.allSettled(notifyJobs);
-    return Response.json({ ok: true }, { status: 200 });
+    return Response.json({ ok: true, requestId: request?.id ?? null }, { status: 200 });
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }

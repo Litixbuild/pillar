@@ -403,6 +403,8 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [lateCheckoutSent, setLateCheckoutSent] = useState(false);
   const [lateCheckoutLoading, setLateCheckoutLoading] = useState(false);
+  const [lateCheckoutConfirm, setLateCheckoutConfirm] = useState(false);
+  const [lateCheckoutStatus, setLateCheckoutStatus] = useState<'pending' | 'approved' | 'denied' | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -417,6 +419,42 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
     window.addEventListener('keydown', fn);
     return () => window.removeEventListener('keydown', fn);
   }, [open, onClose]);
+
+  // Check localStorage for an existing late checkout request and poll its status
+  useEffect(() => {
+    if (!open || !slug) return;
+    const stored = localStorage.getItem(`pillar_lco_${slug}`);
+    if (!stored) return;
+    let parsed: { requestId?: string; submittedAt?: string } | null = null;
+    try { parsed = JSON.parse(stored); } catch { return; }
+    const { requestId, submittedAt } = parsed ?? {};
+    if (!requestId || !submittedAt) return;
+    // Client-side expiry guard (8 hours)
+    if (Date.now() - new Date(submittedAt).getTime() > 8 * 60 * 60 * 1000) {
+      localStorage.removeItem(`pillar_lco_${slug}`);
+      return;
+    }
+    fetch(`/api/guest/late-checkout/status?id=${encodeURIComponent(requestId)}`)
+      .then((r) => r.json().catch(() => ({})))
+      .then((d: { status?: string; expires_at?: string }) => {
+        const s = d.status;
+        if (s === 'approved' || s === 'denied') {
+          setLateCheckoutStatus(s);
+          setLateCheckoutSent(true);
+        } else if (s === 'pending') {
+          // If server-side expiry has passed, clear and show button again
+          if (d.expires_at && new Date(d.expires_at) < new Date()) {
+            localStorage.removeItem(`pillar_lco_${slug}`);
+          } else {
+            setLateCheckoutStatus('pending');
+            setLateCheckoutSent(true);
+          }
+        } else {
+          localStorage.removeItem(`pillar_lco_${slug}`);
+        }
+      })
+      .catch(() => undefined);
+  }, [open, slug]);
 
   useEffect(() => {
     if (!open || !slug) return;
@@ -598,31 +636,72 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
           <div className="mt-5">
             <div className="h-px" style={{ backgroundColor: dividerCol }} />
             <div className="mt-5">
-              {lateCheckoutSent ? (
+              {lateCheckoutStatus !== null ? (
+                <div className="rounded-2xl px-4 py-3.5 text-sm font-medium leading-relaxed text-center" style={
+                  lateCheckoutStatus === 'approved'
+                    ? { background: 'linear-gradient(135deg, rgba(34,197,94,0.18) 0%, rgba(21,128,61,0.22) 100%)', border: '1px solid rgba(34,197,94,0.35)', color: dark ? '#86efac' : '#166534' }
+                    : lateCheckoutStatus === 'denied'
+                    ? { background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(185,28,28,0.20) 100%)', border: '1px solid rgba(239,68,68,0.32)', color: dark ? '#fca5a5' : '#991b1b' }
+                    : { background: inputBg, border: `1px solid ${dark ? borderCol : 'rgba(0,0,0,0.18)'}`, color: dark ? mutedCol : 'rgba(0,0,0,0.82)' }
+                }>
+                  {lateCheckoutStatus === 'approved' ? t('lateCheckoutApproved') : lateCheckoutStatus === 'denied' ? t('lateCheckoutDenied') : t('lateCheckoutPending')}
+                </div>
+              ) : lateCheckoutSent ? (
                 <div className="rounded-2xl px-4 py-3.5 text-sm leading-relaxed" style={{ background: inputBg, border: `1px solid ${borderCol}`, color: mutedCol }}>
-                  {t('lateCheckoutSent')}
+                  {t('lateCheckoutPending')}
+                </div>
+              ) : lateCheckoutConfirm ? (
+                <div className="rounded-2xl px-4 py-4 space-y-3" style={{ background: inputBg, border: `1px solid ${borderCol}` }}>
+                  <p className="text-sm text-center" style={{ color: textCol }}>{t('confirmLateCheckout')}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={lateCheckoutLoading}
+                      onClick={() => {
+                        setLateCheckoutLoading(true);
+                        fetch('/api/guest/late-checkout', {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify({ slug }),
+                        })
+                          .then((r) => r.json().catch(() => ({})))
+                          .then((d: { requestId?: string }) => {
+                            if (d.requestId) {
+                              localStorage.setItem(`pillar_lco_${slug}`, JSON.stringify({ requestId: d.requestId, submittedAt: new Date().toISOString() }));
+                              setLateCheckoutStatus('pending');
+                            }
+                          })
+                          .catch(() => undefined)
+                          .finally(() => {
+                            setLateCheckoutLoading(false);
+                            setLateCheckoutConfirm(false);
+                            setLateCheckoutSent(true);
+                          });
+                      }}
+                      className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+                      style={{ background: `rgba(${accentGlowRGB},${isModalThemed ? '0.07' : '0.15'})`, border: `1px solid rgba(${accentGlowRGB},${isModalThemed ? '0.18' : '0.25'})`, color: checkColor }}
+                    >
+                      {lateCheckoutLoading ? t('sending') : t('yes')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={lateCheckoutLoading}
+                      onClick={() => setLateCheckoutConfirm(false)}
+                      className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+                      style={{ background: 'transparent', border: `1px solid ${borderCol}`, color: mutedCol }}
+                    >
+                      {t('no')}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
                   type="button"
-                  disabled={lateCheckoutLoading}
-                  onClick={() => {
-                    setLateCheckoutLoading(true);
-                    fetch('/api/guest/late-checkout', {
-                      method: 'POST',
-                      headers: { 'content-type': 'application/json' },
-                      body: JSON.stringify({ slug }),
-                    })
-                      .catch(() => undefined)
-                      .finally(() => {
-                        setLateCheckoutLoading(false);
-                        setLateCheckoutSent(true);
-                      });
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
+                  onClick={() => setLateCheckoutConfirm(true)}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold tracking-wide transition-all duration-200"
                   style={{ background: inputBg, border: `1px solid ${borderCol}`, color: textCol }}
                 >
-                  {lateCheckoutLoading ? t('sending') : t('requestLateCheckout')}
+                  {t('requestLateCheckout')}
                 </button>
               )}
             </div>
@@ -972,15 +1051,17 @@ export default function PropertyExperience({
   }, [openAmenityId]);
 
   // Prevent iOS from scrolling the background when any overlay modal is open.
-  // overflow:hidden on <html> blocks scrolling without shifting layout — avoids
-  // the position:fixed+scrollTo approach which could leave the page stuck shifted.
+  // Capture scrollY before locking so we can restore exact position on close —
+  // overflow:hidden on <html> resets the scroll container to 0.
   useEffect(() => {
     const isAnyModalOpen = needHelpOpen || checkoutOpen || !!openAmenityId || lightboxOpen;
     if (!isAnyModalOpen) return;
+    const scrollY = window.scrollY;
     const prev = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     return () => {
       document.documentElement.style.overflow = prev;
+      window.scrollTo(0, scrollY);
     };
   }, [needHelpOpen, checkoutOpen, openAmenityId, lightboxOpen]);
 

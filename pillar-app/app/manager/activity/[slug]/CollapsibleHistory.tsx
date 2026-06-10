@@ -7,9 +7,11 @@ import WorkOrderList from './WorkOrderList';
 export default function CollapsibleHistory({
   orders,
   slug,
+  propertyName = '',
 }: {
   orders: WorkOrder[];
   slug: string;
+  propertyName?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -18,7 +20,7 @@ export default function CollapsibleHistory({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 transition-colors hover:bg-[rgba(100,80,40,0.02)] dark:border-white/[0.07] dark:hover:bg-white/[0.02]"
+        className="flex w-full items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 transition-colors hover:bg-[rgba(100,80,40,0.02)] dark:border-white/7 dark:hover:bg-white/2"
       >
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[rgba(100,80,40,0.60)] dark:text-white/50">
           History
@@ -38,7 +40,7 @@ export default function CollapsibleHistory({
         </span>
       </button>
 
-      {open && <WorkOrderList orders={orders} slug={slug} mode="resolved" />}
+      {open && <WorkOrderList orders={orders} slug={slug} mode="resolved" propertyName={propertyName} />}
     </div>
   );
 }

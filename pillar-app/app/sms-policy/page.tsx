@@ -68,18 +68,21 @@ export default function SmsPolicyPage() {
             </div>
 
             <p className="mt-4">
-              Both fields display the label <em>"Phone number for SMS alerts"</em> adjacent to the input.
-              No pre-checked boxes or implied consent — the manager actively types their number and saves.
+              Directly below each phone number field, the following consent notice is displayed before the
+              manager saves:
             </p>
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 font-mono text-xs text-slate-700">
+              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants
+              submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+            </div>
           </section>
 
           {/* Consent language */}
           <section>
             <h2 className="mb-3 text-base font-semibold text-slate-800">Consent Language Shown at Opt-In</h2>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 font-mono text-xs text-slate-700">
-              By entering your phone number, you agree to receive SMS notifications from Pillar when
-              tenants submit requests for this property. Message and data rates may apply.
-              Reply STOP to opt out at any time.
+              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants
+              submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
             </div>
           </section>
 

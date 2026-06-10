@@ -4,9 +4,18 @@ import Link from 'next/link';
 import { getManagerCookieName, verifyManagerSession } from '@/lib/managerAuth';
 import { getPropertiesByManagerId } from '@/lib/properties';
 import { getOpenWorkOrderCounts } from '@/lib/workOrders';
+import { getPendingLateCheckoutCounts } from '@/lib/lateCheckouts';
 import ManagerBottomNav from '@/app/manager/ManagerBottomNav';
 
 export const dynamic = 'force-dynamic';
+
+function activityLabel(workOrders: number, checkouts: number): string {
+  if (workOrders === 0 && checkouts === 0) return 'No open activity';
+  const parts: string[] = [];
+  if (workOrders > 0) parts.push(`${workOrders} ${workOrders === 1 ? 'order' : 'orders'}`);
+  if (checkouts > 0) parts.push(`${checkouts} ${checkouts === 1 ? 'checkout req' : 'checkout reqs'}`);
+  return parts.join(' · ');
+}
 
 export default async function ActivityPage() {
   const jar = await cookies();
@@ -16,9 +25,12 @@ export default async function ActivityPage() {
 
   const properties = await getPropertiesByManagerId(session.userId);
   const slugs = properties.map((p) => p.Slug ?? '').filter(Boolean);
-  const openCounts = slugs.length > 0 ? await getOpenWorkOrderCounts(slugs) : {};
 
-  const totalOpen = Object.values(openCounts).reduce((s, n) => s + n, 0);
+  const [openCounts, checkoutCounts] = slugs.length > 0
+    ? await Promise.all([getOpenWorkOrderCounts(slugs), getPendingLateCheckoutCounts(slugs)])
+    : [{} as Record<string, number>, {} as Record<string, number>];
+
+  const totalOpen = slugs.reduce((s, slug) => s + (openCounts[slug] ?? 0) + (checkoutCounts[slug] ?? 0), 0);
 
   return (
     <div className="relative min-h-screen">
@@ -56,7 +68,9 @@ export default async function ActivityPage() {
           <div className="grid grid-cols-2 gap-3">
             {properties.map((p) => {
               const slug = p.Slug ?? '';
-              const count = openCounts[slug] ?? 0;
+              const woCount = openCounts[slug] ?? 0;
+              const lcCount = checkoutCounts[slug] ?? 0;
+              const totalCount = woCount + lcCount;
               return (
                 <Link
                   key={slug}
@@ -83,20 +97,20 @@ export default async function ActivityPage() {
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
 
-                  {/* Open count badge */}
-                  {count > 0 && (
+                  {/* Combined badge */}
+                  {totalCount > 0 && (
                     <span className="absolute right-2.5 top-2.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-none text-white shadow-lg">
-                      {count}
+                      {totalCount}
                     </span>
                   )}
 
-                  {/* Property name */}
+                  {/* Property name + activity label */}
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="truncate text-xs font-semibold leading-tight text-white drop-shadow-sm">
                       {p.PropertyName || slug}
                     </p>
                     <p className="mt-0.5 text-[10px] font-medium text-white/60">
-                      {count === 0 ? 'No open orders' : count === 1 ? '1 open order' : `${count} open orders`}
+                      {activityLabel(woCount, lcCount)}
                     </p>
                   </div>
                 </Link>

@@ -935,6 +935,9 @@ function PropertyInfoView({
                 <TextInput value={core.ManagerPhone} onChange={(v) => setField('ManagerPhone', v)} placeholder="+1 (555) 000-0000" type="tel" />
               </FieldGroup>
             </div>
+            <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
+              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+            </p>
           </div>
         </div>
 
@@ -2584,13 +2587,18 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
               </div>
 
               {isEditing ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <FieldGroup label="Phone">
-                    <TextInput value={editPhone} onChange={setEditPhone} placeholder="+1 (555) 000-0000" type="tel" />
-                  </FieldGroup>
-                  <FieldGroup label="Email">
-                    <TextInput value={editEmail} onChange={setEditEmail} placeholder="repairs@co.com" type="email" />
-                  </FieldGroup>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FieldGroup label="Phone">
+                      <TextInput value={editPhone} onChange={setEditPhone} placeholder="+1 (555) 000-0000" type="tel" />
+                    </FieldGroup>
+                    <FieldGroup label="Email">
+                      <TextInput value={editEmail} onChange={setEditEmail} placeholder="repairs@co.com" type="email" />
+                    </FieldGroup>
+                  </div>
+                  <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
+                    By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+                  </p>
                 </div>
               ) : confirmDeleteId === cat.id ? (
                 <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
@@ -2651,6 +2659,9 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
             <TextInput value={addEmail} onChange={setAddEmail} placeholder="repairs@co.com" type="email" />
           </FieldGroup>
         </div>
+        <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
+          By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+        </p>
         {addError ? <p className="text-xs text-red-400">{addError}</p> : null}
         <button
           type="button"

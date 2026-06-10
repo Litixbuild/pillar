@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { getManagerCookieName, verifyManagerSession } from '@/lib/managerAuth';
 import { getPropertyAccessWithName } from '@/lib/properties';
 import { getWorkOrdersByProperty } from '@/lib/workOrders';
+import { getPendingLateCheckoutsByProperty, getActionedLateCheckoutsByProperty } from '@/lib/lateCheckouts';
 import ManagerBottomNav from '@/app/manager/ManagerBottomNav';
 import WorkOrderList from './WorkOrderList';
 import CollapsibleHistory from './CollapsibleHistory';
+import { PendingLateCheckoutList, ActionedLateCheckoutHistory } from './LateCheckoutList';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +24,12 @@ export default async function PropertyActivityPage(
   const { allowed, propertyName } = await getPropertyAccessWithName(session.userId, slug);
   if (!allowed) notFound();
 
-  const allOrders = await getWorkOrdersByProperty(slug);
+  const [allOrders, pendingCheckouts, actionedCheckouts] = await Promise.all([
+    getWorkOrdersByProperty(slug),
+    getPendingLateCheckoutsByProperty(slug),
+    getActionedLateCheckoutsByProperty(slug),
+  ]);
+
   const open = allOrders.filter((o) => o.status === 'open');
   const resolved = allOrders.filter((o) => o.status === 'resolved');
 
@@ -45,14 +52,43 @@ export default async function PropertyActivityPage(
             Activity
           </Link>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[rgba(100,80,40,0.55)] dark:text-white/60">
-            Work Orders
+            Activity
           </p>
           <h1 className="mt-1 text-[1.75rem] font-light leading-tight tracking-tight text-slate-900 dark:text-white">
             {propertyName ?? decodeURIComponent(slug)}
           </h1>
         </div>
 
-        {/* Open orders */}
+        {/* Late Checkout Requests — gold accent, shown above work orders */}
+        {(pendingCheckouts.length > 0 || actionedCheckouts.length > 0) && (
+          <div className="mb-4 space-y-3">
+            {pendingCheckouts.length > 0 && (
+              <div
+                className="overflow-hidden rounded-2xl bg-white/88 backdrop-blur-xl dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]"
+                style={{ border: '1px solid rgba(212,175,55,0.28)', boxShadow: '0 4px 20px rgba(212,175,55,0.10)' }}
+              >
+                <div
+                  className="flex items-center justify-between px-6 py-4"
+                  style={{ borderBottom: '1px solid rgba(212,175,55,0.14)' }}
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7a5c08] dark:text-[#D4AF37]/80">
+                    Late Checkout Requests
+                  </p>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #A87C0A 100%)' }}
+                  >
+                    {pendingCheckouts.length}
+                  </span>
+                </div>
+                <PendingLateCheckoutList requests={pendingCheckouts} />
+              </div>
+            )}
+            <ActionedLateCheckoutHistory requests={actionedCheckouts} propertyName={propertyName ?? decodeURIComponent(slug)} />
+          </div>
+        )}
+
+        {/* Open work orders */}
         <div className="mb-4 overflow-hidden rounded-2xl border border-[rgba(100,80,40,0.12)] bg-white/88 shadow-[0_4px_20px_rgba(100,80,40,0.08)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]">
           <div className="flex items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 dark:border-white/[0.07]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[rgba(100,80,40,0.60)] dark:text-white/50">
@@ -79,7 +115,7 @@ export default async function PropertyActivityPage(
 
         {/* Resolved history */}
         {resolved.length > 0 && (
-          <CollapsibleHistory orders={resolved} slug={slug} />
+          <CollapsibleHistory orders={resolved} slug={slug} propertyName={propertyName ?? decodeURIComponent(slug)} />
         )}
 
       </div>
