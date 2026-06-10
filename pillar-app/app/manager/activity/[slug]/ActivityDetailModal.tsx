@@ -17,18 +17,18 @@ function formatDateTime(iso: string) {
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-4 border-b border-[rgba(100,80,40,0.07)] py-3 last:border-b-0 dark:border-white/[0.055]">
-      <span className="mt-0.5 w-28 flex-none text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(100,80,40,0.42)] dark:text-white/32">
+      <span className="mt-0.5 w-28 flex-none text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(100,80,40,0.42)] dark:text-white/35">
         {label}
       </span>
-      <div className="flex-1 text-sm leading-snug text-[#1e293b] dark:text-white/82">
+      <div className="flex-1 text-sm leading-snug text-[#1e293b] dark:text-white/85">
         {children}
       </div>
     </div>
   );
 }
 
-type WorkOrderProps  = { type: 'workorder'; item: WorkOrder;           propertyName: string; onClose: () => void };
-type CheckoutProps   = { type: 'checkout';  item: LateCheckoutRequest; propertyName: string; onClose: () => void };
+type WorkOrderProps = { type: 'workorder'; item: WorkOrder;           propertyName: string; onClose: () => void };
+type CheckoutProps  = { type: 'checkout';  item: LateCheckoutRequest; propertyName: string; onClose: () => void };
 type Props = WorkOrderProps | CheckoutProps;
 
 export default function ActivityDetailModal(props: Props) {
@@ -41,29 +41,24 @@ export default function ActivityDetailModal(props: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const accentBorder  = isCheckout ? 'rgba(212,175,55,0.26)' : 'rgba(100,80,40,0.14)';
-  const headerDivider = isCheckout ? 'rgba(212,175,55,0.14)' : 'rgba(100,80,40,0.08)';
+  const accentBorder  = isCheckout ? 'rgba(212,175,55,0.28)' : 'rgba(100,80,40,0.15)';
+  const headerDivider = isCheckout ? 'rgba(212,175,55,0.14)' : 'rgba(100,80,40,0.09)';
   const innerDivider  = isCheckout ? 'rgba(212,175,55,0.12)' : 'rgba(100,80,40,0.08)';
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-5"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Card */}
       <div
-        className="relative w-full overflow-hidden rounded-t-3xl bg-white shadow-[0_-4px_40px_rgba(0,0,0,0.13)] sm:max-w-md sm:rounded-3xl sm:shadow-[0_20px_60px_rgba(0,0,0,0.18)] dark:bg-[rgba(13,13,13,0.99)] dark:shadow-[0_-4px_40px_rgba(0,0,0,0.55)] sm:dark:shadow-[0_20px_60px_rgba(0,0,0,0.65)]"
+        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-[0_24px_64px_rgba(0,0,0,0.20)] dark:bg-[rgba(13,13,13,0.99)] dark:shadow-[0_24px_64px_rgba(0,0,0,0.70)]"
         style={{ border: `1px solid ${accentBorder}` }}
       >
-        {/* Drag handle (mobile) */}
-        <div className="flex justify-center pt-3 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-[rgba(100,80,40,0.14)] dark:bg-white/14" />
-        </div>
-
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4"
@@ -77,19 +72,20 @@ export default function ActivityDetailModal(props: Props) {
               Late Checkout
             </span>
           ) : (
-            <span className="rounded-md border border-[rgba(100,80,40,0.14)] bg-[rgba(100,80,40,0.06)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(100,80,40,0.68)] dark:border-white/10 dark:bg-white/5 dark:text-white/52">
+            <span className="rounded-md border border-[rgba(100,80,40,0.14)] bg-[rgba(100,80,40,0.06)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgba(100,80,40,0.68)] dark:border-white/10 dark:bg-white/5 dark:text-white/55">
               Work Order
             </span>
           )}
 
+          {/* X close button */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(100,80,40,0.06)] text-[rgba(100,80,40,0.48)] transition-colors hover:bg-[rgba(100,80,40,0.12)] hover:text-[rgba(100,80,40,0.75)] dark:bg-white/5 dark:text-white/38 dark:hover:bg-white/10 dark:hover:text-white/68"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(100,80,40,0.07)] text-[rgba(100,80,40,0.55)] transition-colors hover:bg-[rgba(100,80,40,0.14)] hover:text-[rgba(100,80,40,0.85)] dark:bg-white/8 dark:text-white/45 dark:hover:bg-white/14 dark:hover:text-white/80"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
@@ -107,8 +103,8 @@ export default function ActivityDetailModal(props: Props) {
         {/* Divider */}
         <div className="mx-6 mt-4 h-px" style={{ background: innerDivider }} />
 
-        {/* Scrollable body */}
-        <div className="max-h-[55vh] overflow-y-auto px-6 pb-7 pt-1 sm:max-h-none">
+        {/* Body */}
+        <div className="max-h-[60vh] overflow-y-auto px-6 pb-7 pt-1">
           {props.type === 'checkout'
             ? <CheckoutFields request={props.item} />
             : <WorkOrderFields order={props.item} />}
