@@ -59,38 +59,9 @@ export default async function PropertyActivityPage(
           </h1>
         </div>
 
-        {/* Late Checkout Requests — gold accent, shown above work orders */}
-        {(pendingCheckouts.length > 0 || actionedCheckouts.length > 0) && (
-          <div className="mb-4 space-y-3">
-            {pendingCheckouts.length > 0 && (
-              <div
-                className="overflow-hidden rounded-2xl bg-white/88 backdrop-blur-xl dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]"
-                style={{ border: '1px solid rgba(212,175,55,0.28)', boxShadow: '0 4px 20px rgba(212,175,55,0.10)' }}
-              >
-                <div
-                  className="flex items-center justify-between px-6 py-4"
-                  style={{ borderBottom: '1px solid rgba(212,175,55,0.14)' }}
-                >
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7a5c08] dark:text-[#D4AF37]/80">
-                    Late Checkout Requests
-                  </p>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #A87C0A 100%)' }}
-                  >
-                    {pendingCheckouts.length}
-                  </span>
-                </div>
-                <PendingLateCheckoutList requests={pendingCheckouts} />
-              </div>
-            )}
-            <ActionedLateCheckoutHistory requests={actionedCheckouts} propertyName={propertyName ?? decodeURIComponent(slug)} />
-          </div>
-        )}
-
-        {/* Open work orders */}
+        {/* Open work orders — always first */}
         <div className="mb-4 overflow-hidden rounded-2xl border border-[rgba(100,80,40,0.12)] bg-white/88 shadow-[0_4px_20px_rgba(100,80,40,0.08)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]">
-          <div className="flex items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 dark:border-white/[0.07]">
+          <div className="flex items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 dark:border-white/7">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[rgba(100,80,40,0.60)] dark:text-white/50">
               Open
             </p>
@@ -113,7 +84,38 @@ export default async function PropertyActivityPage(
           )}
         </div>
 
-        {/* Resolved history */}
+        {/* Pending late checkout requests — open items, shown below work orders */}
+        {pendingCheckouts.length > 0 && (
+          <div
+            className="mb-4 overflow-hidden rounded-2xl bg-white/88 backdrop-blur-xl dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]"
+            style={{ border: '1px solid rgba(212,175,55,0.28)', boxShadow: '0 4px 20px rgba(212,175,55,0.10)' }}
+          >
+            <div
+              className="flex items-center justify-between px-6 py-4"
+              style={{ borderBottom: '1px solid rgba(212,175,55,0.14)' }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7a5c08] dark:text-[#D4AF37]/80">
+                Late Checkout Requests
+              </p>
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #A87C0A 100%)' }}
+              >
+                {pendingCheckouts.length}
+              </span>
+            </div>
+            <PendingLateCheckoutList requests={pendingCheckouts} />
+          </div>
+        )}
+
+        {/* Checkout History */}
+        {actionedCheckouts.length > 0 && (
+          <div className="mb-4">
+            <ActionedLateCheckoutHistory requests={actionedCheckouts} propertyName={propertyName ?? decodeURIComponent(slug)} />
+          </div>
+        )}
+
+        {/* Work Order History */}
         {resolved.length > 0 && (
           <CollapsibleHistory orders={resolved} slug={slug} propertyName={propertyName ?? decodeURIComponent(slug)} />
         )}
