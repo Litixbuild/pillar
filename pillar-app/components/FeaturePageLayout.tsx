@@ -101,7 +101,7 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
 /* ── Portrait image — for screenshots that already contain a phone ── */
 function PortraitImage({ src, width = 'min(380px, 80vw)' }: { src: string; width?: string }) {
   const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
-  const style: React.CSSProperties = { width, height: 'auto', display: 'block', filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.5))' };
+  const style: React.CSSProperties = { width, height: 'auto', display: 'block' };
   if (isVideo) return <video src={src} autoPlay loop muted playsInline style={style} />;
   return <img src={src} alt="App screenshot" style={style} />;
 }
@@ -121,7 +121,6 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
     const mediaStyle: React.CSSProperties = {
       width: '100%', height: 'auto', display: 'block', borderRadius: 16,
       maxHeight: '72vh', objectFit: 'contain', objectPosition: 'top',
-      filter: 'drop-shadow(0 16px 48px rgba(0,0,0,0.45))',
     };
     if (isVideo) return <video src={src} autoPlay loop muted playsInline style={mediaStyle} />;
     return <img src={src} alt={label ?? 'Screenshot'} style={mediaStyle} />;
