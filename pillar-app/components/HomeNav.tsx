@@ -26,8 +26,8 @@ const PLATFORM = [
 
 const SOLUTIONS = [
   { label: 'Airbnb Hosts',                  desc: 'Turn one-time guests into repeat bookings.',   href: '/solutions/airbnb-hosts'     },
-  { label: 'Vacation Rental Managers',      desc: 'Scale your portfolio without the overhead.',   href: '/solutions/vacation-rentals' },
-  { label: 'Residential Property Managers', desc: 'Modern tools for modern landlords.',           href: '/solutions/residential'      },
+  { label: 'Vacation Rentals',        desc: 'Scale your portfolio without the overhead.', href: '/solutions/vacation-rentals' },
+  { label: 'Residential Properties', desc: 'Modern tools for modern landlords.',           href: '/solutions/residential'      },
   { label: 'Hotels',                        desc: 'Enterprise-grade hospitality for every room.', href: '/solutions/hotels'           },
 ];
 
@@ -68,13 +68,13 @@ function Card({ href, onClose, featured, t, children }: {
 }) {
   const [hov, setHov] = useState(false);
   return (
-    <Link href={href} onClick={onClose} style={{ textDecoration: 'none', display: 'block' }}>
+    <Link href={href} onClick={onClose} style={{ textDecoration: 'none', display: 'flex', flex: 1, minWidth: 0 }}>
       <div
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
           display: 'flex', flexDirection: 'column',
-          height: '100%', minHeight: 140,
+          flex: 1, minHeight: 140,
           padding: '16px 18px', borderRadius: 12, boxSizing: 'border-box',
           border: `1px solid ${hov
             ? (featured ? t.featHoverBorder : t.cardHoverBorder)
@@ -209,7 +209,7 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
             borderRadius: 8, textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap',
             transition: 'background 0.2s, color 0.2s',
           }}>
-            Sign In / Sign Up
+            Sign In
           </Link>
         </div>
       </div>
@@ -297,7 +297,7 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
         {/* ── Pricing ── */}
         <div style={{
           overflow: 'hidden',
-          maxHeight: activeDropdown === 'pricing' ? 320 : 0,
+          maxHeight: activeDropdown === 'pricing' ? 400 : 0,
           opacity: activeDropdown === 'pricing' ? 1 : 0,
           transition: 'max-height 0.36s cubic-bezier(0.4,0,0.2,1), opacity 0.24s ease',
           background: t.panelBg, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
@@ -306,28 +306,52 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
         }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(14px,4vw,40px) 28px' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.34em', textTransform: 'uppercase', color: t.label, marginBottom: 16 }}>Pricing</p>
+            {/* alignItems:stretch ensures all three cards reach the same height */}
             <div style={{
-              display: 'flex', gap: 8,
-              overflowX: 'auto', overflowY: 'visible',
+              display: 'flex', alignItems: 'stretch', gap: 10,
+              overflowX: 'auto',
               scrollSnapType: 'x mandatory',
               WebkitOverflowScrolling: 'touch',
-              paddingBottom: 4,
+              paddingBottom: 2,
             }}>
-              {([
-                { href: '/pricing',          featured: true,  eyebrow: 'Base Plan',             price: '$14.99', unit: '/mo',      body: 'Full platform for your first property. Every feature included.' },
-                { href: '/pricing',          featured: false, eyebrow: 'Additional Properties', price: '$9.99',  unit: '/mo each', body: 'Scale your portfolio at a reduced rate per property.' },
-                { href: '/pricing#referral', featured: false, eyebrow: 'Referral Program',       price: 'Earn',   unit: ' credits', body: 'Refer a host and earn account credits when they subscribe.' },
-              ] as const).map(({ href, featured, eyebrow, price, unit, body }) => (
-                <div key={href + eyebrow} style={{ flex: '1 0 200px', minWidth: 200, maxWidth: 340, scrollSnapAlign: 'start' }}>
-                  <Card href={href} onClose={() => setActiveDropdown(null)} featured={featured} t={t}>
-                    <p style={{ fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>{eyebrow}</p>
-                    <p style={{ fontSize: 28, fontWeight: 300, color: t.body, lineHeight: 1, marginBottom: 4 }}>
-                      {price}<span style={{ fontSize: 13, color: t.muted, fontWeight: 400 }}>{unit}</span>
-                    </p>
-                    <p style={{ fontSize: 12, color: t.muted, lineHeight: 1.6, flex: 1, marginTop: 10 }}>{body}</p>
-                  </Card>
-                </div>
-              ))}
+              {/* Base Plan — slightly wider / taller than the other two */}
+              <div style={{ flex: '1.25 0 220px', minWidth: 220, maxWidth: 320, scrollSnapAlign: 'start', display: 'flex' }}>
+                <Card href="/pricing" onClose={() => setActiveDropdown(null)} featured t={t}>
+                  <p style={{ fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>Base Plan</p>
+                  <p style={{ fontSize: 32, fontWeight: 300, color: t.body, lineHeight: 1, marginBottom: 2 }}>
+                    $14.99<span style={{ fontSize: 13, color: t.muted, fontWeight: 400 }}>/mo</span>
+                  </p>
+                  <p style={{ fontSize: 12, color: t.muted, lineHeight: 1.6, flex: 1, marginTop: 12 }}>
+                    Full platform for your first property. Every feature included.
+                  </p>
+                </Card>
+              </div>
+
+              {/* Additional Properties — baseline size */}
+              <div style={{ flex: '1 0 185px', minWidth: 185, maxWidth: 260, scrollSnapAlign: 'start', display: 'flex' }}>
+                <Card href="/pricing" onClose={() => setActiveDropdown(null)} t={t}>
+                  <p style={{ fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>Additional Properties</p>
+                  <p style={{ fontSize: 26, fontWeight: 300, color: t.body, lineHeight: 1, marginBottom: 2 }}>
+                    $9.99<span style={{ fontSize: 12, color: t.muted, fontWeight: 400 }}>/mo each</span>
+                  </p>
+                  <p style={{ fontSize: 12, color: t.muted, lineHeight: 1.6, flex: 1, marginTop: 12 }}>
+                    Scale your portfolio at a reduced rate per property.
+                  </p>
+                </Card>
+              </div>
+
+              {/* Referral Program — same sizing as Additional Properties */}
+              <div style={{ flex: '1 0 185px', minWidth: 185, maxWidth: 260, scrollSnapAlign: 'start', display: 'flex' }}>
+                <Card href="/pricing#referral" onClose={() => setActiveDropdown(null)} t={t}>
+                  <p style={{ fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>Referral Program</p>
+                  <p style={{ fontSize: 26, fontWeight: 300, color: t.body, lineHeight: 1, marginBottom: 2 }}>
+                    Earn<span style={{ fontSize: 12, color: t.muted, fontWeight: 400 }}> credits</span>
+                  </p>
+                  <p style={{ fontSize: 12, color: t.muted, lineHeight: 1.6, flex: 1, marginTop: 12 }}>
+                    Refer a host and earn account credits when they subscribe.
+                  </p>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
