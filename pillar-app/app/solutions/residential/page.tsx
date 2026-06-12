@@ -19,11 +19,6 @@ export default function ResidentialPage() {
         ctaHref="/manager/login"
       />
 
-      <Divider />
-
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Tenant Portal — Residential Property" aspect="16/9" />
-      </section>
 
       <Divider />
 
@@ -48,7 +43,7 @@ export default function ResidentialPage() {
           'Update any information at any time. Tenants always see the current version.',
           'Sets a professional, organised tone that reduces disputes and improves the relationship.',
         ]}
-        screenshotLabel="Tenant Portal — Move-In View"
+        screenshotLabel="Tenant Portal — Move-In View" hideScreenshot
         reverse={false}
       />
 
@@ -62,7 +57,7 @@ export default function ResidentialPage() {
           'Full history of every request per unit. Ideal for resolving disputes or tracking recurring issues.',
           'Resolve requests from the dashboard. Tenants can see status without calling.',
         ]}
-        screenshotLabel="Dashboard — Maintenance Activity"
+        screenshotLabel="Dashboard — Maintenance Activity" hideScreenshot
         reverse={true}
       />
 

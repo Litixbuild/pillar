@@ -98,7 +98,34 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
   );
 }
 
-export function ScreenshotPlaceholder({ label, aspect = '16/9' }: { label?: string; aspect?: string }) {
+/* ── Portrait image — for screenshots that already contain a phone ── */
+function PortraitImage({ src, width = 'min(380px, 80vw)' }: { src: string; width?: string }) {
+  const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
+  const style: React.CSSProperties = { width, height: 'auto', display: 'block', filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.5))' };
+  if (isVideo) return <video src={src} autoPlay loop muted playsInline style={style} />;
+  return <img src={src} alt="App screenshot" style={style} />;
+}
+
+export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
+  label?: string; aspect?: string; src?: string; phone?: boolean;
+}) {
+  if (src && phone) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(16px, 4vw, 40px) 0' }}>
+        <PortraitImage src={src} width="min(300px, 100%)" />
+      </div>
+    );
+  }
+  if (src) {
+    const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
+    const mediaStyle: React.CSSProperties = {
+      width: '100%', height: 'auto', display: 'block', borderRadius: 16,
+      maxHeight: '72vh', objectFit: 'contain', objectPosition: 'top',
+      filter: 'drop-shadow(0 16px 48px rgba(0,0,0,0.45))',
+    };
+    if (isVideo) return <video src={src} autoPlay loop muted playsInline style={mediaStyle} />;
+    return <img src={src} alt={label ?? 'Screenshot'} style={mediaStyle} />;
+  }
   return (
     <div style={{
       width: '100%', aspectRatio: aspect, borderRadius: 16,
@@ -113,6 +140,23 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9' }: { label?: stri
       <p style={{ fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(245,237,213,0.28)' }}>
         {label ?? 'Screenshot Preview'}
       </p>
+    </div>
+  );
+}
+
+/* ── One or two portrait screenshots for full-width hero sections ── */
+export function PhoneHero({ left, right }: { left: string; right?: string }) {
+  const imgWidth = right ? 'min(300px, 42vw)' : 'min(420px, 72vw)';
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 'clamp(16px, 4vw, 32px)', padding: 'clamp(16px, 4vw, 40px) 0' }}>
+      <div style={{ transform: 'translateY(20px) rotate(-4deg)', transformOrigin: 'bottom center' }}>
+        <PortraitImage src={left} width={imgWidth} />
+      </div>
+      {right && (
+        <div style={{ transform: 'translateY(-8px) rotate(3deg)', transformOrigin: 'bottom center' }}>
+          <PortraitImage src={right} width={imgWidth} />
+        </div>
+      )}
     </div>
   );
 }
@@ -141,18 +185,18 @@ export function FeatureGrid({ features }: { features: { icon: React.ReactNode; t
   );
 }
 
-export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabel, reverse }: {
-  eyebrow: string; title: string; titleAccent: string; body: string[]; screenshotLabel?: string; reverse?: boolean;
+export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabel, screenshotSrc, reverse, hideScreenshot, phoneScreenshot }: {
+  eyebrow: string; title: string; titleAccent: string; body: string[]; screenshotLabel?: string; screenshotSrc?: string; reverse?: boolean; hideScreenshot?: boolean; phoneScreenshot?: boolean;
 }) {
   return (
     <section style={{ padding: 'clamp(40px, 6vw, 72px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ display: 'flex', flexDirection: reverse ? 'row-reverse' : 'row', alignItems: 'center', gap: 'clamp(32px, 5vw, 72px)', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 300px' }}>
+        <div style={{ flex: hideScreenshot ? '1 1 100%' : '1 1 300px' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: SANDY, marginBottom: 16 }}>{eyebrow}</p>
           <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 400, lineHeight: 1.15, color: '#fff', marginBottom: 20 }}>
             {title}<br /><span style={{ color: SANDY }}>{titleAccent}</span>
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: hideScreenshot ? 720 : undefined }}>
             {body.map((point, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(245,237,213,0.40)', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -163,9 +207,11 @@ export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabe
             ))}
           </div>
         </div>
-        <div style={{ flex: '1 1 300px' }}>
-          <ScreenshotPlaceholder label={screenshotLabel} aspect="4/3" />
-        </div>
+        {!hideScreenshot && (
+          <div style={{ flex: '1 1 300px' }}>
+            <ScreenshotPlaceholder label={screenshotLabel} src={screenshotSrc} aspect="4/3" phone={phoneScreenshot} />
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
 
 function SparkleIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M12 3l1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8L12 3z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><path d="M19.5 19l.75 1.5 1.5-.75-1.5-.75L19.5 19z" fill="currentColor" /></svg>; }
 function MapPinIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" stroke="currentColor" strokeWidth="1.4" /><circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth="1.4" /></svg>; }
@@ -21,8 +21,8 @@ export default function AIConcierge() {
 
       <Divider />
 
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="AI Concierge — Chat Interface" aspect="16/9" />
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
+        <PhoneHero left="/images/screenshots/ai-concierge-hero.png" />
       </section>
 
       <Divider />
@@ -48,7 +48,7 @@ export default function AIConcierge() {
           'Multi-turn conversation means guests can refine, ask follow-ups, and get truly personalised recommendations.',
           'Every recommendation is contextual — based on time of day, guest preferences, and what\'s actually open.',
         ]}
-        screenshotLabel="AI Concierge — Local Recommendations"
+        screenshotLabel="AI Concierge — Local Recommendations" screenshotSrc="/images/screenshots/ai-concierge-local.webm" phoneScreenshot
         reverse={false}
       />
 
@@ -62,7 +62,7 @@ export default function AIConcierge() {
           'Each stop includes the venue name, why it fits, and practical details like address and vibe.',
           'The result is a shareable, memorable plan that turns a good stay into an exceptional one.',
         ]}
-        screenshotLabel="AI Concierge — Itinerary View"
+        screenshotLabel="AI Concierge — Itinerary View" screenshotSrc="/images/screenshots/ai-concierge-itinerary.webm" phoneScreenshot
         reverse={true}
       />
 

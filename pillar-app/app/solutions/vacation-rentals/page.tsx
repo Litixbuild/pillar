@@ -22,7 +22,7 @@ export default function VacationRentalsPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Manager Dashboard — Multi-Property View" aspect="16/9" />
+        <ScreenshotPlaceholder label="Manager Dashboard — Multi-Property View" aspect="16/9" src="/images/screenshots/vacation-rentals-hero.png" />
       </section>
 
       <Divider />
@@ -48,7 +48,7 @@ export default function VacationRentalsPage() {
           'Duplicate a fully configured property to bootstrap new listings instantly.',
           'Consistent guest experience across your entire portfolio — brand equity that compounds.',
         ]}
-        screenshotLabel="Dashboard — Portfolio Overview"
+        screenshotLabel="Dashboard — Portfolio Overview" screenshotSrc="/images/screenshots/vacation-rentals-portfolio.png"
         reverse={false}
       />
 
@@ -62,7 +62,7 @@ export default function VacationRentalsPage() {
           'A 5-property portfolio costs $54.95/month — less than one saved maintenance call.',
           'Add and remove properties anytime. Only pay for what you have active.',
         ]}
-        screenshotLabel="Dashboard — Billing & Properties"
+        screenshotLabel="Dashboard — Billing & Properties" screenshotSrc="/images/screenshots/vacation-rentals-billing.png"
         reverse={true}
       />
 

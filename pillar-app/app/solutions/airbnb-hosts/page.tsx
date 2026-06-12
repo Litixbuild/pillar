@@ -22,7 +22,7 @@ export default function AirbnbHostsPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Guest Portal — Airbnb Property" aspect="16/9" />
+        <ScreenshotPlaceholder label="Guest Portal — Airbnb Property" aspect="16/9" src="/images/screenshots/airbnb-hero.png" />
       </section>
 
       <Divider />
@@ -59,21 +59,6 @@ export default function AirbnbHostsPage() {
         { icon: <MapPinIcon />, title: 'Local Expertise, Built In', desc: 'The AI concierge knows your neighbourhood — restaurants, activities, and what\'s actually worth visiting.' },
       ]} />
 
-      <Divider />
-
-      <SplitSection
-        eyebrow="The First Impression"
-        title="Arrive to a"
-        titleAccent="Premium Experience."
-        body={[
-          'Guests scan a QR code on the kitchen counter and everything loads instantly — no app, no login.',
-          'Your property\'s name, photos, WiFi, codes, house rules, and local guides all in one elegant view.',
-          'The AI concierge is ready to help from the moment they arrive — local spots, weather, day plans.',
-          'A first impression this clean tells guests immediately: this host cares.',
-        ]}
-        screenshotLabel="Guest Portal — First View on Arrival"
-        reverse={false}
-      />
 
       <Divider />
 

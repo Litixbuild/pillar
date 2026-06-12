@@ -1,4 +1,4 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
 
 function ClockIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4" /><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function CheckSquareIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><polyline points="9 11 12 14 22 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -21,8 +21,8 @@ export default function LateCheckoutPage() {
 
       <Divider />
 
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Late Checkout — Guest Request Flow" aspect="16/9" />
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
+        <PhoneHero left="/images/screenshots/late-checkout-hero.png" />
       </section>
 
       <Divider />
@@ -44,12 +44,13 @@ export default function LateCheckoutPage() {
         titleAccent="Last-Minute Texts."
         body={[
           'Guests find the late checkout request button right in their portal — one tap, done.',
-          'They\'re shown the standard checkout time and asked for their preferred departure time.',
-          'Status updates — pending, approved, denied — display directly in the portal.',
+          'They\'re shown the standard checkout time and can request their preferred departure time.',
+          'Once submitted, the host is notified immediately and responds directly from their dashboard.',
           'No app required. Works on any phone, any browser, from check-in to checkout.',
         ]}
-        screenshotLabel="Guest Portal — Late Checkout Request"
+        screenshotSrc="/images/screenshots/late-checkout-hero.png"
         reverse={false}
+        hideScreenshot
       />
 
       <SplitSection
@@ -62,7 +63,7 @@ export default function LateCheckoutPage() {
           'See all requests across all properties in a single unified view.',
           'Requests auto-expire after 8 hours if not reviewed — the dashboard stays clean.',
         ]}
-        screenshotLabel="Dashboard — Late Checkout Management"
+        screenshotLabel="Dashboard — Late Checkout Management" screenshotSrc="/images/screenshots/late-checkout-dashboard.png"
         reverse={true}
       />
 

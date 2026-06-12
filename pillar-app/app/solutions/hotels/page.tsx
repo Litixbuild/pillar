@@ -19,11 +19,6 @@ export default function HotelsPage() {
         ctaHref="/manager/login"
       />
 
-      <Divider />
-
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Hotel Dashboard — Commercial View" aspect="16/9" />
-      </section>
 
       <Divider />
 
@@ -48,7 +43,7 @@ export default function HotelsPage() {
           'Suite guests see the hot tub guide. Standard guests see the gym access info. Relevant, not overwhelming.',
           'Hotel-wide amenities (pool, spa, restaurant hours) surface for every guest regardless of room type.',
         ]}
-        screenshotLabel="Hotel Dashboard — Room Type Editor"
+        screenshotLabel="Hotel Dashboard — Room Type Editor" hideScreenshot
         reverse={false}
       />
 
@@ -62,7 +57,7 @@ export default function HotelsPage() {
           'Hotel managers see all open requests across all rooms in a single dashboard view.',
           'Full activity log per hotel — filterable by room, status, and date.',
         ]}
-        screenshotLabel="Hotel Dashboard — Work Orders"
+        screenshotLabel="Hotel Dashboard — Work Orders" hideScreenshot
         reverse={true}
       />
 

@@ -1,4 +1,4 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
 
 function QRCodeIcon() {
   return (
@@ -66,9 +66,8 @@ export default function QRPortalPage() {
 
       <Divider />
 
-      {/* Full-width screenshot */}
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Guest Portal — Mobile View" aspect="16/9" />
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
+        <PhoneHero left="/images/screenshots/qr-portal-hero.png" right="/images/screenshots/qr-portal-guest.png" />
       </section>
 
       <Divider />
@@ -94,7 +93,7 @@ export default function QRPortalPage() {
           'Guests arrive, scan, and instantly access everything. You never have to send a message again.',
           'Update any information at any time from the dashboard — the QR code stays the same.',
         ]}
-        screenshotLabel="Dashboard — QR Code Generator"
+        screenshotLabel="Dashboard — QR Code Generator" screenshotSrc="/images/screenshots/qr-portal-setup.png" hideScreenshot
         reverse={false}
       />
 
@@ -108,7 +107,7 @@ export default function QRPortalPage() {
           'Built-in AI concierge answers questions, suggests local spots, and plans their day.',
           'Late checkout requests handled directly in the portal — no texts, no calls.',
         ]}
-        screenshotLabel="Guest Portal — Property View"
+        screenshotLabel="Guest Portal — Property View" screenshotSrc="/images/screenshots/qr-portal-guest.png" phoneScreenshot
         reverse={true}
       />
 

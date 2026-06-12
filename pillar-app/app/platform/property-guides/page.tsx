@@ -1,4 +1,4 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
 
 function WifiIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function KeyIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -21,8 +21,8 @@ export default function PropertyGuidesPage() {
 
       <Divider />
 
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Property Guides — Guest View" aspect="16/9" />
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
+        <PhoneHero left="/images/screenshots/property-guides-hero.png" />
       </section>
 
       <Divider />
@@ -48,7 +48,7 @@ export default function PropertyGuidesPage() {
           'Organise by category so guests can find exactly what they need without scrolling through everything.',
           'Update any guide at any time from the dashboard — guests always see the latest version.',
         ]}
-        screenshotLabel="Dashboard — Amenity Window Editor"
+        screenshotLabel="Dashboard — Amenity Window Editor" screenshotSrc="/images/screenshots/property-guides-editor.png"
         reverse={false}
       />
 
@@ -62,7 +62,7 @@ export default function PropertyGuidesPage() {
           'Each portal URL is a unique UUID with 122 bits of entropy. Practically impossible to guess.',
           'Update codes at any time and changes reflect immediately across every guest session.',
         ]}
-        screenshotLabel="Dashboard — Property Settings"
+        screenshotLabel="Dashboard — Property Settings" screenshotSrc="/images/screenshots/property-guides-settings.mp4"
         reverse={true}
       />
 

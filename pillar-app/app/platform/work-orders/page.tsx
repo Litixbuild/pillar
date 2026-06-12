@@ -22,7 +22,7 @@ export default function WorkOrdersPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Work Orders — Manager Dashboard" aspect="16/9" />
+        <ScreenshotPlaceholder label="Manager Dashboard — Property Health, Resolution Stats & Saved Calls" aspect="16/9" src="/images/screenshots/manager-dashboard.png" />
       </section>
 
       <Divider />
@@ -48,7 +48,7 @@ export default function WorkOrdersPage() {
           'SMS and email notifications sent simultaneously for maximum reliability.',
           'Customize notification format per category — include the property address, guest name, and description.',
         ]}
-        screenshotLabel="Dashboard — Category Routing Setup"
+        screenshotLabel="Dashboard — Category Routing Setup" screenshotSrc="/images/screenshots/work-orders-routing.png"
         reverse={false}
       />
 
@@ -62,7 +62,7 @@ export default function WorkOrdersPage() {
           'Resolve orders directly from the dashboard with a single click.',
           'Full history preserved — ideal for tracking recurring issues across properties.',
         ]}
-        screenshotLabel="Dashboard — Work Order Activity"
+        screenshotLabel="Dashboard — Work Order Activity" screenshotSrc="/images/screenshots/work-orders-activity.png"
         reverse={true}
       />
 
