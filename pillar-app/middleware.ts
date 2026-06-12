@@ -9,6 +9,8 @@ const MANAGER_PUBLIC = new Set([
   "/manager/reset-password",
 ]);
 
+const COMMERCIAL_PUBLIC = new Set(["/commercial/login"]);
+
 function detectLocale(req: NextRequest): string {
   const cookieLocale = req.cookies.get("NEXT_LOCALE")?.value;
   if (cookieLocale && LOCALES.includes(cookieLocale)) return cookieLocale;
@@ -87,6 +89,17 @@ export async function middleware(req: NextRequest) {
     if (!token || !secret || isTokenExpired(token, 24 * 60 * 60 * 1000) || !(await verifyHmac(token, secret))) {
       const url = req.nextUrl.clone();
       url.pathname = "/manager/login";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // --- Commercial auth ---
+  if (!COMMERCIAL_PUBLIC.has(pathname) && pathname.startsWith("/commercial")) {
+    const token = req.cookies.get("pillar_commercial")?.value || "";
+    const secret = process.env.COMMERCIAL_SESSION_SECRET || "";
+    if (!token || !secret || isTokenExpired(token, 24 * 60 * 60 * 1000) || !(await verifyHmac(token, secret))) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/commercial/login";
       return NextResponse.redirect(url);
     }
   }

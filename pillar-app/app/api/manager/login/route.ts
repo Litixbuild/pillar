@@ -42,9 +42,13 @@ export async function POST(req: Request) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("full_name")
+    .select("full_name, role")
     .eq("id", data.user.id)
     .single();
+
+  if (profile?.role === "commercial") {
+    return Response.json({ error: "Invalid email or password" }, { status: 401 });
+  }
 
   const managerName = profile?.full_name ?? undefined;
 

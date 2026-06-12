@@ -4,23 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import IntroSplash from './IntroSplash';
-
-function SunIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+import HomeNav from '../components/HomeNav';
 
 const SANDY = '#F5EDD5';
 
@@ -34,6 +18,13 @@ export default function HomeDarkWrapper() {
     if (stored === 'dark') setDark(true);
   }, []);
 
+  const toggleDark = () => {
+    const next = !dark;
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
+    setDark(next);
+  };
+
   return (
     <>
       <IntroSplash />
@@ -44,41 +35,9 @@ export default function HomeDarkWrapper() {
         <div className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 dark:opacity-0" style={{ backgroundImage: 'url(/images/mainbackground.png)', backgroundSize: 'cover', backgroundPosition: 'center top' }} />
       </div>
 
-      <main className="min-h-screen" style={{ color: '#fff' }}>
-      {/* ── Navigation ── */}
-      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 pt-6">
-        {/* Dark mode toggle */}
-        <button
-          type="button"
-          onClick={() => setDark((d) => {
-            const next = !d;
-            document.documentElement.classList.toggle('dark', next);
-            localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
-            return next;
-          })}
-          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="flex h-8 w-8 items-center justify-center rounded-xl border transition-opacity duration-500"
-          style={{
-            borderColor: dark ? 'rgba(245,237,213,0.28)' : 'rgba(255,255,255,0.35)',
-            background: dark ? 'rgba(245,237,213,0.08)' : 'rgba(255,255,255,0.15)',
-            color: dark ? SANDY : 'rgba(255,255,255,0.90)',
-          }}
-        >
-          {dark ? <SunIcon /> : <MoonIcon />}
-        </button>
+      <HomeNav dark={dark} onToggleDark={toggleDark} />
 
-        {/* Login link */}
-        <Link
-          href="/manager/login"
-          className="group flex items-center gap-2 text-[11px] lg:text-xs uppercase tracking-[0.22em] transition-opacity duration-300 hover:opacity-70"
-          style={{ color: dark ? SANDY : 'rgba(255,255,255,0.90)' }}
-        >
-          Login / Sign Up
-          <span className="transition-transform duration-300 group-hover:translate-x-1" style={{ fontSize: '13px' }}>
-            →
-          </span>
-        </Link>
-      </nav>
+      <main className="min-h-screen" style={{ color: '#fff' }}>
 
       {/* ── Hero ── */}
       <section className="relative flex items-center overflow-hidden">
