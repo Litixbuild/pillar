@@ -98,23 +98,34 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
   );
 }
 
-/* ── Portrait image — for screenshots that already contain a phone ── */
+/* ── Plain portrait image — PNGs that already have a phone frame baked in ── */
 function PortraitImage({ src, width = 'min(380px, 80vw)' }: { src: string; width?: string }) {
-  const isVideo = /\.(webm|mp4|mov)$/i.test(src);
-  const style: React.CSSProperties = { width, height: 'auto', display: 'block', backgroundColor: 'transparent' };
-  if (isVideo) return <VideoEl src={src} style={style} />;
-  return <img src={src} alt="App screenshot" style={style} />;
+  return <img src={src} alt="App screenshot" style={{ width, height: 'auto', display: 'block' }} />;
 }
 
-/* Renders video with mp4-first source order so iOS Safari gets a compatible format */
-function VideoEl({ src, style }: { src: string; style: React.CSSProperties }) {
-  const mp4 = src.replace(/\.(webm|mov)$/i, '.mp4');
-  const hasFallback = mp4 !== src;
+/* ── CSS phone frame — wraps raw screenshots/videos that have no frame baked in ── */
+function PhoneFrame({ src }: { src: string }) {
+  const isVideo = /\.(mp4|webm|mov)$/i.test(src);
   return (
-    <video autoPlay loop muted playsInline style={style}>
-      {hasFallback && <source src={mp4} type="video/mp4" />}
-      <source src={src} type={src.endsWith('.webm') ? 'video/webm' : src.endsWith('.mov') ? 'video/quicktime' : 'video/mp4'} />
-    </video>
+    <div style={{
+      position: 'relative',
+      width: 'min(260px, 62vw)',
+      borderRadius: 'min(40px, 10vw)',
+      border: '7px solid rgba(255,255,255,0.15)',
+      background: '#111',
+      boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.10)',
+      overflow: 'hidden',
+      flexShrink: 0,
+    }}>
+      {isVideo
+        ? <video src={src} autoPlay loop muted playsInline preload="auto" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        : <img src={src} alt="App screenshot" style={{ width: '100%', height: 'auto', display: 'block' }} />
+      }
+      <div style={{
+        position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+        width: '30%', height: 22, background: '#111', borderRadius: 20, zIndex: 3,
+      }} />
+    </div>
   );
 }
 
@@ -124,14 +135,14 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
   if (src && phone) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(16px, 4vw, 40px) 0' }}>
-        <PortraitImage src={src} width="min(300px, 100%)" />
+        <PhoneFrame src={src} />
       </div>
     );
   }
   if (src) {
     const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
-    const base: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', borderRadius: 16, maxHeight: '72vh', backgroundColor: 'transparent' };
-    if (isVideo) return <VideoEl src={src} style={base} />;
+    const base: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', borderRadius: 16, maxHeight: '72vh' };
+    if (isVideo) return <video src={src} autoPlay loop muted playsInline style={base}><source src={src} type="video/mp4" /></video>;
     return <img src={src} alt={label ?? 'Screenshot'} style={{ ...base, objectFit: 'contain', objectPosition: 'top' }} />;
   }
   return (

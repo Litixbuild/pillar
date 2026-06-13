@@ -47,7 +47,7 @@ export default function AIConcierge() {
           'Multi-turn conversation lets guests refine and follow up — "something quieter", "closer to the water", "good for kids".',
           'Recommendations are context-aware — based on time of day, what\'s open, and what actually fits the guest\'s mood.',
         ]}
-        screenshotLabel="AI Concierge — Local Recommendations" screenshotSrc="/images/screenshots/ai-concierge-local.webm" phoneScreenshot
+        screenshotLabel="AI Concierge — Local Recommendations" screenshotSrc="/images/screenshots/ai-concierge-local.png" phoneScreenshot
         reverse={false}
       />
 
@@ -61,7 +61,7 @@ export default function AIConcierge() {
           'Each stop includes the venue name, why it fits, and practical details like address and vibe.',
           'The result is a shareable, memorable plan that turns a good stay into an exceptional one.',
         ]}
-        screenshotLabel="AI Concierge — Itinerary View" screenshotSrc="/images/screenshots/ai-concierge-itinerary.webm" phoneScreenshot
+        screenshotLabel="AI Concierge — Itinerary View" screenshotSrc="/images/screenshots/ai-concierge-itinerary.png" phoneScreenshot
         reverse={true}
       />
 

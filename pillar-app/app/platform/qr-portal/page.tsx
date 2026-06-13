@@ -106,7 +106,7 @@ export default function QRPortalPage() {
           'Built-in AI concierge answers questions, suggests local spots, and plans their day.',
           'Late checkout requests handled directly in the portal — no texts, no calls.',
         ]}
-        screenshotLabel="Guest Portal — Property View" screenshotSrc="/images/screenshots/qr-portal-guest.png" phoneScreenshot
+        screenshotLabel="Guest Portal — Property View" screenshotSrc="/images/screenshots/qr-portal-guest.png"
         reverse={true}
       />
 
