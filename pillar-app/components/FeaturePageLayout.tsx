@@ -100,10 +100,22 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
 
 /* ── Portrait image — for screenshots that already contain a phone ── */
 function PortraitImage({ src, width = 'min(380px, 80vw)' }: { src: string; width?: string }) {
-  const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
-  const style: React.CSSProperties = { width, height: 'auto', display: 'block' };
-  if (isVideo) return <video src={src} autoPlay loop muted playsInline style={style} />;
+  const isVideo = /\.(webm|mp4|mov)$/i.test(src);
+  const style: React.CSSProperties = { width, height: 'auto', display: 'block', backgroundColor: 'transparent' };
+  if (isVideo) return <VideoEl src={src} style={style} />;
   return <img src={src} alt="App screenshot" style={style} />;
+}
+
+/* Renders video with mp4-first source order so iOS Safari gets a compatible format */
+function VideoEl({ src, style }: { src: string; style: React.CSSProperties }) {
+  const mp4 = src.replace(/\.(webm|mov)$/i, '.mp4');
+  const hasFallback = mp4 !== src;
+  return (
+    <video autoPlay loop muted playsInline style={style}>
+      {hasFallback && <source src={mp4} type="video/mp4" />}
+      <source src={src} type={src.endsWith('.webm') ? 'video/webm' : src.endsWith('.mov') ? 'video/quicktime' : 'video/mp4'} />
+    </video>
+  );
 }
 
 export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
@@ -118,8 +130,8 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
   }
   if (src) {
     const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
-    const base: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', borderRadius: 16, maxHeight: '72vh' };
-    if (isVideo) return <video src={src} autoPlay loop muted playsInline style={{ ...base, background: 'transparent' }} />;
+    const base: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', borderRadius: 16, maxHeight: '72vh', backgroundColor: 'transparent' };
+    if (isVideo) return <VideoEl src={src} style={base} />;
     return <img src={src} alt={label ?? 'Screenshot'} style={{ ...base, objectFit: 'contain', objectPosition: 'top' }} />;
   }
   return (
