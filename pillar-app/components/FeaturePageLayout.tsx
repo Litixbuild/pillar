@@ -111,9 +111,9 @@ function PhoneFrame({ src }: { src: string }) {
       position: 'relative',
       width: 'min(260px, 62vw)',
       borderRadius: 'min(40px, 10vw)',
-      border: '7px solid rgba(255,255,255,0.15)',
+      border: '7px solid #1a1a1a',
       background: '#111',
-      boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.10)',
+      boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)',
       overflow: 'hidden',
       flexShrink: 0,
     }}>
