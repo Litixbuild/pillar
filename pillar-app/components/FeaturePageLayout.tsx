@@ -118,12 +118,9 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
   }
   if (src) {
     const isVideo = src.endsWith('.webm') || src.endsWith('.mp4') || src.endsWith('.mov');
-    const mediaStyle: React.CSSProperties = {
-      width: '100%', height: 'auto', display: 'block', borderRadius: 16,
-      maxHeight: '72vh', objectFit: 'contain', objectPosition: 'top',
-    };
-    if (isVideo) return <video src={src} autoPlay loop muted playsInline style={mediaStyle} />;
-    return <img src={src} alt={label ?? 'Screenshot'} style={mediaStyle} />;
+    const base: React.CSSProperties = { width: '100%', height: 'auto', display: 'block', borderRadius: 16, maxHeight: '72vh' };
+    if (isVideo) return <video src={src} autoPlay loop muted playsInline style={{ ...base, background: 'transparent' }} />;
+    return <img src={src} alt={label ?? 'Screenshot'} style={{ ...base, objectFit: 'contain', objectPosition: 'top' }} />;
   }
   return (
     <div style={{

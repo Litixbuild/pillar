@@ -1,4 +1,4 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, CTASection, Divider } from '@/components/FeaturePageLayout';
 
 function StarIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>; }
 function ZapIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -11,19 +11,13 @@ export default function AirbnbHostsPage() {
   return (
     <FeaturePageLayout>
       <PageHero
-        eyebrow="Airbnb Hosts"
+        eyebrow="Rental Hosts"
         title="Stand Out From"
         titleAccent="Every Other Listing."
-        subtitle="When every property looks the same, the experience is what wins. Pillar gives Airbnb hosts a premium guest portal that turns five-star stays into five-star reviews."
+        subtitle="When every property looks the same, the experience is what wins. Pillar gives rental hosts a premium guest portal that turns five-star stays into five-star reviews."
         cta="Start Free Today"
         ctaHref="/manager/login"
       />
-
-      <Divider />
-
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-        <ScreenshotPlaceholder label="Guest Portal — Airbnb Property" aspect="16/9" src="/images/screenshots/airbnb-hero.png" />
-      </section>
 
       <Divider />
 
@@ -64,7 +58,7 @@ export default function AirbnbHostsPage() {
 
       <CTASection
         title="Turn Your Listing Into a Five-Star Experience"
-        subtitle="Join Airbnb hosts already delivering premium stays with Pillar."
+        subtitle="Join rental hosts already delivering premium stays with Pillar."
         buttonText="Get Started Free"
         buttonHref="/manager/login"
       />

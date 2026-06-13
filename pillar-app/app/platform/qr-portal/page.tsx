@@ -78,7 +78,6 @@ export default function QRPortalPage() {
         { icon: <ZapIcon />, title: 'Instant Access', desc: 'The moment they scan, everything loads. WiFi, house rules, guides — all right there.' },
         { icon: <RefreshIcon />, title: 'Always Up To Date', desc: 'Update your property info any time. Every scan reflects the latest version automatically.' },
         { icon: <StarIcon />, title: 'Five-Star Impressions', desc: 'A seamless arrival experience sets the tone for the entire stay — and for your reviews.' },
-        { icon: <LockOpenIcon />, title: 'Secure by Design', desc: 'Each portal URL uses a unique UUID — 122 bits of entropy. Practically unguessable.' },
       ]} />
 
       <Divider />

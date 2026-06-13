@@ -28,12 +28,11 @@ export default function AIConcierge() {
       <Divider />
 
       <FeatureGrid features={[
-        { icon: <SparkleIcon />, title: 'Powered by Gemini', desc: 'State-of-the-art AI from Google delivers thoughtful, nuanced answers every time.' },
         { icon: <MapPinIcon />, title: 'Local Discovery', desc: 'Restaurants, activities, hidden gems — curated recommendations based on your property\'s location.' },
         { icon: <CalendarIcon />, title: 'Day Itinerary Builder', desc: 'Guests describe their mood and the AI builds a full itinerary: breakfast through dessert.' },
         { icon: <MoonIcon />, title: '24/7 Availability', desc: 'No more late-night texts to you. The concierge never sleeps, never misses a question.' },
         { icon: <HomeIcon />, title: 'Property Knowledge', desc: 'WiFi, check-out reminders, appliance how-tos — the AI knows your property inside and out.' },
-        { icon: <CloudIcon />, title: 'Live Weather', desc: 'Real-time weather data helps guests plan outdoor activities and dress appropriately.' },
+        { icon: <SparkleIcon />, title: 'Smart Recommendations', desc: 'Context-aware suggestions based on time of day, guest preferences, and what\'s actually open.' },
       ]} />
 
       <Divider />
@@ -43,10 +42,10 @@ export default function AIConcierge() {
         title="More Than Answers."
         titleAccent="Curated Experiences."
         body={[
-          'The AI searches real local listings and surfaces restaurants, bars, cafes, and attractions near your property.',
-          'Results include ratings, hours, and distance — everything a guest needs to decide in seconds.',
-          'Multi-turn conversation means guests can refine, ask follow-ups, and get truly personalised recommendations.',
-          'Every recommendation is contextual — based on time of day, guest preferences, and what\'s actually open.',
+          'The AI surfaces nearby restaurants, bars, cafes, and attractions — each with a real description of the vibe and what makes it worth visiting.',
+          'Every result shows ratings, distance, and a direct Google button so guests can pull up the menu or get directions instantly.',
+          'Multi-turn conversation lets guests refine and follow up — "something quieter", "closer to the water", "good for kids".',
+          'Recommendations are context-aware — based on time of day, what\'s open, and what actually fits the guest\'s mood.',
         ]}
         screenshotLabel="AI Concierge — Local Recommendations" screenshotSrc="/images/screenshots/ai-concierge-local.webm" phoneScreenshot
         reverse={false}

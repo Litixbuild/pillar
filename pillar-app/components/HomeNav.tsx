@@ -25,7 +25,7 @@ const PLATFORM = [
 ];
 
 const SOLUTIONS = [
-  { label: 'Airbnb Hosts',                  desc: 'Turn one-time guests into repeat bookings.',   href: '/solutions/airbnb-hosts'     },
+  { label: 'Rental Hosts',                   desc: 'Turn one-time guests into repeat bookings.',   href: '/solutions/airbnb-hosts'     },
   { label: 'Vacation Rentals',        desc: 'Scale your portfolio without the overhead.', href: '/solutions/vacation-rentals' },
   { label: 'Residential Properties', desc: 'Modern tools for modern landlords.',           href: '/solutions/residential'      },
   { label: 'Hotels',                        desc: 'Enterprise-grade hospitality for every room.', href: '/solutions/hotels'           },
@@ -230,12 +230,12 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(14px,4vw,40px) 28px' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.34em', textTransform: 'uppercase', color: t.label, marginBottom: 16 }}>Platform Features</p>
             {/* Horizontal scroll on small screens, fills full width on desktop */}
-            <div style={{
+            <div className="no-scrollbar" style={{
               display: 'flex', gap: 8,
               overflowX: 'auto', overflowY: 'visible',
               scrollSnapType: 'x mandatory',
               WebkitOverflowScrolling: 'touch',
-              paddingBottom: 4, /* keeps card shadow visible */
+              paddingBottom: 4,
             }}>
               {PLATFORM.map(({ Icon, title, desc, href, tag }) => (
                 <div key={href} style={{ flex: '1 0 180px', minWidth: 180, maxWidth: 260, scrollSnapAlign: 'start' }}>
@@ -272,7 +272,7 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
         }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(14px,4vw,40px) 28px' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.34em', textTransform: 'uppercase', color: t.label, marginBottom: 16 }}>Who We Help</p>
-            <div style={{
+            <div className="no-scrollbar" style={{
               display: 'flex', gap: 8,
               overflowX: 'auto', overflowY: 'visible',
               scrollSnapType: 'x mandatory',
@@ -307,7 +307,7 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(14px,4vw,40px) 28px' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.34em', textTransform: 'uppercase', color: t.label, marginBottom: 16 }}>Pricing</p>
             {/* alignItems:stretch ensures all three cards reach the same height */}
-            <div style={{
+            <div className="no-scrollbar" style={{
               display: 'flex', alignItems: 'stretch', gap: 10,
               overflowX: 'auto',
               scrollSnapType: 'x mandatory',
