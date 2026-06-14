@@ -345,10 +345,10 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
                 <Card href="/pricing#referral" onClose={() => setActiveDropdown(null)} t={t}>
                   <p style={{ fontSize: 9, letterSpacing: '0.24em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>Referral Program</p>
                   <p style={{ fontSize: 26, fontWeight: 300, color: t.body, lineHeight: 1, marginBottom: 2 }}>
-                    Earn<span style={{ fontSize: 12, color: t.muted, fontWeight: 400 }}> credits</span>
+                    Refer &amp; Save<span style={{ fontSize: 12, color: t.muted, fontWeight: 400 }}> every month</span>
                   </p>
                   <p style={{ fontSize: 12, color: t.muted, lineHeight: 1.6, flex: 1, marginTop: 12 }}>
-                    Refer a host and earn account credits when they subscribe.
+                    Every host you refer earns you a monthly discount off your bill — for as long as they stay subscribed.
                   </p>
                 </Card>
               </div>
