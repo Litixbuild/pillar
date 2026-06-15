@@ -38,7 +38,17 @@ export const metadata: Metadata = {
   title: "Pillar — Guest Experience for Property Managers",
   description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
   icons: {
-    icon: '/images/pillarlogowhite.png',
+    icon: '/images/pillarlogogoogleblack.png',
+    shortcut: '/images/pillarlogogoogleblack.png',
+    apple: '/images/pillarlogogoogleblack.png',
+  },
+  openGraph: {
+    title: "Pillar — Guest Experience for Property Managers",
+    description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
+    url: 'https://pmpillar.com',
+    siteName: 'Pillar',
+    images: [{ url: 'https://pmpillar.com/images/pillarlogogoogle.png', width: 512, height: 512, alt: 'Pillar' }],
+    type: 'website',
   },
 };
 
@@ -57,8 +67,14 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Synchronously apply saved theme before first paint to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('pillar-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Pillar",
+          "url": "https://pmpillar.com",
+          "logo": "https://pmpillar.com/images/pillarlogogoogle.png",
+        })}} />
       </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
