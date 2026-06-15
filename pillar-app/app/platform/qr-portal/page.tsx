@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'QR Guest Portal for Rental Hosts — No App Required | Pillar',
+  description: 'Give guests instant access to WiFi, door codes, house rules, and local recommendations with a single QR code scan. No app download needed. Set up in minutes.',
+};
 
 function QRCodeIcon() {
   return (
@@ -111,6 +117,15 @@ export default function QRPortalPage() {
       />
 
       <Divider />
+
+      <FAQSection faqs={[
+        { q: 'What is a QR guest portal?', a: 'A QR guest portal is a mobile-friendly webpage your guests access by scanning a QR code at your property. It gives them instant access to WiFi credentials, door codes, house rules, property guides, and more — no app download required.' },
+        { q: 'Do guests need to create an account?', a: 'No. Guests simply scan the QR code and the portal loads instantly in their browser. There is no sign-up, no password, and no app to install.' },
+        { q: 'Can I use one QR code for all my properties?', a: 'Each property gets its own unique QR code so guests always see the correct information for the property they are staying at. Managing multiple properties is straightforward from your dashboard.' },
+        { q: 'How do I share the QR code with guests?', a: 'Download your QR code as a high-resolution image from your dashboard and print it, frame it, or include it in your welcome materials. Most hosts place a printed card on the kitchen counter or near the front door.' },
+        { q: 'What happens if I update my property information?', a: 'Any changes you make in your dashboard are reflected immediately the next time a guest scans the code. The QR code itself never changes, so you never need to reprint it.' },
+        { q: 'Is the portal secure?', a: 'Yes. Each portal URL uses a unique identifier with strong entropy — practically impossible to guess. All sensitive data like door codes and WiFi passwords is encrypted at rest.' },
+      ]} />
 
       <CTASection
         title="Ready to Elevate Your Guest Experience?"

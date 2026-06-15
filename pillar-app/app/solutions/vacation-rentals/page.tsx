@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Property Management Platform for Vacation Rental Managers | Pillar',
+  description: 'Manage your entire vacation rental portfolio from one dashboard. QR guest portals, AI concierge, work orders, and late checkout — starting at $14.99/month.',
+};
 
 function LayersIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><polygon points="12 2 2 7 12 12 22 7 12 2" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><polyline points="2 17 12 22 22 17" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><polyline points="2 12 12 17 22 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function RefreshIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -65,6 +71,37 @@ export default function VacationRentalsPage() {
         screenshotLabel="Dashboard — Billing & Properties" screenshotSrc="/images/screenshots/vacation-rentals-billing.png"
         reverse={true}
       />
+
+      <Divider />
+
+      <FAQSection faqs={[
+        { q: 'Can I manage multiple vacation rental properties with one account?', a: 'Yes. One Pillar account supports unlimited properties. Your dashboard shows every property, every work order, and every pending guest request in a single unified view.' },
+        { q: 'How much does it cost to add more properties?', a: 'Your first property is $14.99/month with every feature included. Each additional property is $9.99/month — no feature gates, no tiers. A 5-property portfolio costs $54.95/month total.' },
+        { q: 'Can I copy my setup from one property to another?', a: 'Yes. Pillar lets you duplicate an existing property — guides, categories, routing settings, and house rules all carry over. It takes seconds to bootstrap a new listing.' },
+        { q: 'Does each property have its own QR code?', a: 'Yes. Each property gets a unique permanent QR code so guests always access the correct portal for the property they\'re staying at. QR codes never change, so you print them once.' },
+        { q: 'Can my properties have different work order contacts?', a: 'Yes. Each property has its own routing configuration. A property in one city can route plumbing issues to a local plumber while a property in another city routes to a completely different contact.' },
+        { q: 'Is there a limit on how many properties I can manage?', a: 'No. There is no cap on the number of properties you can add to your account. Each additional property is $9.99/month.' },
+      ]} />
+
+      <Divider />
+
+      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
+        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20, textAlign: 'center' }}>Explore the Platform</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One QR code per property, permanent.' },
+            { href: '/platform/ai-concierge', label: 'AI Concierge', desc: 'Local recommendations, 24/7.' },
+            { href: '/platform/property-guides', label: 'Property Guides', desc: 'WiFi, codes, guides — always current.' },
+            { href: '/platform/work-orders', label: 'Work Orders', desc: 'Smart routing to the right contact.' },
+            { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Approve or deny with one tap.' },
+          ].map(({ href, label, desc }) => (
+            <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: '1px solid rgba(245,237,213,0.10)', background: 'rgba(245,237,213,0.03)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', margin: 0 }}>{label}</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{desc}</p>
+            </a>
+          ))}
+        </div>
+      </section>
 
       <Divider />
 

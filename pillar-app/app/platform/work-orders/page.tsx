@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Maintenance Work Orders & Smart Routing for Rental Properties | Pillar',
+  description: 'Guests submit maintenance requests from their portal. Pillar routes each issue to the right contact automatically — plumber, electrician, or property manager — via SMS and email.',
+};
 
 function WrenchIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function BellIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -67,6 +73,15 @@ export default function WorkOrdersPage() {
       />
 
       <Divider />
+
+      <FAQSection faqs={[
+        { q: 'How do guests submit a maintenance request?', a: 'Guests tap the work order button in their QR portal, select a category, describe the issue, and submit. The appropriate contact is notified by SMS and email immediately — no interaction with the host required.' },
+        { q: 'Can I route different issues to different people?', a: 'Yes. You set up custom categories (Plumbing, HVAC, Electrical, etc.) and assign a specific contact to each. When a guest submits a plumbing request, your plumber is notified directly — not you, not a general inbox.' },
+        { q: 'How are contacts notified?', a: 'Pillar sends both an SMS and an email notification simultaneously when a work order is submitted. Notifications include the property address, the issue category, and the guest\'s description.' },
+        { q: 'Can I track the status of open work orders?', a: 'Yes. All open work orders appear in your manager dashboard, filterable by property, status, and date. You can mark orders resolved from the dashboard with a single click, and full history is preserved for every property.' },
+        { q: 'What happens if a maintenance issue comes in overnight?', a: 'Notifications go out immediately regardless of the time. If you have a 24-hour emergency contact assigned to a category, they\'ll be alerted right away. The dashboard also shows all overnight submissions when you check in the morning.' },
+        { q: 'Does work order management cost extra?', a: 'No. Work orders and smart routing are included in every Pillar plan at no additional charge.' },
+      ]} />
 
       <CTASection
         title="Stop Managing Maintenance by Text"

@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: '24/7 AI Concierge for Vacation Rental Guests | Pillar',
+  description: 'Pillar\'s AI concierge answers guest questions around the clock — local restaurant recommendations, itinerary planning, property how-tos, and more. Included in every plan.',
+};
 
 function SparkleIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M12 3l1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8L12 3z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><path d="M19.5 19l.75 1.5 1.5-.75-1.5-.75L19.5 19z" fill="currentColor" /></svg>; }
 function MapPinIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" stroke="currentColor" strokeWidth="1.4" /><circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth="1.4" /></svg>; }
@@ -66,6 +72,15 @@ export default function AIConcierge() {
       />
 
       <Divider />
+
+      <FAQSection faqs={[
+        { q: 'What can the AI concierge help guests with?', a: 'The AI concierge handles local recommendations, day itinerary planning, property how-tos, and general questions about the area. It knows your property details — WiFi, checkout times, appliance instructions — and can answer in real time around the clock.' },
+        { q: 'Do guests need to download an app to use the concierge?', a: 'No. The AI concierge is built into the guest portal, which guests access by scanning a QR code. It works in any mobile browser — no download, no account required.' },
+        { q: 'Is the AI concierge available 24/7?', a: 'Yes. The concierge is always on. Guests can ask questions at midnight before check-in or at 6am on their last day — they\'ll always get an immediate, helpful response.' },
+        { q: 'What kind of local recommendations does it make?', a: 'It surfaces restaurants, bars, cafes, activities, and attractions near your property. Each recommendation includes a description of the vibe, distance, ratings, and a direct link to Google so guests can see the menu or get directions instantly.' },
+        { q: 'Does the AI know my specific property?', a: 'Yes. The concierge is trained on your property details — the information you add to your Pillar dashboard. This includes house rules, check-out instructions, appliance guides, and any custom notes you choose to include.' },
+        { q: 'Is the AI concierge included in the base plan?', a: 'Yes. The AI concierge is included with every Pillar plan, for every property, at no additional cost.' },
+      ]} />
 
       <CTASection
         title="Give Your Guests a Concierge They'll Talk About"

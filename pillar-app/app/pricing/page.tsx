@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Pillar Pricing — Full Platform Starting at $14.99/Month',
+  description: 'One plan, every feature. Pillar starts at $14.99/month for your first property. Add more at $9.99 each. No feature limits, no long-term contracts — cancel any time.',
+};
 
 const SANDY = '#F5EDD5';
 const GOLD = '#D4AF6A';

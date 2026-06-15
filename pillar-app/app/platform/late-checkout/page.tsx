@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Late Checkout Management for Rental Hosts | Pillar',
+  description: 'Let guests request a late checkout directly from their portal. Approve or deny with one tap from your dashboard. No awkward texts, no missed messages — just a clean process.',
+};
 
 function ClockIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4" /><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function CheckSquareIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><polyline points="9 11 12 14 22 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -68,6 +74,15 @@ export default function LateCheckoutPage() {
       />
 
       <Divider />
+
+      <FAQSection faqs={[
+        { q: 'How does a guest request a late checkout?', a: 'Guests tap the late checkout button in their QR portal, select their preferred departure time, and submit. The request is sent to you instantly and you can approve or deny with a single tap from your dashboard.' },
+        { q: 'How am I notified of a late checkout request?', a: 'You receive an immediate SMS and email notification when a guest submits a request. All pending requests also appear prominently in your manager dashboard so nothing gets missed.' },
+        { q: 'Can I approve or deny from my phone?', a: 'Yes. Your manager dashboard is fully mobile-friendly. You can review and respond to late checkout requests from anywhere, in seconds.' },
+        { q: 'What happens if I don\'t respond to a request?', a: 'Requests automatically expire after 8 hours if not reviewed. The guest is notified that their request was not approved, and the dashboard stays clean with no lingering open items.' },
+        { q: 'Does the guest get notified of my decision?', a: 'Yes. As soon as you approve or deny, the guest receives an immediate notification in their portal. There is no need for any follow-up messages between you and your guest.' },
+        { q: 'Is there a fee for the late checkout feature?', a: 'No. Late checkout management is included in every Pillar plan at no additional cost.' },
+      ]} />
 
       <CTASection
         title="Give Guests Flexibility Without the Hassle"

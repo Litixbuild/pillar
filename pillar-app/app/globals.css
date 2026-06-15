@@ -98,4 +98,12 @@ nextjs-portal {
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+@keyframes testimonialSlideIn {
+  from { transform: translateX(48px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.testimonial-slide-in {
+  animation: testimonialSlideIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Manager portal — page transition handled by PageFader (layout.tsx) */

@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Tenant Communication Tools for Residential Property Managers | Pillar',
+  description: 'Streamline tenant communication with digital property guides, maintenance request routing, and a structured checkout process — all managed from one clean dashboard.',
+};
 
 function HomeIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>; }
 function FileTextIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /><polyline points="10 9 9 9 8 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>; }
@@ -60,6 +66,36 @@ export default function ResidentialPage() {
         screenshotLabel="Dashboard — Maintenance Activity" hideScreenshot
         reverse={true}
       />
+
+      <Divider />
+
+      <FAQSection faqs={[
+        { q: 'How is Pillar different from a typical property management tool?', a: 'Most property management software is built for the manager. Pillar is built around the tenant and guest experience — a QR-accessible portal they use throughout their tenancy to find information, submit maintenance requests, and communicate without unnecessary back-and-forth.' },
+        { q: 'Can I use Pillar for long-term rental properties?', a: 'Yes. Pillar works well for long-term residential rentals. The guest portal becomes a permanent resource for tenants — house rules, appliance guides, utility contacts, and maintenance requests all in one place for the duration of the tenancy.' },
+        { q: 'How do tenants submit maintenance requests?', a: 'Tenants access the portal via QR code, navigate to work orders, select the appropriate category, describe the issue, and submit. The right contact — your plumber, electrician, or property manager — is notified immediately by SMS and email.' },
+        { q: 'Can I manage multiple residential units from one account?', a: 'Yes. Add each unit as its own property. Each gets a unique QR code and its own portal. Your dashboard shows all units and all pending maintenance requests in one view.' },
+        { q: 'What if a tenant loses access to the QR code?', a: 'The portal URL can be accessed directly, and you can regenerate or share the QR code at any time from your dashboard. Most landlords include the QR code with the tenancy welcome pack and frame it somewhere visible in the unit.' },
+        { q: 'How much does Pillar cost for residential properties?', a: 'Pillar starts at $14.99/month for your first unit with every feature included. Each additional unit is $9.99/month. There are no long-term contracts and you can cancel anytime.' },
+      ]} />
+
+      <Divider />
+
+      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
+        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20, textAlign: 'center' }}>Explore the Platform</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One QR code — all property info.' },
+            { href: '/platform/property-guides', label: 'Property Guides', desc: 'Handbook, rules, and contacts.' },
+            { href: '/platform/work-orders', label: 'Work Orders', desc: 'Maintenance routed to the right person.' },
+            { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Structured requests, no awkward texts.' },
+          ].map(({ href, label, desc }) => (
+            <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: '1px solid rgba(245,237,213,0.10)', background: 'rgba(245,237,213,0.03)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', margin: 0 }}>{label}</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{desc}</p>
+            </a>
+          ))}
+        </div>
+      </section>
 
       <Divider />
 

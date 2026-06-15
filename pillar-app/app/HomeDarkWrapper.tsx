@@ -10,12 +10,40 @@ const SANDY = '#F5EDD5';
 
 const THEME_KEY = 'pillar-theme';
 
+const TESTIMONIALS = [
+  {
+    quote: "My guests stopped messaging me about WiFi and door codes the same week I set Pillar up. They scan in on arrival and everything they need is already there.",
+    name: "Sarah M.",
+    role: "Vacation Rental Host — 3 Properties",
+  },
+  {
+    quote: "The AI concierge genuinely impressed my guests. Multiple people mentioned it in their reviews. I had no idea it would make that kind of difference.",
+    name: "James R.",
+    role: "Short-Term Rental Manager",
+  },
+  {
+    quote: "Setup took me about 10 minutes per property. Now I spend a fraction of the time I used to on guest communication.",
+    name: "Priya K.",
+    role: "Rental Host — 6 Properties",
+  },
+];
+
 export default function HomeDarkWrapper() {
   const [dark, setDark] = useState(false);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [testimonialKey, setTestimonialKey] = useState(0);
 
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === 'dark') setDark(true);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTestimonialIndex(i => (i + 1) % TESTIMONIALS.length);
+      setTestimonialKey(k => k + 1);
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const toggleDark = () => {
@@ -24,6 +52,8 @@ export default function HomeDarkWrapper() {
     localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
     setDark(next);
   };
+
+  const t = TESTIMONIALS[testimonialIndex];
 
   return (
     <>
@@ -58,7 +88,7 @@ export default function HomeDarkWrapper() {
               {[
                 'Late-night calls for the WiFi password — every single stay',
                 'Guests wandering aimlessly, missing the best your area has to offer',
-                'Forgettable stays don’t create repeat guests, referrals, or 5-star reviews',
+                "Forgettable stays don’t create repeat guests, referrals, or 5-star reviews",
               ].map((pain) => (
                 <div key={pain} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.80)' }}>
                   <span className="mt-0.5 shrink-0" style={{ color: SANDY }}>✕</span>
@@ -189,6 +219,54 @@ export default function HomeDarkWrapper() {
           </div>
         </div>
       </section>
+
+      {/* Divider */}
+      <div className="max-w-7xl mx-auto px-8 lg:px-16">
+        <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(245,237,213,0.25), transparent)' }} />
+      </div>
+
+      {/* ── Testimonials ── */}
+      <section className="py-12 lg:py-20">
+        <div className="max-w-2xl mx-auto px-5 lg:px-8 text-center">
+          <p className="text-[10px] uppercase tracking-[0.45em] mb-10 lg:mb-14" style={{ color: SANDY }}>What Hosts Are Saying</p>
+
+          <div style={{ overflow: 'hidden', minHeight: 140 }}>
+            <div key={testimonialKey} className="testimonial-slide-in">
+              <p className="text-base lg:text-lg leading-relaxed mb-7" style={{ color: 'rgba(255,255,255,0.80)', fontStyle: 'italic' }}>
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.90)' }}>{t.name}</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.38)' }}>{t.role}</p>
+            </div>
+          </div>
+
+          {/* Dot indicators */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { setTestimonialIndex(i); setTestimonialKey(k => k + 1); }}
+                aria-label={`Go to testimonial ${i + 1}`}
+                style={{
+                  width: i === testimonialIndex ? 20 : 6,
+                  height: 6,
+                  borderRadius: 999,
+                  background: i === testimonialIndex ? SANDY : 'rgba(245,237,213,0.25)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'width 0.35s ease, background 0.35s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="max-w-7xl mx-auto px-8 lg:px-16">
+        <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(245,237,213,0.25), transparent)' }} />
+      </div>
 
       {/* ── CTA ── */}
       <section className="relative py-12 lg:py-24 overflow-hidden">

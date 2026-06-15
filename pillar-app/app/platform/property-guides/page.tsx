@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, PhoneHero, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Digital Property Guides for Vacation Rental Hosts | Pillar',
+  description: 'Build a complete digital guide for your rental property — WiFi passwords, door codes, house rules, appliance tutorials, and more. Guests access it instantly by scanning your QR code.',
+};
 
 function WifiIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
 function KeyIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -67,6 +73,15 @@ export default function PropertyGuidesPage() {
       />
 
       <Divider />
+
+      <FAQSection faqs={[
+        { q: 'What information can I add to a property guide?', a: 'You can add WiFi credentials, door and garage codes, house rules, checkout instructions, appliance tutorials, photo galleries, PDF manuals, and unlimited custom guide sections for any amenity or topic specific to your property.' },
+        { q: 'How do guests access the property guide?', a: 'Guests scan your unique QR code on arrival and the guide loads instantly in their browser. No app download, no account creation — just instant access to everything they need.' },
+        { q: 'Are door codes and WiFi passwords stored securely?', a: 'Yes. All sensitive data is encrypted at rest using AES-256-GCM encryption — the same standard used by banks. Codes are only accessible through your authenticated guest portal, never exposed in plain text.' },
+        { q: 'Can I update the guide after guests have already checked in?', a: 'Yes. Any changes you make in the dashboard are reflected immediately. If you change a WiFi password or update checkout instructions mid-stay, guests will see the latest version the next time they open the portal.' },
+        { q: 'Can I attach videos or PDF manuals for appliances?', a: 'Yes. Each guide section supports rich content including images, video tutorials, and PDF attachments. This is ideal for complex appliances, smart home systems, or hot tub operating instructions.' },
+        { q: 'How long does it take to set up a property guide?', a: 'Most hosts complete their first property guide in under 10 minutes. You can start with the essentials — WiFi, door code, house rules — and add more detailed guides over time.' },
+      ]} />
 
       <CTASection
         title="Build Your Property Guide Today"

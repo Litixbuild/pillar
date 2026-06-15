@@ -77,6 +77,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.80,
     },
 
+    // Blog
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    },
+    {
+      url: `${BASE_URL}/blog/reduce-guest-messages-rental-host`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/best-tools-vacation-rental-managers-2026`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/digital-property-guide-what-to-include`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+
     // Legal & support
     {
       url: `${BASE_URL}/contact`,

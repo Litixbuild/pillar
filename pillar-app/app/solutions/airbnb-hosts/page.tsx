@@ -1,4 +1,10 @@
-import FeaturePageLayout, { PageHero, FeatureGrid, CTASection, Divider } from '@/components/FeaturePageLayout';
+import type { Metadata } from 'next';
+import FeaturePageLayout, { PageHero, FeatureGrid, CTASection, Divider, FAQSection } from '@/components/FeaturePageLayout';
+
+export const metadata: Metadata = {
+  title: 'Guest Experience Platform for Rental Hosts | Pillar',
+  description: 'Turn one-time guests into five-star reviews. Pillar gives rental hosts a premium guest portal with AI concierge, property guides, and work orders — all from one QR scan.',
+};
 
 function StarIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>; }
 function ZapIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 20, height: 20 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -49,10 +55,41 @@ export default function AirbnbHostsPage() {
         { icon: <MessageIcon />, title: 'AI Handles the Questions', desc: '24/7 concierge answers local recommendations, property questions, and itinerary requests automatically.' },
         { icon: <StarIcon />, title: 'Five-Star Reviews', desc: 'Guests who feel genuinely looked after leave reviews that future guests actually read before booking.' },
         { icon: <ClockIcon />, title: 'Late Checkout On Your Terms', desc: 'Guests request, you approve. Structured and professional — no awkward last-minute texts.' },
-        { icon: <TrendingUpIcon />, title: 'Repeat Bookings', desc: 'Exceptional experiences create direct inquiries and repeat guests who book without searching Airbnb.' },
+        { icon: <TrendingUpIcon />, title: 'Repeat Bookings', desc: 'Exceptional experiences create direct inquiries and repeat guests who come back without searching listing platforms.' },
         { icon: <MapPinIcon />, title: 'Local Expertise, Built In', desc: 'The AI concierge knows your neighbourhood — restaurants, activities, and what\'s actually worth visiting.' },
       ]} />
 
+
+      <Divider />
+
+      <FAQSection faqs={[
+        { q: 'How does Pillar help with guest reviews?', a: 'A better guest experience leads to better reviews. When guests have instant access to everything they need — WiFi, house rules, local spots, and a 24/7 AI concierge — they feel genuinely looked after. That translates directly into five-star feedback.' },
+        { q: 'Do guests need to download an app?', a: 'No. Guests scan a QR code you place at your property and the guest portal opens instantly in their browser. No app, no account, no friction.' },
+        { q: 'Will this work with major booking platforms and direct bookings?', a: 'Yes. Pillar is completely platform-independent. It works alongside any booking platform you use, as well as direct bookings. The QR portal is physical — it lives at your property, not inside any platform.' },
+        { q: 'How does the AI concierge help rental hosts specifically?', a: 'The AI handles the questions every host gets — "What\'s the WiFi?", "Where should we eat?", "Can we check out late?" — automatically, around the clock. You get fewer messages and your guests get faster, better answers.' },
+        { q: 'Can I customise the portal to match my property\'s brand?', a: 'Yes. You control the name, property details, photos, guides, and the content guests see. Every portal reflects your specific property and the experience you want to deliver.' },
+        { q: 'How quickly can I get set up?', a: 'Most hosts set up their first property in under 10 minutes. Add your WiFi, door code, and house rules, download your QR code, and you\'re ready. You can build out the full guide over time.' },
+      ]} />
+
+      <Divider />
+
+      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
+        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20, textAlign: 'center' }}>What's Included</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+          {[
+            { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One scan — everything they need.' },
+            { href: '/platform/ai-concierge', label: 'AI Concierge', desc: '24/7 answers and local recommendations.' },
+            { href: '/platform/property-guides', label: 'Property Guides', desc: 'WiFi, codes, and house rules.' },
+            { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Requests handled without texts.' },
+            { href: '/platform/work-orders', label: 'Work Orders', desc: 'Maintenance routed automatically.' },
+          ].map(({ href, label, desc }) => (
+            <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: '1px solid rgba(245,237,213,0.10)', background: 'rgba(245,237,213,0.03)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', margin: 0 }}>{label}</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{desc}</p>
+            </a>
+          ))}
+        </div>
+      </section>
 
       <Divider />
 

@@ -99,12 +99,12 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
 }
 
 /* ── Plain portrait image — PNGs that already have a phone frame baked in ── */
-function PortraitImage({ src, width = 'min(380px, 80vw)' }: { src: string; width?: string }) {
-  return <img src={src} alt="App screenshot" style={{ width, height: 'auto', display: 'block' }} />;
+function PortraitImage({ src, width = 'min(380px, 80vw)', alt = 'Pillar guest portal screenshot' }: { src: string; width?: string; alt?: string }) {
+  return <img src={src} alt={alt} style={{ width, height: 'auto', display: 'block' }} />;
 }
 
 /* ── CSS phone frame — wraps raw screenshots/videos that have no frame baked in ── */
-function PhoneFrame({ src }: { src: string }) {
+function PhoneFrame({ src, alt = 'Pillar app screenshot' }: { src: string; alt?: string }) {
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
   return (
     <div style={{
@@ -119,7 +119,7 @@ function PhoneFrame({ src }: { src: string }) {
     }}>
       {isVideo
         ? <video src={src} autoPlay loop muted playsInline preload="auto" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        : <img src={src} alt="App screenshot" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        : <img src={src} alt={alt} style={{ width: '100%', height: 'auto', display: 'block' }} />
       }
       <div style={{
         position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
@@ -135,7 +135,7 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
   if (src && phone) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(16px, 4vw, 40px) 0' }}>
-        <PhoneFrame src={src} />
+        <PhoneFrame src={src} alt={label ?? 'Pillar app screenshot'} />
       </div>
     );
   }
@@ -164,16 +164,17 @@ export function ScreenshotPlaceholder({ label, aspect = '16/9', src, phone }: {
 }
 
 /* ── One or two portrait screenshots for full-width hero sections ── */
-export function PhoneHero({ left, right }: { left: string; right?: string }) {
+export function PhoneHero({ left, right, leftAlt, rightAlt }: { left: string; right?: string; leftAlt?: string; rightAlt?: string }) {
   const imgWidth = right ? 'min(300px, 42vw)' : 'min(420px, 72vw)';
+  const deriveAlt = (src: string) => src.split('/').pop()?.replace(/[-_]/g, ' ').replace(/\.\w+$/, '') ?? 'Pillar app screenshot';
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 'clamp(16px, 4vw, 32px)', padding: 'clamp(16px, 4vw, 40px) 0' }}>
       <div style={{ transform: 'translateY(20px) rotate(-4deg)', transformOrigin: 'bottom center' }}>
-        <PortraitImage src={left} width={imgWidth} />
+        <PortraitImage src={left} width={imgWidth} alt={leftAlt ?? deriveAlt(left)} />
       </div>
       {right && (
         <div style={{ transform: 'translateY(-8px) rotate(3deg)', transformOrigin: 'bottom center' }}>
-          <PortraitImage src={right} width={imgWidth} />
+          <PortraitImage src={right} width={imgWidth} alt={rightAlt ?? deriveAlt(right)} />
         </div>
       )}
     </div>
@@ -231,6 +232,44 @@ export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabe
             <ScreenshotPlaceholder label={screenshotLabel} src={screenshotSrc} aspect="4/3" phone={phoneScreenshot} />
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+export function FAQSection({ faqs }: { faqs: { q: string; a: string }[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+  return (
+    <section style={{ padding: 'clamp(40px, 6vw, 72px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: SANDY, marginBottom: 16, textAlign: 'center' }}>FAQ</p>
+      <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 400, color: '#fff', textAlign: 'center', marginBottom: 40, lineHeight: 1.2 }}>
+        Common Questions
+      </h2>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {faqs.map(({ q, a }, i) => (
+          <div key={i} style={{ borderBottom: '1px solid rgba(245,237,213,0.10)' }}>
+            <button
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+              style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '20px 0', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}
+            >
+              <span style={{ fontSize: 14.5, fontWeight: 500, color: 'rgba(255,255,255,0.90)', lineHeight: 1.4 }}>{q}</span>
+              <span style={{ fontSize: 22, color: SANDY, flexShrink: 0, display: 'inline-block', transform: openIndex === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease' }}>+</span>
+            </button>
+            {openIndex === i && (
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.58)', lineHeight: 1.72, paddingBottom: 20, marginTop: -4 }}>{a}</p>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );
