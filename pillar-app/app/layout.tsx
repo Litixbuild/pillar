@@ -38,7 +38,10 @@ export const metadata: Metadata = {
   title: "Pillar — Guest Experience for Property Managers",
   description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
   icons: {
-    icon: '/images/pillarlogogoogleblack.png',
+    icon: [
+      { url: '/images/pillarlogogoogleblack.png', media: '(prefers-color-scheme: light)' },
+      { url: '/images/pillarlogowhite.png',       media: '(prefers-color-scheme: dark)'  },
+    ],
     shortcut: '/images/pillarlogogoogleblack.png',
     apple: '/images/pillarlogogoogleblack.png',
   },
