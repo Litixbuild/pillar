@@ -1,6 +1,6 @@
 [build]
   base = "pillar-app"
-  command = "npm run build"
+  command = "npm audit --audit-level=high && npm run build"
   publish = ".next"
 
 [[plugins]]
