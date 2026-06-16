@@ -1139,18 +1139,9 @@ function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
     setLoading(true);
     setFetchError(null);
     try {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&country=US&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'en' } }
-      );
-      const geoData = (await geoRes.json()) as Array<{ lat: string; lon: string }>;
-      if (!geoData[0]) throw new Error('Location not found');
-      const { lat, lon } = geoData[0];
-
-      const wxRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`
-      );
-      const raw = (await wxRes.json()) as {
+      const res = await fetch(`/api/guest/weather?zip=${encodeURIComponent(zipCode)}`);
+      if (!res.ok) throw new Error('Weather unavailable');
+      const raw = (await res.json()) as {
         current: { temperature_2m: number; apparent_temperature: number; weather_code: number; time: string };
         hourly: { time: string[]; temperature_2m: number[]; weather_code: number[] };
         daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[] };
