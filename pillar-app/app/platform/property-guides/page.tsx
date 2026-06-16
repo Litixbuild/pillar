@@ -68,7 +68,7 @@ export default function PropertyGuidesPage() {
           'Each portal URL is a unique UUID with 122 bits of entropy. Practically impossible to guess.',
           'Update codes at any time and changes reflect immediately across every guest session.',
         ]}
-        screenshotLabel="Dashboard — Property Settings" screenshotSrc="/images/screenshots/property-guides-settings.mp4"
+        hideScreenshot
         reverse={true}
       />
 

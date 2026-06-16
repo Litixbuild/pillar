@@ -994,6 +994,381 @@ function guessAttachmentKind(url: string): 'image' | 'video' | 'other' {
   return 'other';
 }
 
+/* ─── Weather Widget ─────────────────────────────────────────── */
+
+function WxSunIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WxCloudIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }} aria-hidden="true">
+      <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WxRainIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }} aria-hidden="true">
+      <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 13v4M8 13v4M12 15v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WxSnowIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }} aria-hidden="true">
+      <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8" cy="22" r="1" fill="currentColor" />
+      <circle cx="12" cy="22" r="1" fill="currentColor" />
+      <circle cx="16" cy="22" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function WxStormIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: size, height: size }} aria-hidden="true">
+      <path d="M19 16.9A5 5 0 0018 7h-1.26A8 8 0 104 15.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points="13 11 9 17 15 17 11 23" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function wmoIcon(code: number, size?: number): ReactNode {
+  if (code <= 1) return <WxSunIcon size={size} />;
+  if (code >= 95) return <WxStormIcon size={size} />;
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return <WxSnowIcon size={size} />;
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return <WxRainIcon size={size} />;
+  return <WxCloudIcon size={size} />;
+}
+
+function wmoLabel(code: number): string {
+  if (code === 0) return 'Clear Sky';
+  if (code === 1) return 'Mainly Clear';
+  if (code === 2) return 'Partly Cloudy';
+  if (code === 3) return 'Overcast';
+  if (code === 45 || code === 48) return 'Foggy';
+  if (code >= 51 && code <= 57) return 'Drizzle';
+  if (code >= 61 && code <= 67) return 'Rain';
+  if (code >= 71 && code <= 77) return 'Snow';
+  if (code >= 80 && code <= 82) return 'Rain Showers';
+  if (code >= 85 && code <= 86) return 'Snow Showers';
+  if (code >= 95) return 'Thunderstorm';
+  return 'Cloudy';
+}
+
+function formatHour(isoTime: string): string {
+  const h = parseInt(isoTime.slice(11, 13), 10);
+  if (h === 0) return '12 AM';
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return '12 PM';
+  return `${h - 12} PM`;
+}
+
+function formatDayLabel(isoDate: string): string {
+  const d = new Date(isoDate + 'T12:00:00');
+  const today = new Date();
+  if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth()) return 'Today';
+  return d.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+function getWxTabIcon(idx: number): ReactNode {
+  if (idx === 0) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" style={{ width: 18, height: 18 }} aria-hidden="true">
+        <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (idx === 1) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" style={{ width: 18, height: 18 }} aria-hidden="true">
+        <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={{ width: 18, height: 18 }} aria-hidden="true">
+      <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 13v3M8 13v3M12 15v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+interface WxData {
+  temp: number;
+  feelsLike: number;
+  code: number;
+  hourly: { time: string; temp: number; code: number }[];
+  daily: { date: string; high: number; low: number; code: number }[];
+}
+
+function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
+  zipCode: string;
+  dark: boolean;
+  lightTheme: LightTheme;
+  isLightThemed: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [tabIconIdx, setTabIconIdx] = useState(0);
+  const [wx, setWx] = useState<WxData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setTabIconIdx((i) => (i + 1) % 3), 2200);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    void fetchWx();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function fetchWx() {
+    if (wx || loading || !zipCode) return;
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&country=US&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const geoData = (await geoRes.json()) as Array<{ lat: string; lon: string }>;
+      if (!geoData[0]) throw new Error('Location not found');
+      const { lat, lon } = geoData[0];
+
+      const wxRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`
+      );
+      const raw = (await wxRes.json()) as {
+        current: { temperature_2m: number; apparent_temperature: number; weather_code: number; time: string };
+        hourly: { time: string[]; temperature_2m: number[]; weather_code: number[] };
+        daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[] };
+      };
+
+      const nowPrefix = raw.current.time.slice(0, 13);
+      const hIdx = raw.hourly.time.findIndex((t) => t.slice(0, 13) === nowPrefix);
+      const hStart = hIdx >= 0 ? hIdx : 0;
+
+      setWx({
+        temp: Math.round(raw.current.temperature_2m),
+        feelsLike: Math.round(raw.current.apparent_temperature),
+        code: raw.current.weather_code,
+        hourly: raw.hourly.time.slice(hStart, hStart + 24).map((t, i) => ({
+          time: t,
+          temp: Math.round((raw.hourly.temperature_2m[hStart + i] as number) ?? 0),
+          code: (raw.hourly.weather_code[hStart + i] as number) ?? 0,
+        })),
+        daily: raw.daily.time.map((t, i) => ({
+          date: t,
+          high: Math.round((raw.daily.temperature_2m_max[i] as number) ?? 0),
+          low: Math.round((raw.daily.temperature_2m_min[i] as number) ?? 0),
+          code: (raw.daily.weather_code[i] as number) ?? 0,
+        })),
+      });
+    } catch {
+      setFetchError('Unable to load weather.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const panelBg = dark
+    ? 'rgba(10,10,10,0.97)'
+    : isLightThemed
+    ? lTheme.buttonBg.replace(',0.88)', ',0.97)')
+    : 'rgba(255,255,255,0.97)';
+  const borderCol = dark
+    ? 'rgba(255,255,255,0.08)'
+    : isLightThemed
+    ? `rgba(${lTheme.accentRGB},0.14)`
+    : 'rgba(0,0,0,0.08)';
+  const textCol = dark ? 'rgba(255,255,255,0.92)' : isLightThemed ? lTheme.titleText : '#1e293b';
+  const mutedCol = dark
+    ? 'rgba(255,255,255,0.42)'
+    : isLightThemed
+    ? `rgba(${lTheme.accentRGB},0.55)`
+    : 'rgba(30,41,59,0.45)';
+  const dividerCol = dark
+    ? 'rgba(255,255,255,0.06)'
+    : isLightThemed
+    ? `rgba(${lTheme.accentRGB},0.09)`
+    : 'rgba(0,0,0,0.06)';
+  const accentRGB = isLightThemed ? lTheme.accentRGB : SANDY_RGB;
+  const iconColor = dark
+    ? `rgba(${SANDY_RGB},0.85)`
+    : isLightThemed
+    ? lTheme.iconColor
+    : 'rgba(100,80,40,0.85)';
+  const tabBg = dark
+    ? 'rgba(10,10,10,0.82)'
+    : isLightThemed
+    ? lTheme.buttonBg
+    : 'rgba(255,255,255,0.82)';
+
+  return (
+    <>
+      {/* Floating weather tab — right edge, vertically centered */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="View weather forecast"
+        className="fixed right-0 z-20 flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95"
+        style={{
+          top: '30%',
+          transform: 'translateY(-50%)',
+          width: 38,
+          paddingTop: 14,
+          paddingBottom: 14,
+          borderRadius: '10px 0 0 10px',
+          background: tabBg,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: `1px solid ${borderCol}`,
+          borderRight: 'none',
+          boxShadow: dark ? '-4px 0 20px rgba(0,0,0,0.50)' : '-4px 0 16px rgba(0,0,0,0.10)',
+          color: iconColor,
+        }}
+      >
+        <div key={tabIconIdx} className="wx-tab-icon-fade">
+          {getWxTabIcon(tabIconIdx)}
+        </div>
+      </button>
+
+      {/* Backdrop */}
+      {open ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.40)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
+          onClick={() => setOpen(false)}
+          aria-label="Close weather"
+        />
+      ) : null}
+
+      {/* Drawer */}
+      <div
+        className="fixed z-40 flex flex-col overflow-hidden"
+        style={{
+          top: 20,
+          bottom: 20,
+          right: 0,
+          width: 'min(85vw, 300px)',
+          background: panelBg,
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${borderCol}`,
+          borderRight: 'none',
+          borderRadius: '20px 0 0 20px',
+          boxShadow: dark ? '-8px 0 48px rgba(0,0,0,0.65)' : '-8px 0 48px rgba(0,0,0,0.16)',
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.30s ease',
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? 'auto' : 'none',
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-px" style={{ backgroundImage: `linear-gradient(to right, transparent, rgba(${accentRGB},0.22), transparent)`, borderRadius: '20px 0 0 0' }} />
+
+        {/* Header */}
+        <div
+          className="flex shrink-0 items-center justify-between px-5 pb-4 pt-5"
+          style={{ borderBottom: `1px solid ${dividerCol}` }}
+        >
+          <p className="text-base font-semibold tracking-wide" style={{ color: textCol }}>Weather</p>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-200"
+            style={{ border: `1px solid ${borderCol}`, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', color: mutedCol }}
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-5 space-y-5" style={{ scrollbarWidth: 'none' }}>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16">
+              <div
+                className="h-8 w-8 animate-spin rounded-full border-2"
+                style={{ borderColor: `rgba(${accentRGB},0.25)`, borderTopColor: `rgba(${accentRGB},0.80)` }}
+              />
+              <p className="text-xs" style={{ color: mutedCol }}>Loading weather…</p>
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <p className="text-sm" style={{ color: mutedCol }}>{fetchError}</p>
+            </div>
+          ) : wx ? (
+            <>
+              {/* Current conditions */}
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[3.2rem] font-light leading-none tracking-tight" style={{ color: textCol }}>{wx.temp}°F</p>
+                  <p className="mt-1 text-sm font-medium" style={{ color: textCol }}>{wmoLabel(wx.code)}</p>
+                  <p className="mt-0.5 text-xs" style={{ color: mutedCol }}>Feels like {wx.feelsLike}°</p>
+                </div>
+                <div style={{ color: iconColor }}>{wmoIcon(wx.code, 60)}</div>
+              </div>
+
+              <div className="h-px" style={{ background: dividerCol }} />
+
+              {/* Hourly */}
+              <div>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: mutedCol }}>Hourly</p>
+                <div className="flex gap-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' } as React.CSSProperties}>
+                  {wx.hourly.map((h, i) => (
+                    <div key={i} className="flex flex-col items-center gap-1.5 shrink-0">
+                      <p className="text-[10px] whitespace-nowrap" style={{ color: mutedCol }}>{i === 0 ? 'Now' : formatHour(h.time)}</p>
+                      <div style={{ color: iconColor }}>{wmoIcon(h.code, 18)}</div>
+                      <p className="text-xs font-semibold" style={{ color: textCol }}>{h.temp}°</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px" style={{ background: dividerCol }} />
+
+              {/* 7-day */}
+              <div>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: mutedCol }}>7-Day Forecast</p>
+                <div className="space-y-3.5">
+                  {wx.daily.map((d, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <p className="w-11 shrink-0 text-xs font-medium" style={{ color: textCol }}>{formatDayLabel(d.date)}</p>
+                      <div className="flex flex-1 items-center gap-2 min-w-0">
+                        <div style={{ color: iconColor, flexShrink: 0 }}>{wmoIcon(d.code, 18)}</div>
+                        <p className="text-[10px] truncate" style={{ color: mutedCol }}>{wmoLabel(d.code)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <p className="text-xs font-semibold" style={{ color: textCol }}>{d.high}°</p>
+                        <span className="text-xs" style={{ color: dividerCol }}>|</span>
+                        <p className="text-xs" style={{ color: mutedCol }}>{d.low}°</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ─── Main component ──────────────────────────────────────────── */
 
 export default function PropertyExperience({
@@ -1309,6 +1684,15 @@ export default function PropertyExperience({
           >
             {dark ? <SunIcon /> : <MoonIcon />}
           </button>
+
+          {property.PropertyZipCode ? (
+            <WeatherWidget
+              zipCode={property.PropertyZipCode}
+              dark={dark}
+              lightTheme={lightTheme}
+              isLightThemed={isLightThemed}
+            />
+          ) : null}
 
           <div className="relative">
             {/* Content view */}

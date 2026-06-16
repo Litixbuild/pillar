@@ -106,4 +106,12 @@ nextjs-portal {
   animation: testimonialSlideIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes wxTabIconFade {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.wx-tab-icon-fade {
+  animation: wxTabIconFade 0.30s ease both;
+}
+
 /* Manager portal — page transition handled by PageFader (layout.tsx) */
