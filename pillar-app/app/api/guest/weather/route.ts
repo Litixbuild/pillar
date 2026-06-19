@@ -12,7 +12,9 @@ export async function GET(req: Request) {
     const geoRes = await fetch(`https://api.zippopotam.us/us/${encodeURIComponent(zip)}`);
     if (!geoRes.ok) return Response.json({ error: 'ZIP not found' }, { status: 404 });
 
-    const geoData = (await geoRes.json()) as { places?: Array<{ latitude: string; longitude: string }> };
+    const geoData = (await geoRes.json()) as {
+      places?: Array<{ latitude: string; longitude: string; 'place name': string; 'state abbreviation': string }>;
+    };
     const place = geoData.places?.[0];
     if (!place) return Response.json({ error: 'ZIP not found' }, { status: 404 });
 
@@ -28,7 +30,10 @@ export async function GET(req: Request) {
 
     const wxData = await wxRes.json();
 
-    return Response.json(wxData, {
+    return Response.json({
+      ...wxData,
+      location: { city: place['place name'], state: place['state abbreviation'] },
+    }, {
       headers: { 'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=300' },
     });
   } catch {

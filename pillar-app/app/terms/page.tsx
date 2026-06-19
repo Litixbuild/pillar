@@ -66,16 +66,22 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-slate-800">4. SMS Notifications</h2>
             <p className="mb-3">
-              Property managers may provide a phone number to receive SMS work order notifications. By providing
-              your phone number in the Pillar dashboard:
+              Property managers may provide a phone number to receive SMS work order notifications through
+              the Pillar PM Alerts program. By entering and saving a phone number in the Pillar dashboard
+              (Work Order Category Settings or Property Manager Phone field):
             </p>
             <ul className="list-disc space-y-2 pl-5">
-              <li>You consent to receive automated SMS notifications when tenants submit maintenance requests.</li>
-              <li>Message and data rates may apply.</li>
-              <li>Message frequency varies based on tenant activity.</li>
-              <li>You may opt out at any time by replying STOP to any message or removing your phone number from your dashboard settings.</li>
-              <li>Reply HELP for assistance or contact {CONTACT_EMAIL}.</li>
+              <li>You expressly consent to receive recurring automated transactional SMS notifications from Pillar PM when tenants submit maintenance requests or late checkout requests.</li>
+              <li>Message and data rates may apply depending on your mobile carrier and plan.</li>
+              <li>Message frequency varies based on tenant activity — one message per tenant submission.</li>
+              <li>You may opt out at any time by replying <strong>STOP</strong> to any message. You will receive a confirmation and no further messages will be sent.</li>
+              <li>Reply <strong>HELP</strong> to any message for assistance, or contact {CONTACT_EMAIL}.</li>
+              <li>We do not sell or share your mobile phone number with third parties for marketing purposes.</li>
             </ul>
+            <p className="mt-3">
+              For full details of the opt-in process, consent language, and opt-out instructions, see our{' '}
+              <a href="/sms-policy" className="text-slate-800 underline underline-offset-2">SMS Policy</a>.
+            </p>
           </section>
 
           <section>

@@ -415,10 +415,10 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                     })()}
                   </div>
                   {(p.cuisine || typeof p.rating === 'number') ? (
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                      {p.cuisine ? <span>{p.cuisine}</span> : null}
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                      {p.cuisine ? <span className="whitespace-nowrap">{p.cuisine}</span> : null}
                       {typeof p.rating === 'number' ? (
-                        <span className="flex items-center gap-0.5">
+                        <span className="flex items-center gap-0.5 whitespace-nowrap">
                           {p.cuisine ? <span style={{ opacity: 0.35 }}>·</span> : null}
                           <span style={{ color: 'var(--star-col)' }}>{'★'.repeat(Math.min(5, Math.round(p.rating)))}</span>
                           <span style={{ opacity: 0.25 }}>{'★'.repeat(5 - Math.min(5, Math.round(p.rating)))}</span>
@@ -461,7 +461,7 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
                           : (p.name || '—')}
                       </div>
                       {typeof p.rating === 'number' ? (
-                        <div className="mt-0.5 flex items-center gap-0.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                        <div className="mt-0.5 flex items-center gap-0.5 whitespace-nowrap text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                           <span style={{ color: 'var(--star-col)' }}>{'★'.repeat(Math.min(5, Math.round(p.rating)))}</span>
                           <span style={{ opacity: 0.25 }}>{'★'.repeat(5 - Math.min(5, Math.round(p.rating)))}</span>
                           <span className="ml-0.5">{p.rating.toFixed(1)}</span>

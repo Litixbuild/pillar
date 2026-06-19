@@ -1,11 +1,24 @@
 'use client';
 
-import type { DashboardStats, MonthlyResolutionPoint } from '@/lib/propertyEvents';
+import type { DashboardStats, MonthlyResolutionPoint, ActivityMonthPoint } from '@/lib/propertyEvents';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DONUT_COLORS = ['#C8B89A', '#B09878', '#A08868', '#D4C4A8', '#907858', '#BCA888'];
+
+const ACTIVITY_KEYS = ['amenity', 'concierge', 'workOrder'] as const;
+type ActivityKey = typeof ACTIVITY_KEYS[number];
+const ACTIVITY_COLORS: Record<ActivityKey, string> = {
+  amenity: '#DCBC8C',
+  concierge: '#A0C0D6',
+  workOrder: '#D9A186',
+};
+const ACTIVITY_LABELS: Record<ActivityKey, string> = {
+  amenity: 'Amenities',
+  concierge: 'AI Concierge',
+  workOrder: 'Work Orders',
+};
 
 function DonutChart({ slices }: { slices: { label: string; value: number; color: string }[] }) {
   const total = slices.reduce((s, x) => s + x.value, 0);
@@ -377,8 +390,359 @@ function ResolutionHistoryModal({
   );
 }
 
+function ActivityHistoryModal({
+  currentMonth,
+  monthly,
+  onClose,
+}: {
+  currentMonth: { amenity: number; concierge: number; workOrder: number };
+  monthly: ActivityMonthPoint[];
+  onClose: () => void;
+}) {
+  const dark = useDark();
+  const [visible, setVisible] = useState(false);
+  const [viewMode, setViewMode] = useState<'category' | 'month' | 'year'>('category');
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [barsKey, setBarsKey] = useState(0);
+
+  const currentYearNum = new Date().getFullYear();
+  const currentMonthIdx = new Date().getMonth();
+
+  const allYears = [...new Set([currentYearNum, ...monthly.map((d) => d.year)])].sort((a, b) => a - b);
+  const canPrev = selectedYear > allYears[0];
+  const canNext = selectedYear < allYears[allYears.length - 1];
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') handleClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  });
+
+  function handleClose() {
+    setVisible(false);
+    setTimeout(onClose, 290);
+  }
+
+  function changeYear(delta: number) {
+    setSelectedYear((y) => y + delta);
+    setBarsKey((k) => k + 1);
+  }
+
+  function switchMode(mode: 'category' | 'month' | 'year') {
+    setViewMode(mode);
+    setBarsKey((k) => k + 1);
+  }
+
+  // Theme tokens — same family as ResolutionHistoryModal
+  const cardBg        = dark ? '#0d0d0d'                  : 'rgba(255,252,245,0.99)';
+  const cardBorder    = dark ? 'rgba(255,255,255,0.07)'   : 'rgba(100,80,40,0.14)';
+  const cardShadow    = dark ? '0 32px 80px rgba(0,0,0,0.75)' : '0 32px 80px rgba(100,80,40,0.14)';
+  const gradientLine  = dark
+    ? 'linear-gradient(to right, transparent, rgba(200,184,154,0.40), transparent)'
+    : 'linear-gradient(to right, transparent, rgba(180,145,90,0.55), transparent)';
+  const tooltipBg     = dark ? '#1c1c1c'                  : 'rgba(255,252,245,0.99)';
+  const tooltipBorder = dark ? 'rgba(255,255,255,0.10)'   : 'rgba(100,80,40,0.16)';
+  const tooltipLine   = dark
+    ? 'linear-gradient(to right, transparent, rgba(200,184,154,0.30), transparent)'
+    : 'linear-gradient(to right, transparent, rgba(180,145,90,0.45), transparent)';
+  const ghostBarBg    = dark ? 'rgba(255,255,255,0.06)'   : 'rgba(100,80,40,0.09)';
+  const labelMuted    = dark ? 'rgba(255,255,255,0.35)'   : 'rgba(100,80,40,0.50)';
+  const labelTitle    = dark ? 'rgba(255,255,255,0.90)'   : '#1e293b';
+  const chipBorder    = dark ? 'rgba(255,255,255,0.08)'   : 'rgba(100,80,40,0.13)';
+  const chipBg        = dark ? 'rgba(255,255,255,0.03)'   : 'rgba(100,80,40,0.04)';
+  const chipText      = dark ? 'rgba(255,255,255,0.40)'   : 'rgba(100,80,40,0.50)';
+  const chipActiveBg  = dark ? 'rgba(200,184,154,0.20)'   : 'rgba(180,145,90,0.16)';
+  const chipActiveText = dark ? 'rgba(255,255,255,0.92)'  : '#3d2a0a';
+  const barHoverShadow = dark
+    ? '0 0 12px rgba(200,184,154,0.25)'
+    : '0 0 14px rgba(180,145,90,0.35)';
+
+  function monthLabelColor(isCur: boolean, isHovered: boolean) {
+    if (isHovered) return dark ? 'rgba(200,184,154,0.80)' : 'rgba(140,105,60,0.80)';
+    if (isCur)     return dark ? 'rgba(255,255,255,0.55)' : 'rgba(100,80,40,0.65)';
+    return                dark ? 'rgba(255,255,255,0.22)' : 'rgba(100,80,40,0.32)';
+  }
+
+  type Bucket = { key: string; label: string; amenity: number; concierge: number; workOrder: number; isCurrent: boolean };
+
+  let buckets: Bucket[] = [];
+  if (viewMode === 'month') {
+    buckets = Array.from({ length: 12 }, (_, i) => {
+      const point = monthly.find((d) => d.year === selectedYear && d.month === i + 1);
+      return {
+        key: `${selectedYear}-${i}`,
+        label: MONTH_LABELS[i].slice(0, 1),
+        amenity: point?.amenity ?? 0,
+        concierge: point?.concierge ?? 0,
+        workOrder: point?.workOrder ?? 0,
+        isCurrent: selectedYear === currentYearNum && i === currentMonthIdx,
+      };
+    });
+  } else if (viewMode === 'year') {
+    const byYear = new Map<number, { amenity: number; concierge: number; workOrder: number }>();
+    for (const d of monthly) {
+      const e = byYear.get(d.year) ?? { amenity: 0, concierge: 0, workOrder: 0 };
+      e.amenity += d.amenity; e.concierge += d.concierge; e.workOrder += d.workOrder;
+      byYear.set(d.year, e);
+    }
+    if (!byYear.has(currentYearNum)) byYear.set(currentYearNum, { amenity: 0, concierge: 0, workOrder: 0 });
+    buckets = [...byYear.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([year, v]) => ({ key: String(year), label: String(year), ...v, isCurrent: year === currentYearNum }));
+  }
+
+  const hasSeriesData = buckets.some((b) => b.amenity + b.concierge + b.workOrder > 0);
+  const maxTotal = Math.max(...buckets.map((b) => b.amenity + b.concierge + b.workOrder), 1);
+
+  const categoryTotal = currentMonth.amenity + currentMonth.concierge + currentMonth.workOrder;
+  const maxCategoryVal = Math.max(currentMonth.amenity, currentMonth.concierge, currentMonth.workOrder, 1);
+
+  return (
+    <div
+      className="fixed inset-0 z-9999 flex items-end sm:items-center justify-center px-4"
+      style={{
+        background: `rgba(5,10,16,${visible ? 0.72 : 0})`,
+        transition: 'background 0.29s ease',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-t-4xl sm:rounded-4xl pb-safe"
+        style={{
+          background: cardBg,
+          border: `1px solid ${cardBorder}`,
+          boxShadow: cardShadow,
+          transform: visible ? 'translateY(0) scale(1)' : 'translateY(28px) scale(0.975)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.26s ease',
+        }}
+      >
+        <div className="h-px w-full" style={{ background: gradientLine }} />
+
+        <div className="p-6 pb-7">
+          {/* Header row */}
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em]" style={{ color: labelMuted }}>
+                {viewMode === 'category' ? 'This Month' : viewMode === 'month' ? 'Monthly' : 'Yearly'}
+              </p>
+              <h2 className="mt-1 text-lg font-light tracking-tight" style={{ color: labelTitle }}>
+                Activity Breakdown
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleClose}
+              className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl transition-colors duration-150"
+              style={{ border: `1px solid ${chipBorder}`, background: chipBg, color: chipText }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Legend */}
+          <div className="mb-6 flex items-center gap-4">
+            {ACTIVITY_KEYS.map((k) => (
+              <div key={k} className="flex items-center gap-1.5">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: ACTIVITY_COLORS[k] }} />
+                <span className="text-[10px] font-medium" style={{ color: labelMuted }}>{ACTIVITY_LABELS[k]}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Year nav — only in month mode */}
+          {viewMode === 'month' && (
+            <div className="flex items-center justify-center gap-5 mb-6">
+              <button
+                type="button"
+                onClick={() => canPrev && changeYear(-1)}
+                disabled={!canPrev}
+                className="flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-150 disabled:pointer-events-none disabled:opacity-20"
+                style={{ border: `1px solid ${chipBorder}`, background: chipBg, color: chipText }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <span className="w-12 text-center text-xl font-light tabular-nums tracking-tight" style={{ color: labelTitle }}>
+                {selectedYear}
+              </span>
+              <button
+                type="button"
+                onClick={() => canNext && changeYear(1)}
+                disabled={!canNext}
+                className="flex h-8 w-8 items-center justify-center rounded-xl transition-all duration-150 disabled:pointer-events-none disabled:opacity-20"
+                style={{ border: `1px solid ${chipBorder}`, background: chipBg, color: chipText }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* ── Category view (default) ───────────────────────── */}
+          {viewMode === 'category' && (
+            categoryTotal === 0 ? (
+              <div className="flex h-44 flex-col items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8" style={{ color: dark ? 'rgba(255,255,255,0.10)' : 'rgba(100,80,40,0.18)' }}>
+                  <path d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 0c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(100,80,40,0.38)' }}>
+                  No activity yet this month
+                </p>
+              </div>
+            ) : (
+              <div key={barsKey} style={{ animation: 'resolutionFadeUp 0.22s ease forwards' }}>
+                <div className="flex h-44 items-end justify-center gap-6 px-2">
+                  {ACTIVITY_KEYS.map((k) => {
+                    const val = currentMonth[k];
+                    const heightPct = val > 0 ? Math.max((val / maxCategoryVal) * 100, 6) : 2;
+                    return (
+                      <div key={k} className="flex h-full w-16 flex-col items-center justify-end">
+                        <p className="mb-2 text-sm font-semibold tabular-nums" style={{ color: labelTitle }}>{val}</p>
+                        <div
+                          className="w-full rounded-t-lg transition-all duration-300"
+                          style={{ height: `${heightPct}%`, background: ACTIVITY_COLORS[k], opacity: val === 0 ? 0.16 : 0.88 }}
+                        />
+                        <p className="mt-2.5 text-center text-[10px] font-medium" style={{ color: labelMuted }}>{ACTIVITY_LABELS[k]}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          )}
+
+          {/* ── Month / Year stacked views ────────────────────── */}
+          {viewMode !== 'category' && (
+            !hasSeriesData ? (
+              <div className="flex h-44 flex-col items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8" style={{ color: dark ? 'rgba(255,255,255,0.10)' : 'rgba(100,80,40,0.18)' }}>
+                  <path d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 0c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-sm" style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(100,80,40,0.38)' }}>
+                  {viewMode === 'month' ? `No activity in ${selectedYear}` : 'No activity yet'}
+                </p>
+              </div>
+            ) : (
+              <div key={barsKey} style={{ animation: 'resolutionFadeUp 0.22s ease forwards' }}>
+                <div className="flex h-40 items-end gap-1 px-0.5">
+                  {buckets.map((b, i) => {
+                    const total = b.amenity + b.concierge + b.workOrder;
+                    const heightPct = total > 0 ? Math.max((total / maxTotal) * 100, 4) : 0;
+                    const isHovered = hovered === i;
+                    return (
+                      <div
+                        key={b.key}
+                        className="relative flex h-full flex-1 flex-col items-center justify-end"
+                        onMouseEnter={() => setHovered(i)}
+                        onMouseLeave={() => setHovered(null)}
+                      >
+                        {isHovered && total > 0 && (
+                          <div
+                            className="pointer-events-none absolute bottom-full mb-2.5 left-1/2 z-10 -translate-x-1/2 overflow-hidden whitespace-nowrap rounded-xl shadow-xl"
+                            style={{ background: tooltipBg, border: `1px solid ${tooltipBorder}` }}
+                          >
+                            <div className="h-px w-full" style={{ background: tooltipLine }} />
+                            <div className="space-y-0.5 px-3 py-2 text-center">
+                              <p className="text-xs font-semibold" style={{ color: labelTitle }}>{total} total</p>
+                              {ACTIVITY_KEYS.map((k) => (
+                                <p key={k} className="text-[10px]" style={{ color: labelMuted }}>
+                                  <span style={{ color: ACTIVITY_COLORS[k] }}>●</span> {ACTIVITY_LABELS[k]} {b[k]}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {total > 0 ? (
+                          <div
+                            className="flex w-full flex-col-reverse overflow-hidden rounded-t-md transition-all duration-200"
+                            style={{
+                              height: `${heightPct}%`,
+                              opacity: isHovered ? 1 : b.isCurrent ? 0.94 : 0.78,
+                              boxShadow: isHovered ? barHoverShadow : 'none',
+                            }}
+                          >
+                            {ACTIVITY_KEYS.map((k) => (
+                              b[k] > 0 ? (
+                                <div key={k} style={{ height: `${(b[k] / total) * 100}%`, background: ACTIVITY_COLORS[k] }} />
+                              ) : null
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="w-full rounded-t-sm" style={{ height: '3px', background: ghostBarBg }} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-2.5 flex gap-1 px-0.5">
+                  {buckets.map((b, i) => (
+                    <div key={b.key} className="flex flex-1 justify-center">
+                      <span
+                        className="text-[9px] font-medium transition-colors duration-150"
+                        style={{ color: monthLabelColor(b.isCurrent, hovered === i) }}
+                      >
+                        {b.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: labelMuted }}>By:</span>
+            <div className="flex overflow-hidden rounded-xl" style={{ border: `1px solid ${chipBorder}` }}>
+              {(['category', 'month', 'year'] as const).map((m) => {
+                const active = viewMode === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => switchMode(m)}
+                    className="flex h-8 items-center justify-center px-4 text-[11px] font-semibold transition-colors duration-150"
+                    style={{
+                      background: active ? chipActiveBg : chipBg,
+                      color: active ? chipActiveText : chipText,
+                    }}
+                  >
+                    {m === 'category' ? 'Day' : m === 'month' ? 'Month' : 'Year'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes resolutionFadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function HomeStats({ stats }: { stats: DashboardStats; managerName: string }) {
   const [showResolutionModal, setShowResolutionModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
 
   const donutSlices = stats.issueBreakdown.slice(0, 6).map((item, i) => ({
     label: item.category,
@@ -386,20 +750,29 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
     color: DONUT_COLORS[i % DONUT_COLORS.length],
   }));
 
-  const resolutionLabel = stats.avgResolutionHours === null
+  const resolutionValue = stats.avgResolutionHours === null
     ? '—'
     : stats.avgResolutionHours < 1
-      ? `${Math.round(stats.avgResolutionHours * 60)}m`
-      : `${stats.avgResolutionHours}h`;
+      ? `${Math.round(stats.avgResolutionHours * 60)}`
+      : `${stats.avgResolutionHours}`;
+  const resolutionUnit = stats.avgResolutionHours === null
+    ? ''
+    : stats.avgResolutionHours < 1
+      ? 'm'
+      : 'h';
 
   const monthlyData = stats.monthlyResolution ?? [];
 
   return (
     <>
       <div className="space-y-4">
-        {/* Saved calls — full width hero card */}
-        <div className="relative overflow-hidden rounded-3xl p-6"
-          style={{ background: 'linear-gradient(135deg, #C8B89A 0%, #B09878 55%, #A08868 100%)' }}>
+        {/* Saved calls — full width hero card, clickable */}
+        <button
+          type="button"
+          onClick={() => setShowActivityModal(true)}
+          className="group relative w-full overflow-hidden rounded-3xl p-6 text-left transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99]"
+          style={{ background: 'linear-gradient(135deg, #C8B89A 0%, #B09878 55%, #A08868 100%)' }}
+        >
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #fff 0%, transparent 60%)' }} />
           <p className="relative text-[10px] font-semibold uppercase tracking-[0.28em] text-white/70">This Month</p>
           <p className="relative mt-1 text-5xl font-light leading-none tracking-tight text-white">
@@ -411,7 +784,10 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
           <p className="relative mt-1 text-[11px] text-white/55">
             Tenants self-served via amenities, work orders &amp; AI concierge
           </p>
-        </div>
+          <p className="relative mt-3 text-[10px] font-medium text-white/60 transition-colors duration-200 group-hover:text-white/85">
+            View breakdown →
+          </p>
+        </button>
 
         {/* Resolution time + Issue breakdown — side by side */}
         <div className="grid grid-cols-2 gap-4">
@@ -421,9 +797,38 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
             onClick={() => setShowResolutionModal(true)}
             className="group flex flex-col justify-between rounded-3xl border border-[rgba(100,80,40,0.10)] bg-white/88 p-5 shadow-[0_4px_20px_rgba(100,80,40,0.07)] backdrop-blur-xl transition-all duration-200 hover:border-[rgba(100,80,40,0.22)] hover:shadow-[0_6px_28px_rgba(100,80,40,0.13)] dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:hover:border-white/15 text-left"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Avg. Resolution</p>
-            <div className="mt-3">
-              <p className="text-4xl font-light tracking-tight text-slate-900 dark:text-white">{resolutionLabel}</p>
+            <div className="text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Monthly</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Avg. Resolution</p>
+            </div>
+            <div className="mt-3 text-center">
+              <p
+                className="text-5xl font-light tracking-tight"
+                style={{
+                  fontFamily: 'var(--font-lux-title), Georgia, serif',
+                  fontFeatureSettings: '"lnum" 1, "tnum" 1',
+                  backgroundImage: 'linear-gradient(135deg, #C8B89A 0%, #B09878 55%, #A08868 100%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}
+              >
+                {resolutionValue}
+                {resolutionUnit && (
+                  <span
+                    className="ml-0.5 text-2xl font-light"
+                    style={{
+                      verticalAlign: 'super',
+                      backgroundImage: 'linear-gradient(135deg, rgba(200,184,154,0.70) 0%, rgba(176,152,120,0.70) 55%, rgba(160,136,104,0.70) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                    }}
+                  >
+                    {resolutionUnit}
+                  </span>
+                )}
+              </p>
               <div className="mt-1.5">
                 <TrendArrow current={stats.avgResolutionHours} prev={stats.avgResolutionHoursPrev} />
                 {stats.avgResolutionHours === null && (
@@ -432,14 +837,20 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
               </div>
             </div>
             {/* Subtle tap hint */}
-            <p className="mt-3 text-[10px] text-[rgba(100,80,40,0.30)] group-hover:text-[rgba(100,80,40,0.55)] dark:text-white/18 dark:group-hover:text-white/35 transition-colors duration-200">
-              View history →
+            <p className="mt-3 flex items-center justify-center gap-1 text-[10px] font-medium text-[rgba(100,80,40,0.55)] group-hover:text-[rgba(100,80,40,0.80)] dark:text-white/35 dark:group-hover:text-white/60 transition-colors duration-200">
+              View history
+              <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </p>
           </button>
 
           {/* Issue breakdown donut */}
           <div className="flex flex-col rounded-3xl border border-[rgba(100,80,40,0.10)] bg-white/88 p-5 shadow-[0_4px_20px_rgba(100,80,40,0.07)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Issues</p>
+            <div className="text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Monthly</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Work Orders</p>
+            </div>
             <div className="mt-3 flex flex-1 items-center justify-center">
               <DonutChart slices={donutSlices} />
             </div>
@@ -490,6 +901,14 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
         <ResolutionHistoryModal
           data={monthlyData}
           onClose={() => setShowResolutionModal(false)}
+        />
+      )}
+
+      {showActivityModal && (
+        <ActivityHistoryModal
+          currentMonth={stats.activityBreakdown.currentMonth}
+          monthly={stats.activityBreakdown.monthly}
+          onClose={() => setShowActivityModal(false)}
         />
       )}
     </>

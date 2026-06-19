@@ -195,6 +195,28 @@ function rotate<T>(arr: T[], offset: number): T[] {
   return a.slice(n).concat(a.slice(0, n));
 }
 
+// Names already shown for this category, across every turn of the conversation so far —
+// not just the last one. Lets "more options" (explicit or a repeated ask) keep surfacing
+// genuinely new places on the 3rd, 4th, etc. request instead of re-showing the same batch.
+function getPreviouslyShownPlaceNames(
+  history: Array<{ role: "user" | "model"; text: string }>,
+  label: string
+): Set<string> {
+  const wanted = label.trim().toLowerCase();
+  const names = new Set<string>();
+  for (const h of history) {
+    if (h.role !== "model") continue;
+    const m = h.text.match(/\[Showed place recommendations \(([^)]+)\):\s*([^\]]*)\]/);
+    if (!m || m[1].trim().toLowerCase() !== wanted) continue;
+    m[2]
+      .split(",")
+      .map((n) => n.trim().toLowerCase())
+      .filter(Boolean)
+      .forEach((n) => names.add(n));
+  }
+  return names;
+}
+
 function takeUniquePlaces(
   candidates: PlaceResult[],
   used: Set<string>,
@@ -214,6 +236,7 @@ function takeUniquePlaces(
 import { getPropertyBySlug } from "@/lib/properties";
 import { logPropertyEvent } from "@/lib/propertyEvents";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { placesCacheKey, getPlacesCache, savePlacesCache, advancePlacesCacheOffset } from "@/lib/placesCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -230,6 +253,15 @@ type CacheEntry<T> = { value: T; expiresAtMs: number };
 // Note: these live only for the lifetime of the Node process (works well on warm lambdas).
 const PLACES_CACHE_TTL_MS = Math.max(5_000, Number(process.env.PLACES_CACHE_TTL_MS || 60_000));
 const placesCache: Map<string, CacheEntry<PlaceResult[]>> = new Map();
+
+// Only ever recommend places guests will actually enjoy.
+const MIN_PLACE_RATING = Number(process.env.MIN_PLACE_RATING || 4.3);
+// If the rating filter would leave too few options (sparse-data areas), fall back to the
+// unfiltered list rather than showing an almost-empty response — same safety pattern used
+// by filterPlacesForIntent below.
+const MIN_RATING_RESULT_FLOOR = 3;
+// How many places we show per "page" — used to size the cross-guest rotation step.
+const ROTATION_PAGE_SIZE = 5;
 
 function getCachedPlaces(key: string): PlaceResult[] | null {
   const hit = placesCache.get(key);
@@ -641,6 +673,34 @@ function filterPlacesForIntent(userMessage: string, places: PlaceResult[]): Plac
   }
 
   return places;
+}
+
+// "Places people actually look forward to going" — drop anything under the rating floor.
+// Falls back to the unfiltered list if too few survive, so a sparse-data area never
+// returns an almost-empty (or empty) response.
+function filterByMinRating(places: PlaceResult[]): PlaceResult[] {
+  const filtered = places.filter((p) => typeof p.rating === "number" && p.rating >= MIN_PLACE_RATING);
+  return filtered.length >= MIN_RATING_RESULT_FLOOR ? filtered : places;
+}
+
+// Gives a brand-new conversation a different starting point in the (already rating-filtered)
+// candidate pool than the last fresh conversation got, so different guests asking the same
+// question over time see variety instead of always the identical top 5. Scoped to only the
+// very first places-question of a conversation — mid-conversation category switches and
+// "show me other options" requests are untouched and keep working exactly as before, since
+// those already have their own pagination logic that assumes a stable starting order.
+async function rotateForFreshConversation(query: string, places: PlaceResult[]): Promise<PlaceResult[]> {
+  if (places.length === 0) return places;
+  try {
+    const cacheKey = placesCacheKey(query);
+    const cached = await getPlacesCache<PlaceResult>(cacheKey);
+    const offset = cached ? cached.shownOffset % places.length : 0;
+    const nextOffset = (offset + ROTATION_PAGE_SIZE) % places.length;
+    void advancePlacesCacheOffset(cacheKey, nextOffset);
+    return rotate(places, offset);
+  } catch {
+    return places;
+  }
 }
 
 function looksLikeWeatherQuestion(userMessage: string): boolean {
@@ -1178,20 +1238,31 @@ export async function POST(req: Request) {
       (h) => h.role === "model" && h.text.includes("[Showed a full-day itinerary")
     );
 
-    const wantsMoreOptions = looksLikeMoreOptionsRequest(message);
-
-    // For "more options" requests, extract the previous shown category from history so we
-    // can re-run the same query with an offset. Used as a fallback if the classifier misses it.
+    // Extract the most recently shown category from history (if any) so we can tell
+    // whether the guest is asking for the SAME thing again — e.g. tapping the "Local
+    // dinner spots" suggestion pill a second time sends the identical literal message,
+    // with no "more options" wording, but the guest clearly wants different results.
     let prevCategoryQuery = "";
-    if (wantsMoreOptions && historyHasPlacesContext) {
+    let lastShownLabel = "";
+    if (historyHasPlacesContext) {
       for (let i = history.length - 1; i >= 0; i--) {
         const h = history[i];
         if (h.role !== "model") continue;
         const m = h.text.match(/\[Showed place recommendations \(([^)]+)\)/);
-        if (m) { prevCategoryQuery = `${m[1]} near ${near}`; break; }
+        if (m) { prevCategoryQuery = `${m[1]} near ${near}`; lastShownLabel = m[1]; break; }
         if (h.text.includes("[Showed a full-day itinerary")) { prevCategoryQuery = `restaurants and activities near ${near}`; break; }
       }
     }
+
+    const requestedPlacesLabel = getPlacesLabel(message);
+    const isImplicitRepeatCategory =
+      historyHasPlacesContext &&
+      !!lastShownLabel &&
+      lastShownLabel.trim().toLowerCase() === requestedPlacesLabel.trim().toLowerCase();
+
+    // Treat an implicit repeat ("same category, asked again") exactly like an explicit
+    // "show me other options" request — both should surface places we haven't shown yet.
+    const wantsMoreOptions = looksLikeMoreOptionsRequest(message) || isImplicitRepeatCategory;
 
     if (hasHistory) {
       const forceLocal = historyHasPlacesContext &&
@@ -1206,12 +1277,15 @@ export async function POST(req: Request) {
         wantsWeather = intent.needsWeather;
         smartPlacesModifier = intent.dayPlanModifiers || '';
 
-        if (intent.needsPlaces || intent.isDayPlan) {
-          smartPlacesQuery = intent.placesQuery;
-        } else if (wantsMoreOptions && prevCategoryQuery) {
-          // "More options" — classifier missed it; re-fetch the previous category.
+        if (wantsMoreOptions && prevCategoryQuery) {
+          // "More options" (explicit, or an implicit repeat of the same category) — always
+          // reuse the exact same query string as last time, rather than whatever phrasing
+          // the classifier might independently invent for it. This is what guarantees we
+          // hit the same cached candidate pool, so "already shown" exclusion actually works.
           smartPlacesQuery = prevCategoryQuery;
           wantsLocal = true;
+        } else if (intent.needsPlaces || intent.isDayPlan) {
+          smartPlacesQuery = intent.placesQuery;
         } else if (forceLocal) {
           // Use the raw message as the query — never recycle the old category from history
           // since the guest may be asking about a completely different type of place.
@@ -1274,8 +1348,15 @@ export async function POST(req: Request) {
 
     if (wantsLocal) {
       const placesKey = requireGooglePlacesApiKey();
-      const fetchPlaces = async (query: string): Promise<PlaceResult[]> =>
-        (await withOverloadRetry(async () => {
+      const fetchPlaces = async (query: string): Promise<PlaceResult[]> => {
+        // Durable cross-request cache (Supabase) — checked before ever calling Google.
+        // Same property + same kind of question reuses the prior answer instead of
+        // paying for/waiting on an identical Places lookup again.
+        const dbCacheKey = placesCacheKey(query);
+        const dbCached = await getPlacesCache<PlaceResult>(dbCacheKey);
+        if (dbCached && dbCached.results.length > 0) return dbCached.results;
+
+        const fresh = (await withOverloadRetry(async () => {
           try {
             return await placesTextSearchV1(placesKey, query);
           } catch {
@@ -1284,6 +1365,10 @@ export async function POST(req: Request) {
           }
         // Fetch up to 12 so "more options" requests can show a distinct second page (offset 5).
         })).slice(0, 12);
+
+        void savePlacesCache(dbCacheKey, fresh);
+        return fresh;
+      };
 
       if (wantsDayPlan) {
         const dayPlanQ = buildDayPlanQueries(near, smartPlacesModifier);
@@ -1296,12 +1381,12 @@ export async function POST(req: Request) {
           fetchPlaces(dayPlanQ.dessert),
         ]);
         dayPlanPlaces = {
-          breakfast: filterPlacesForIntent("breakfast", breakfast),
-          morningActivity,
-          lunch: filterPlacesForIntent("lunch", lunch),
-          afternoonActivity,
-          dinner: filterPlacesForIntent("dinner", dinner),
-          dessert,
+          breakfast: filterByMinRating(filterPlacesForIntent("breakfast", breakfast)),
+          morningActivity: filterByMinRating(morningActivity),
+          lunch: filterByMinRating(filterPlacesForIntent("lunch", lunch)),
+          afternoonActivity: filterByMinRating(afternoonActivity),
+          dinner: filterByMinRating(filterPlacesForIntent("dinner", dinner)),
+          dessert: filterByMinRating(dessert),
         };
         livePlaces = [
           ...dayPlanPlaces.breakfast,
@@ -1323,6 +1408,7 @@ export async function POST(req: Request) {
         }
         const filteredPlaces = filterPlacesForIntent(message, rawPlaces);
         livePlaces = filteredPlaces.length >= 3 ? filteredPlaces : (filteredPlaces.length < rawPlaces.length ? rawPlaces : filteredPlaces);
+        livePlaces = filterByMinRating(livePlaces);
       }
     }
 
@@ -1345,13 +1431,26 @@ export async function POST(req: Request) {
       );
     }
 
+    // Cross-guest variety: only on a conversation's very first places-question, start from a
+    // different spot in the (already rating-filtered) pool than last time, so different guests
+    // asking the same thing over days/weeks don't all see the identical top 5. Mid-conversation
+    // category switches and "show me other options" are intentionally left untouched below —
+    // they already have their own pagination logic that depends on a stable starting order.
+    if (wantsLocal && !wantsDayPlan && !hasHistory && !wantsMoreOptions && livePlaces.length > 0) {
+      livePlaces = await rotateForFreshConversation(smartPlacesQuery, livePlaces);
+    }
+
     // Enrich single-category results with phone/website now.
     // Descriptions are generated later, after systemInstruction is built with full place context.
     let singlePlacesSelected: PlaceResult[] = [];
     if (wantsLocal && !wantsDayPlan && livePlaces.length > 0) {
       if (wantsMoreOptions) {
-        const shownKeys = new Set(livePlaces.slice(0, 5).map(normalizePlaceKey));
-        const nextBatch = livePlaces.filter((p) => !shownKeys.has(normalizePlaceKey(p))).slice(0, 5);
+        const alreadyShownNames = getPreviouslyShownPlaceNames(history, requestedPlacesLabel || lastShownLabel);
+        const nextBatch = alreadyShownNames.size > 0
+          ? livePlaces.filter((p) => !alreadyShownNames.has((p.name || '').trim().toLowerCase())).slice(0, 5)
+          : livePlaces.filter((p) => !new Set(livePlaces.slice(0, 5).map(normalizePlaceKey)).has(normalizePlaceKey(p))).slice(0, 5);
+        // Pool exhausted (guest has now seen everything) — cycle back to the top rather
+        // than showing an almost-empty result.
         singlePlacesSelected = nextBatch.length >= 3 ? nextBatch : livePlaces.slice(0, 5);
       } else {
         singlePlacesSelected = livePlaces.slice(0, 5);

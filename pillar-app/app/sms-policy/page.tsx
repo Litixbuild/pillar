@@ -72,8 +72,9 @@ export default function SmsPolicyPage() {
               manager saves:
             </p>
             <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 font-mono text-xs text-slate-700">
-              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants
-              submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+              By saving a phone number, you consent to receive recurring transactional SMS notifications from
+              Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates may apply.
+              Reply STOP to opt out or HELP for help. Privacy Policy · SMS Policy
             </div>
           </section>
 
@@ -81,8 +82,9 @@ export default function SmsPolicyPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-slate-800">Consent Language Shown at Opt-In</h2>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 font-mono text-xs text-slate-700">
-              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants
-              submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+              By saving a phone number, you consent to receive recurring transactional SMS notifications from
+              Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates may apply.
+              Reply STOP to opt out or HELP for help. Privacy Policy · SMS Policy
             </div>
           </section>
 

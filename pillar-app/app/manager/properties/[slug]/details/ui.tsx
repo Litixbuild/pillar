@@ -875,6 +875,14 @@ export default function ManagerPropertyDetailsClient({
               placeholder="+1 (555) 555-5555"
               onChange={(v) => setDraft((d) => ({ ...d, phone: v }))}
             />
+            <p className="text-[11px] leading-relaxed text-slate-400">
+              By saving a phone number, you consent to receive recurring transactional SMS notifications
+              from Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates
+              may apply. Reply STOP to opt out or HELP for help.{' '}
+              <a href="/privacy" className="underline">Privacy Policy</a>
+              {' '}·{' '}
+              <a href="/sms-policy" className="underline">SMS Policy</a>
+            </p>
           </div>
         </section>
 

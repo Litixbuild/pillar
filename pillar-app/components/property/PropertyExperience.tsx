@@ -1110,6 +1110,7 @@ interface WxData {
   code: number;
   hourly: { time: string; temp: number; code: number }[];
   daily: { date: string; high: number; low: number; code: number }[];
+  location: { city: string; state: string } | null;
 }
 
 function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
@@ -1145,6 +1146,7 @@ function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
         current: { temperature_2m: number; apparent_temperature: number; weather_code: number; time: string };
         hourly: { time: string[]; temperature_2m: number[]; weather_code: number[] };
         daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weather_code: number[] };
+        location?: { city: string; state: string };
       };
 
       const nowPrefix = raw.current.time.slice(0, 13);
@@ -1166,6 +1168,7 @@ function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
           low: Math.round((raw.daily.temperature_2m_min[i] as number) ?? 0),
           code: (raw.daily.weather_code[i] as number) ?? 0,
         })),
+        location: raw.location ?? null,
       });
     } catch {
       setFetchError('Unable to load weather.');
@@ -1275,7 +1278,9 @@ function WeatherWidget({ zipCode, dark, lightTheme: lTheme, isLightThemed }: {
           className="flex shrink-0 items-center justify-between px-5 pb-4 pt-5"
           style={{ borderBottom: `1px solid ${dividerCol}` }}
         >
-          <p className="text-base font-semibold tracking-wide" style={{ color: textCol }}>Weather</p>
+          <p className="text-base font-semibold tracking-wide" style={{ color: textCol }}>
+            {wx?.location ? `Weather in ${wx.location.city}, ${wx.location.state}` : 'Weather'}
+          </p>
           <button
             type="button"
             onClick={() => setOpen(false)}

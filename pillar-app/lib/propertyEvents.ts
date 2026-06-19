@@ -20,6 +20,19 @@ export interface MonthlyResolutionPoint {
   count: number;
 }
 
+export interface ActivityMonthPoint {
+  year: number;
+  month: number; // 1–12
+  amenity: number;
+  concierge: number;
+  workOrder: number; // includes late checkout requests
+}
+
+export interface ActivityBreakdown {
+  currentMonth: { amenity: number; concierge: number; workOrder: number };
+  monthly: ActivityMonthPoint[];
+}
+
 export interface DashboardStats {
   avgResolutionHours: number | null;
   avgResolutionHoursPrev: number | null;
@@ -27,6 +40,7 @@ export interface DashboardStats {
   savedCallsThisMonth: number;
   propertyHealth: { slug: string; name: string; heroImage: string | null; openCount: number }[];
   monthlyResolution: MonthlyResolutionPoint[];
+  activityBreakdown: ActivityBreakdown;
 }
 
 export async function getDashboardStats(managerId: string): Promise<DashboardStats> {
@@ -42,7 +56,15 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
   const slugs = properties.map((p) => String(p.slug)).filter(Boolean);
 
   if (slugs.length === 0) {
-    return { avgResolutionHours: null, avgResolutionHoursPrev: null, issueBreakdown: [], savedCallsThisMonth: 0, propertyHealth: [], monthlyResolution: [] };
+    return {
+      avgResolutionHours: null,
+      avgResolutionHoursPrev: null,
+      issueBreakdown: [],
+      savedCallsThisMonth: 0,
+      propertyHealth: [],
+      monthlyResolution: [],
+      activityBreakdown: { currentMonth: { amenity: 0, concierge: 0, workOrder: 0 }, monthly: [] },
+    };
   }
 
   const now = new Date();
@@ -50,7 +72,18 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const endOfLastMonth = startOfThisMonth;
 
-  const [resolvedThis, resolvedPrev, openOrders, breakdownData, eventsData, workOrderEvents, allResolved] = await Promise.all([
+  const [
+    resolvedThis,
+    resolvedPrev,
+    openOrders,
+    breakdownData,
+    eventsData,
+    workOrderEvents,
+    allResolved,
+    allAmenityConciergeEvents,
+    allWorkOrdersCreated,
+    allLateCheckouts,
+  ] = await Promise.all([
     // Resolved this month — for avg resolution time
     supabase
       .from('work_orders')
@@ -104,6 +137,25 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
       .in('property_slug', slugs)
       .eq('status', 'resolved')
       .not('resolved_at', 'is', null),
+
+    // All amenity + concierge events (all time) — for activity breakdown chart
+    supabase
+      .from('property_events')
+      .select('event_type, created_at')
+      .in('property_slug', slugs)
+      .in('event_type', ['amenity_view', 'concierge_message']),
+
+    // All work orders created (all time) — for activity breakdown chart
+    supabase
+      .from('work_orders')
+      .select('created_at')
+      .in('property_slug', slugs),
+
+    // All late checkout requests (all time) — counted as part of "work orders" category
+    supabase
+      .from('late_checkout_requests')
+      .select('submitted_at')
+      .in('property_slug', slugs),
   ]);
 
   // Avg resolution time
@@ -174,5 +226,37 @@ export async function getDashboardStats(managerId: string): Promise<DashboardSta
     })
     .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
 
-  return { avgResolutionHours, avgResolutionHoursPrev, issueBreakdown, savedCallsThisMonth, propertyHealth, monthlyResolution };
+  // Activity breakdown — amenity / concierge / work-order (incl. late checkout) counts by month
+  const activityMap = new Map<string, { amenity: number; concierge: number; workOrder: number }>();
+  function bumpActivity(dateStr: string, field: 'amenity' | 'concierge' | 'workOrder') {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const entry = activityMap.get(key) ?? { amenity: 0, concierge: 0, workOrder: 0 };
+    entry[field] += 1;
+    activityMap.set(key, entry);
+  }
+  for (const row of (allAmenityConciergeEvents.data as Row[] | null) ?? []) {
+    bumpActivity(String(row.created_at), row.event_type === 'amenity_view' ? 'amenity' : 'concierge');
+  }
+  for (const row of (allWorkOrdersCreated.data as Row[] | null) ?? []) {
+    bumpActivity(String(row.created_at), 'workOrder');
+  }
+  for (const row of (allLateCheckouts.data as Row[] | null) ?? []) {
+    bumpActivity(String(row.submitted_at), 'workOrder');
+  }
+
+  const activityMonthly: ActivityMonthPoint[] = [...activityMap.entries()]
+    .map(([key, val]) => {
+      const [yearStr, monthStr] = key.split('-');
+      return { year: Number(yearStr), month: Number(monthStr), ...val };
+    })
+    .sort((a, b) => (a.year !== b.year ? a.year - b.year : a.month - b.month));
+
+  const currentActivityKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthActivity = activityMap.get(currentActivityKey) ?? { amenity: 0, concierge: 0, workOrder: 0 };
+
+  const activityBreakdown: ActivityBreakdown = { currentMonth: currentMonthActivity, monthly: activityMonthly };
+
+  return { avgResolutionHours, avgResolutionHoursPrev, issueBreakdown, savedCallsThisMonth, propertyHealth, monthlyResolution, activityBreakdown };
 }

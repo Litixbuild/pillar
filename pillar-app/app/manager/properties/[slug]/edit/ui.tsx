@@ -935,8 +935,11 @@ function PropertyInfoView({
                 <TextInput value={core.ManagerPhone} onChange={(v) => setField('ManagerPhone', v)} placeholder="+1 (555) 000-0000" type="tel" />
               </FieldGroup>
             </div>
-            <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
-              By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+            <p className="text-[11px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.55)' : 'rgba(30,41,59,0.55)' }}>
+              By saving a phone number, you consent to receive recurring transactional SMS notifications from Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help.{' '}
+              <a href="/privacy" className="underline">Privacy Policy</a>
+              {' '}·{' '}
+              <a href="/sms-policy" className="underline">SMS Policy</a>
             </p>
           </div>
         </div>
@@ -2596,8 +2599,11 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
                       <TextInput value={editEmail} onChange={setEditEmail} placeholder="repairs@co.com" type="email" />
                     </FieldGroup>
                   </div>
-                  <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
-                    By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+                  <p className="text-[11px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.55)' : 'rgba(30,41,59,0.55)' }}>
+                    By saving a phone number, you consent to receive recurring transactional SMS notifications from Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help.{' '}
+                    <a href="/privacy" className="underline">Privacy Policy</a>
+                    {' '}·{' '}
+                    <a href="/sms-policy" className="underline">SMS Policy</a>
                   </p>
                 </div>
               ) : confirmDeleteId === cat.id ? (
@@ -2659,8 +2665,11 @@ function WorkOrdersView({ slug, dark, initialCategories, onCategoriesChange }: {
             <TextInput value={addEmail} onChange={setAddEmail} placeholder="repairs@co.com" type="email" />
           </FieldGroup>
         </div>
-        <p className="text-[10px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.38)' : 'rgba(30,41,59,0.40)' }}>
-          By saving a phone number, you consent to receive SMS notifications from Pillar PM when tenants submit requests. Msg &amp; data rates may apply. Reply STOP to opt out at any time.
+        <p className="text-[11px] leading-relaxed" style={{ color: dark ? 'rgba(245,237,213,0.55)' : 'rgba(30,41,59,0.55)' }}>
+          By saving a phone number, you consent to receive recurring transactional SMS notifications from Pillar PM when tenants submit requests. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help.{' '}
+          <a href="/privacy" className="underline">Privacy Policy</a>
+          {' '}·{' '}
+          <a href="/sms-policy" className="underline">SMS Policy</a>
         </p>
         {addError ? <p className="text-xs text-red-400">{addError}</p> : null}
         <button

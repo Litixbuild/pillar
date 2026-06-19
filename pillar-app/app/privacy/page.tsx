@@ -56,15 +56,19 @@ export default function PrivacyPage() {
             <h2 className="mb-3 text-base font-semibold text-slate-800">3. SMS Messaging</h2>
             <p className="mb-3">
               Property managers may opt in to receive SMS notifications by providing a phone number in the
-              Pillar dashboard Work Order Settings. By entering a phone number, you consent to receive
-              text message alerts when tenants submit maintenance requests for your properties.
+              Pillar dashboard (Work Order Category Settings or Property Manager Phone field). By entering
+              and saving a phone number, you expressly consent to receive recurring transactional SMS
+              notifications from Pillar PM when tenants submit maintenance or late checkout requests for
+              your properties. A full description of the opt-in process is available at{' '}
+              <Link href="/sms-policy" className="text-slate-800 underline underline-offset-2">pmpillar.com/sms-policy</Link>.
             </p>
             <ul className="list-disc space-y-2 pl-5">
-              <li><strong>Message frequency:</strong> Message frequency varies based on tenant activity. You will receive one SMS per work order submission for categories where you have provided a phone number.</li>
+              <li><strong>Program name:</strong> Pillar PM Alerts</li>
+              <li><strong>Message frequency:</strong> Message frequency varies based on tenant activity. You will receive one SMS per work order or late checkout submission for categories where you have provided a phone number.</li>
               <li><strong>Message and data rates may apply</strong> depending on your mobile carrier and plan.</li>
-              <li><strong>Opt-out:</strong> Reply <strong>STOP</strong> to any message to stop receiving SMS notifications, or remove your phone number from your dashboard settings at any time.</li>
+              <li><strong>Opt-out:</strong> Reply <strong>STOP</strong> to any message to immediately stop all SMS notifications. You may also remove your phone number from your dashboard settings at any time.</li>
               <li><strong>Help:</strong> Reply <strong>HELP</strong> to any message or contact us at {CONTACT_EMAIL} for assistance.</li>
-              <li><strong>Non-sharing:</strong> We do not sell, share, rent, or disclose your mobile phone number to third parties for their marketing purposes. Phone numbers are used solely to deliver work order notifications you have opted in to receive.</li>
+              <li><strong>No third-party sharing:</strong> We do not sell, share, rent, lease, or otherwise disclose your mobile phone number to any third party for marketing or promotional purposes. Phone numbers are used solely to deliver the transactional notifications described in this program and are not used for any other purpose.</li>
             </ul>
           </section>
 
