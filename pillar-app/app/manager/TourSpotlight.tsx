@@ -20,19 +20,26 @@ type Rect = { top: number; left: number; width: number; height: number };
 
 const OUTSET = 8;
 const RING_RADIUS = 18;
+const CARD_WIDTH = 320;
+const CARD_HEIGHT_ESTIMATE = 240;
+const MARGIN = 16;
 
 export default function TourSpotlight({ step }: { step: TourStep }) {
   const tour = useTour();
   const dark = useDark();
   const [rect, setRect] = useState<Rect | null>(null);
   const [visible, setVisible] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Measure the target element, polling briefly since pages fade/mount asynchronously.
+  // Measure the target element, scroll it into view, and keep tracking it while scrolling/resizing.
   useEffect(() => {
     setVisible(false);
+    setRect(null);
     let attempts = 0;
     let cancelled = false;
+    let scrolledIntoView = false;
 
     function measure() {
       if (cancelled) return;
@@ -40,6 +47,10 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
       if (el) {
         const r = el.getBoundingClientRect();
         if (r.width > 0 && r.height > 0) {
+          if (!scrolledIntoView) {
+            scrolledIntoView = true;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }
           setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
           requestAnimationFrame(() => setVisible(true));
           return;
@@ -58,6 +69,9 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
         const r = el.getBoundingClientRect();
         setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
       }
+      setIsScrolling(true);
+      if (scrollEndRef.current) clearTimeout(scrollEndRef.current);
+      scrollEndRef.current = setTimeout(() => setIsScrolling(false), 180);
     }
     window.addEventListener('resize', reMeasure);
     window.addEventListener('scroll', reMeasure, true);
@@ -65,6 +79,7 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
     return () => {
       cancelled = true;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (scrollEndRef.current) clearTimeout(scrollEndRef.current);
       window.removeEventListener('resize', reMeasure);
       window.removeEventListener('scroll', reMeasure, true);
     };
@@ -94,6 +109,10 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
   const bodyColor = dark ? 'rgba(255,255,255,0.55)' : 'rgba(30,41,59,0.62)';
   const labelColor = dark ? 'rgba(212,175,106,0.80)' : 'rgba(184,148,90,0.95)';
 
+  const positionTransition = isScrolling
+    ? 'opacity 0.2s ease'
+    : 'top 0.30s cubic-bezier(0.16,1,0.3,1), left 0.30s cubic-bezier(0.16,1,0.3,1), bottom 0.30s cubic-bezier(0.16,1,0.3,1), width 0.30s cubic-bezier(0.16,1,0.3,1), height 0.30s cubic-bezier(0.16,1,0.3,1), opacity 0.30s ease';
+
   const ringStyle: React.CSSProperties = rect
     ? {
         position: 'fixed',
@@ -106,20 +125,42 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
         pointerEvents: 'none',
         zIndex: 9990,
         opacity: visible ? 1 : 0,
-        transition: 'top 0.45s cubic-bezier(0.16,1,0.3,1), left 0.45s cubic-bezier(0.16,1,0.3,1), width 0.45s cubic-bezier(0.16,1,0.3,1), height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.30s ease',
+        transition: positionTransition,
       }
     : { position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9990, opacity: 0 };
 
-  // Tooltip position derived from the rect + placement.
-  let tooltipStyle: React.CSSProperties = { position: 'fixed', zIndex: 9992, maxWidth: 320, opacity: visible ? 1 : 0, transition: 'opacity 0.30s ease 0.05s, top 0.45s cubic-bezier(0.16,1,0.3,1), bottom 0.45s cubic-bezier(0.16,1,0.3,1)' };
+  // Tooltip position: prefers the step's placement hint, but flips and clamps so the
+  // full card always stays within the viewport — never off-screen, never unreachable.
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+  const cardWidth = Math.min(CARD_WIDTH, vw - MARGIN * 2);
+
+  let tooltipStyle: React.CSSProperties = {
+    position: 'fixed',
+    zIndex: 9992,
+    width: cardWidth,
+    opacity: visible ? 1 : 0,
+    transition: positionTransition,
+  };
+
   if (!rect || step.placement === 'center') {
     tooltipStyle = { ...tooltipStyle, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
-  } else if (step.placement === 'bottom') {
-    const left = Math.min(Math.max(rect.left + rect.width / 2 - 160, 16), window.innerWidth - 336);
-    tooltipStyle = { ...tooltipStyle, top: rect.top + rect.height + OUTSET + 14, left };
   } else {
-    const left = Math.min(Math.max(rect.left + rect.width / 2 - 160, 16), window.innerWidth - 336);
-    tooltipStyle = { ...tooltipStyle, bottom: window.innerHeight - (rect.top - OUTSET) + 14, left };
+    const spaceBelow = vh - (rect.top + rect.height + OUTSET);
+    const spaceAbove = rect.top - OUTSET;
+    const preferBelow = step.placement === 'bottom';
+    const placeBelow = preferBelow
+      ? spaceBelow >= CARD_HEIGHT_ESTIMATE || spaceBelow >= spaceAbove
+      : spaceAbove < CARD_HEIGHT_ESTIMATE && spaceBelow > spaceAbove;
+
+    let top = placeBelow
+      ? rect.top + rect.height + OUTSET + 14
+      : rect.top - OUTSET - 14 - CARD_HEIGHT_ESTIMATE;
+    const maxTop = Math.max(MARGIN, vh - CARD_HEIGHT_ESTIMATE - MARGIN);
+    top = Math.min(Math.max(top, MARGIN), maxTop);
+
+    const left = Math.min(Math.max(rect.left + rect.width / 2 - cardWidth / 2, MARGIN), vw - cardWidth - MARGIN);
+    tooltipStyle = { ...tooltipStyle, top, left };
   }
 
   return (
@@ -133,7 +174,7 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
         }}
       />
       <div style={ringStyle} />
-      <div className="rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl" style={{ ...card, ...tooltipStyle }}>
+      <div className="max-h-[80vh] overflow-y-auto rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl" style={{ ...card, ...tooltipStyle }}>
         <div className="flex items-start justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: labelColor }}>
             Step {stepNum} of {TOUR_STEPS.length}
