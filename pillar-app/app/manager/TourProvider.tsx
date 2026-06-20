@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { TOUR_STEPS, stepMatchesPath, type TourStep } from '@/lib/tourSteps';
 import TourPromptModal from './TourPromptModal';
@@ -145,8 +145,13 @@ export default function TourProvider({ children }: { children: React.ReactNode }
   const step = active ? TOUR_STEPS[stepIndex] ?? null : null;
   const pathReady = step ? stepMatchesPath(step, pathname) : false;
 
+  const contextValue = useMemo<TourContextValue>(
+    () => ({ active, step, busy, advance, exitTour, finishTour }),
+    [active, step, busy, advance, exitTour, finishTour]
+  );
+
   return (
-    <TourContext.Provider value={{ active, step, busy, advance, exitTour, finishTour }}>
+    <TourContext.Provider value={contextValue}>
       {children}
       {promptOpen ? <TourPromptModal busy={busy} onStart={startTour} onDecline={declineTour} /> : null}
       {active && step && pathReady ? <TourSpotlight step={step} /> : null}

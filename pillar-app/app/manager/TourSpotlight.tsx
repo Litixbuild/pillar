@@ -23,23 +23,25 @@ const RING_RADIUS = 18;
 const CARD_WIDTH = 320;
 const CARD_HEIGHT_ESTIMATE = 240;
 const MARGIN = 16;
+const FIND_TIMEOUT_MS = 3000;
 
 export default function TourSpotlight({ step }: { step: TourStep }) {
   const tour = useTour();
   const dark = useDark();
   const [rect, setRect] = useState<Rect | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Measure the target element, scroll it into view, and keep tracking it while scrolling/resizing.
+  // If the target can never be found, give up after a few seconds rather than freezing the tour.
   useEffect(() => {
-    setVisible(false);
     setRect(null);
-    let attempts = 0;
+    setNotFound(false);
     let cancelled = false;
     let scrolledIntoView = false;
+    const startedAt = Date.now();
 
     function measure() {
       if (cancelled) return;
@@ -52,14 +54,14 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
           }
           setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-          requestAnimationFrame(() => setVisible(true));
           return;
         }
       }
-      attempts += 1;
-      if (attempts < 60) {
-        timeoutRef.current = setTimeout(measure, 50);
+      if (Date.now() - startedAt > FIND_TIMEOUT_MS) {
+        setNotFound(true);
+        return;
       }
+      timeoutRef.current = setTimeout(measure, 50);
     }
     measure();
 
@@ -101,6 +103,8 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
 
   if (!tour) return null;
   const stepNum = TOUR_STEPS.findIndex((s) => s.id === step.id) + 1;
+  const found = rect !== null;
+  const showFallback = notFound && !found;
 
   const card = dark
     ? { background: 'rgba(10,10,10,0.96)', border: '1px solid rgba(255,255,255,0.10)' }
@@ -124,7 +128,7 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
         boxShadow: '0 0 0 9999px rgba(8,8,6,0.58), 0 0 0 2px rgba(212,175,106,0.95), 0 0 28px 6px rgba(212,175,106,0.45)',
         pointerEvents: 'none',
         zIndex: 9990,
-        opacity: visible ? 1 : 0,
+        opacity: 1,
         transition: positionTransition,
       }
     : { position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9990, opacity: 0 };
@@ -139,7 +143,7 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
     position: 'fixed',
     zIndex: 9992,
     width: cardWidth,
-    opacity: visible ? 1 : 0,
+    opacity: 1,
     transition: positionTransition,
   };
 
@@ -163,16 +167,11 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
     tooltipStyle = { ...tooltipStyle, top, left };
   }
 
+  const canAdvanceAnyway = step.advance === 'click' && showFallback;
+
   return (
     <>
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9989,
-          pointerEvents: step.advance === 'click' ? 'none' : 'auto',
-        }}
-      />
+      {/* Purely visual dimming — never blocks clicks, so the real page is never frozen even if something goes wrong. */}
       <div style={ringStyle} />
       <div className="max-h-[80vh] overflow-y-auto rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl" style={{ ...card, ...tooltipStyle }}>
         <div className="flex items-start justify-between gap-3">
@@ -195,7 +194,12 @@ export default function TourSpotlight({ step }: { step: TourStep }) {
         <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: bodyColor }}>
           {step.body}
         </p>
-        {step.advance === 'click' ? (
+        {showFallback ? (
+          <p className="mt-2 text-[11px]" style={{ color: bodyColor }}>
+            We couldn&apos;t find this on the page — tap Next to keep going.
+          </p>
+        ) : null}
+        {step.advance === 'click' && !canAdvanceAnyway ? (
           <p className="mt-3 text-[11px] font-semibold" style={{ color: labelColor, animation: 'tourPulse 1.6s ease-in-out infinite' }}>
             Tap the highlighted item to continue →
           </p>

@@ -207,9 +207,9 @@ export default function PropertiesClient({
           <div className="p-6">
 
             {/* Add Property button */}
-            <div className="mb-5">
+            <div className="mb-5" data-tour="add-property-area">
               {!isSubscribed ? (
-                <div title="Set up billing to add properties" data-tour="add-property-locked">
+                <div title="Set up billing to add properties">
                   <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border px-4 text-sm font-semibold"
                     style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.25)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.30)' }}>
                     <span className="text-base leading-none">+</span> Add Property

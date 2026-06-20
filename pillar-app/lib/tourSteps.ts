@@ -81,9 +81,9 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'properties-add',
     path: '/manager/properties',
-    selector: '[data-tour="add-property-locked"]',
+    selector: '[data-tour="add-property-area"]',
     title: 'Adding your own property',
-    body: "Once you subscribe, this button creates your first real property. We'll get you there at the end of this tour.",
+    body: "This is where you'll add your real properties. If billing isn't set up yet, you'll see a prompt to subscribe first — we'll get you there at the end of this tour.",
     placement: 'bottom',
     advance: 'next',
   },
