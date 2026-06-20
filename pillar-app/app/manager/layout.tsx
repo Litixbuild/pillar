@@ -1,3 +1,5 @@
+import TourProvider from './TourProvider';
+
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <TourProvider>{children}</TourProvider>;
 }

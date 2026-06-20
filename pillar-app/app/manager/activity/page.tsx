@@ -75,6 +75,7 @@ export default async function ActivityPage() {
                 <Link
                   key={slug}
                   href={`/manager/activity/${encodeURIComponent(slug)}`}
+                  data-tour={slug.startsWith('demo-') ? 'demo-activity-tile' : undefined}
                   className="group relative aspect-square overflow-hidden rounded-2xl border border-[rgba(100,80,40,0.12)] bg-[rgba(100,80,40,0.05)] shadow-[0_4px_16px_rgba(100,80,40,0.08)] transition-all duration-200 hover:shadow-[0_6px_24px_rgba(100,80,40,0.14)] dark:border-white/8 dark:bg-[rgba(255,255,255,0.03)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.50)]"
                 >
                   {/* Hero image */}

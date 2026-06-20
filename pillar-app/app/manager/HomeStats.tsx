@@ -769,6 +769,7 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
         {/* Saved calls — full width hero card, clickable */}
         <button
           type="button"
+          data-tour="dashboard-saved-calls"
           onClick={() => setShowActivityModal(true)}
           className="group relative w-full overflow-hidden rounded-3xl p-6 text-left transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99]"
           style={{ background: 'linear-gradient(135deg, #C8B89A 0%, #B09878 55%, #A08868 100%)' }}
@@ -794,6 +795,7 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
           {/* Avg resolution time — clickable */}
           <button
             type="button"
+            data-tour="dashboard-resolution"
             onClick={() => setShowResolutionModal(true)}
             className="group flex flex-col justify-between rounded-3xl border border-[rgba(100,80,40,0.10)] bg-white/88 p-5 shadow-[0_4px_20px_rgba(100,80,40,0.07)] backdrop-blur-xl transition-all duration-200 hover:border-[rgba(100,80,40,0.22)] hover:shadow-[0_6px_28px_rgba(100,80,40,0.13)] dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:hover:border-white/15 text-left"
           >
@@ -870,7 +872,7 @@ export default function HomeStats({ stats }: { stats: DashboardStats; managerNam
 
         {/* Per-property health */}
         {stats.propertyHealth.length > 0 && (
-          <div className="rounded-3xl border border-[rgba(100,80,40,0.10)] bg-white/88 p-5 shadow-[0_4px_20px_rgba(100,80,40,0.07)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)]">
+          <div data-tour="dashboard-health" className="rounded-3xl border border-[rgba(100,80,40,0.10)] bg-white/88 p-5 shadow-[0_4px_20px_rgba(100,80,40,0.07)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)]">
             <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[rgba(100,80,40,0.55)] dark:text-white/45">Property Health</p>
             <div className="space-y-3">
               {stats.propertyHealth.map((p) => (

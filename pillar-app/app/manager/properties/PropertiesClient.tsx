@@ -209,7 +209,7 @@ export default function PropertiesClient({
             {/* Add Property button */}
             <div className="mb-5">
               {!isSubscribed ? (
-                <div title="Set up billing to add properties">
+                <div title="Set up billing to add properties" data-tour="add-property-locked">
                   <button type="button" disabled className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-xl border px-4 text-sm font-semibold"
                     style={dark ? { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.25)' } : { borderColor: 'rgba(0,0,0,0.09)', background: 'rgba(0,0,0,0.03)', color: 'rgba(30,41,59,0.30)' }}>
                     <span className="text-base leading-none">+</span> Add Property
@@ -254,8 +254,9 @@ export default function PropertiesClient({
               <div className="space-y-3">
                 {properties.map((p) => {
                   const slug = (p.Slug || '').trim();
+                  const isDemo = slug.startsWith('demo-');
                   return (
-                    <div key={`${p.PropertyName}-${p.PropertyAddress}`} className="rounded-xl p-4 transition-all duration-200" style={propCardStyle}>
+                    <div key={`${p.PropertyName}-${p.PropertyAddress}`} data-tour={isDemo ? 'demo-property-card' : undefined} className="rounded-xl p-4 transition-all duration-200" style={propCardStyle}>
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
                           <div className="text-sm font-semibold" style={{ color: propNameColor }}>{p.PropertyName || '—'}</div>
@@ -277,7 +278,7 @@ export default function PropertiesClient({
                       ) : (
                         <div className="mt-3 grid grid-cols-3 gap-2">
                           {/* Live */}
-                          <Link href={`/p/${encodeURIComponent(slug)}`} target="_blank" className="group flex flex-col items-center gap-1.5">
+                          <Link href={`/p/${encodeURIComponent(slug)}`} target="_blank" data-tour={isDemo ? 'demo-live' : undefined} className="group flex flex-col items-center gap-1.5">
                             <div className="flex h-[52px] w-full items-center justify-center overflow-hidden rounded-xl transition-all duration-200 group-hover:opacity-75" style={actionBoxStyle}>
                               {p.HeroImage ? (
                                 <img src={p.HeroImage} alt="" className="h-full w-full object-cover" />
@@ -291,7 +292,7 @@ export default function PropertiesClient({
                             <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: labelColor }}>Live</span>
                           </Link>
                           {/* Edit */}
-                          <Link href={`/manager/properties/${encodeURIComponent(slug)}/edit`} className="group flex flex-col items-center gap-1.5">
+                          <Link href={`/manager/properties/${encodeURIComponent(slug)}/edit`} data-tour={isDemo ? 'demo-edit' : undefined} className="group flex flex-col items-center gap-1.5">
                             <div className="flex h-[52px] w-full items-center justify-center rounded-xl transition-all duration-200 group-hover:opacity-75" style={actionBoxStyle}>
                               <ToolsIcon />
                             </div>

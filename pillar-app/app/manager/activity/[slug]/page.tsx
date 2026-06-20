@@ -60,7 +60,7 @@ export default async function PropertyActivityPage(
         </div>
 
         {/* Open work orders — always first */}
-        <div className="mb-4 overflow-hidden rounded-2xl border border-[rgba(100,80,40,0.12)] bg-white/88 shadow-[0_4px_20px_rgba(100,80,40,0.08)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]">
+        <div data-tour="activity-open-orders" className="mb-4 overflow-hidden rounded-2xl border border-[rgba(100,80,40,0.12)] bg-white/88 shadow-[0_4px_20px_rgba(100,80,40,0.08)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]">
           <div className="flex items-center justify-between border-b border-[rgba(100,80,40,0.09)] px-6 py-4 dark:border-white/7">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[rgba(100,80,40,0.60)] dark:text-white/50">
               Open
@@ -87,6 +87,7 @@ export default async function PropertyActivityPage(
         {/* Pending late checkout requests — open items, shown below work orders */}
         {pendingCheckouts.length > 0 && (
           <div
+            data-tour="activity-late-checkout"
             className="mb-4 overflow-hidden rounded-2xl bg-white/88 backdrop-blur-xl dark:bg-[rgba(8,8,8,0.95)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.40)]"
             style={{ border: '1px solid rgba(212,175,55,0.28)', boxShadow: '0 4px 20px rgba(212,175,55,0.10)' }}
           >

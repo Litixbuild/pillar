@@ -1681,7 +1681,7 @@ export default function PropertyExperience({
             {dark ? <SunIcon /> : <MoonIcon />}
           </button>
 
-          {property.PropertyZipCode ? (
+          {property.PropertyZipCode && fullView === 'content' ? (
             <WeatherWidget
               zipCode={property.PropertyZipCode}
               dark={dark}

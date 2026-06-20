@@ -202,6 +202,7 @@ export default function BillingClient({
                   </div>
                   <button
                     type="button"
+                    data-tour="billing-subscribe"
                     onClick={() => void handleStartCheckout()}
                     disabled={billingLoading}
                     className="inline-flex h-10 items-center gap-2 rounded-xl border px-5 text-sm font-semibold transition-all duration-300 disabled:opacity-40"

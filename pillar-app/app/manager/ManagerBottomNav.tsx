@@ -45,10 +45,10 @@ function BillingIcon() {
 }
 
 const TABS = [
-  { label: 'Home',       href: '/manager',            icon: HomeIcon,       match: (p: string) => p === '/manager' },
-  { label: 'Properties', href: '/manager/properties', icon: PropertiesIcon, match: (p: string) => p === '/manager/properties' },
-  { label: 'Activity',   href: '/manager/activity',   icon: ActivityIcon,   match: (p: string) => p.startsWith('/manager/activity') },
-  { label: 'Billing',    href: '/manager/billing',    icon: BillingIcon,    match: (p: string) => p.startsWith('/manager/billing') },
+  { label: 'Home',       href: '/manager',            icon: HomeIcon,       match: (p: string) => p === '/manager',                  tour: undefined },
+  { label: 'Properties', href: '/manager/properties', icon: PropertiesIcon, match: (p: string) => p === '/manager/properties',       tour: 'nav-properties' },
+  { label: 'Activity',   href: '/manager/activity',   icon: ActivityIcon,   match: (p: string) => p.startsWith('/manager/activity'), tour: 'nav-activity' },
+  { label: 'Billing',    href: '/manager/billing',    icon: BillingIcon,    match: (p: string) => p.startsWith('/manager/billing'),  tour: 'nav-billing' },
 ];
 
 export default function ManagerBottomNav() {
@@ -69,13 +69,14 @@ export default function ManagerBottomNav() {
       aria-label="Manager navigation"
     >
       <div className="mx-auto flex max-w-2xl items-center">
-        {TABS.map(({ label, href, icon: Icon, match }) => {
+        {TABS.map(({ label, href, icon: Icon, match, tour }) => {
           const active = match(pathname);
           const showBadge = label === 'Activity' && openCount > 0;
           return (
             <Link
               key={label}
               href={href}
+              data-tour={tour}
               className={[
                 'relative flex flex-1 flex-col items-center gap-1 py-2.5 transition-colors duration-150',
                 active
