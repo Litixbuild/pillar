@@ -111,17 +111,20 @@ export default function ManagerSignupPage() {
         {verificationEmail ? (
           <div className="w-full text-center">
             <div className="mb-5">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/10">
-                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-white/80" aria-hidden="true">
+              <div
+                className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border"
+                style={dark ? { borderColor: "rgba(245,237,213,0.18)", background: "rgba(245,237,213,0.10)" } : { borderColor: "rgba(100,80,40,0.18)", background: "rgba(100,80,40,0.06)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" style={{ color: dark ? "rgba(245,237,213,0.85)" : "rgba(100,80,40,0.75)" }} aria-hidden="true">
                   <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h2 className="text-xl font-light tracking-tight text-white">Check your inbox</h2>
-              <p className="mt-2 text-sm text-white/55">
+              <h2 className="text-xl font-light tracking-tight" style={{ color: headingColor }}>Check your inbox</h2>
+              <p className="mt-2 text-sm" style={{ color: labelColor }}>
                 We sent a verification link to
               </p>
-              <p className="mt-1 text-sm font-medium text-white/80">{verificationEmail}</p>
-              <p className="mt-3 text-xs text-white/40">
+              <p className="mt-1 text-sm font-medium" style={{ color: headingColor }}>{verificationEmail}</p>
+              <p className="mt-3 text-xs" style={{ color: dark ? "rgba(245,237,213,0.45)" : "rgba(100,80,40,0.45)" }}>
                 Click the link in the email to verify your account, then come back and sign in.
               </p>
             </div>
