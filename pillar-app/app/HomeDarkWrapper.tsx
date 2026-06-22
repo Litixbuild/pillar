@@ -96,7 +96,7 @@ export default function HomeDarkWrapper() {
           <div className="flex-1 w-full max-w-2xl">
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.8rem] leading-[1.12] mb-5 lg:mb-7" style={{ color: heading }}>
               Tired of Endless<br />
-              <span style={{ color: accent }}>Tenant Calls?</span>
+              <span style={{ color: accent }}>Guest Calls?</span>
             </h1>
             <p className="text-lg lg:text-xl leading-snug italic mb-3" style={{ color: body }}>
               &ldquo;How does the{' '}
@@ -122,7 +122,26 @@ export default function HomeDarkWrapper() {
             <p className="text-lg lg:text-xl font-medium mb-8 lg:mb-10" style={{ color: heading }}>
               Pillar answers — so you don&apos;t have to.
             </p>
-            <div className="w-14 h-px" style={{ background: accent }} />
+            <div className="w-14 h-px mb-8 lg:mb-10" style={{ background: accent }} />
+            <div className="text-center">
+              <Link
+                href="/manager/login"
+                className="inline-flex items-center justify-center gap-2"
+                style={{
+                  height: 'clamp(38px,4.5vw,46px)', lineHeight: 1, boxSizing: 'border-box',
+                  fontSize: 'clamp(11px,1.3vw,13px)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 400,
+                  color: heading,
+                  background: 'transparent',
+                  padding: '0 clamp(22px,2.8vw,32px)',
+                  borderRadius: 10, textDecoration: 'none',
+                }}
+              >
+                Let&apos;s get you started!
+                <svg viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14, flexShrink: 0 }}>
+                  <path d="M9 5l7 7-7 7" stroke={heading} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
           <div className="flex-1 w-full flex justify-center lg:justify-end">
