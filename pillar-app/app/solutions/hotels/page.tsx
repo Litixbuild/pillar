@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, ScreenshotPlaceholder, FAQSection } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, SplitSection, CTASection, Divider, FAQSection, ExploreLinksSection } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'Digital Guest Portal for Boutique Hotels & Short-Term Rentals | Pillar',
@@ -80,22 +80,14 @@ export default function HotelsPage() {
 
       <Divider />
 
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
-        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20, textAlign: 'center' }}>Explore the Platform</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          {[
-            { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One QR code for the whole hotel.' },
-            { href: '/platform/ai-concierge', label: 'AI Concierge', desc: 'Local recommendations and property Q&A.' },
-            { href: '/platform/work-orders', label: 'Work Orders', desc: 'Room-level requests routed automatically.' },
-            { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Guest requests managed from one view.' },
-          ].map(({ href, label, desc }) => (
-            <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: '1px solid rgba(245,237,213,0.10)', background: 'rgba(245,237,213,0.03)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', margin: 0 }}>{label}</p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{desc}</p>
-            </a>
-          ))}
-        </div>
-      </section>
+      <ExploreLinksSection
+        links={[
+          { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One QR code for the whole hotel.' },
+          { href: '/platform/ai-concierge', label: 'AI Concierge', desc: 'Local recommendations and property Q&A.' },
+          { href: '/platform/work-orders', label: 'Work Orders', desc: 'Room-level requests routed automatically.' },
+          { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Guest requests managed from one view.' },
+        ]}
+      />
 
       <Divider />
 

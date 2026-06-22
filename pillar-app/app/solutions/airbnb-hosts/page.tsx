@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import FeaturePageLayout, { PageHero, FeatureGrid, CTASection, Divider, FAQSection } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { PageHero, FeatureGrid, CTASection, Divider, FAQSection, PainPointsSection, ExploreLinksSection } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'Guest Experience Platform for Rental Hosts | Pillar',
@@ -27,26 +27,16 @@ export default function AirbnbHostsPage() {
 
       <Divider />
 
-      {/* Pain points block */}
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20 }}>Sound Familiar?</p>
-        <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', fontWeight: 400, lineHeight: 1.2, color: '#fff', marginBottom: 36 }}>
-          The same questions,<br />every single booking.
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left', maxWidth: 560, margin: '0 auto' }}>
-          {[
-            '"What\'s the WiFi password again?"',
-            '"Where do I put the trash on checkout day?"',
-            '"Can I check out a little later?"',
-            '"What\'s good to eat near the place?"',
-          ].map(q => (
-            <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 14, color: 'rgba(245,237,213,0.45)', flexShrink: 0 }}>✕</span>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', fontStyle: 'italic' }}>{q}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PainPointsSection
+        eyebrow="Sound Familiar?"
+        title={<>The same questions,<br />every single booking.</>}
+        points={[
+          '"What\'s the WiFi password again?"',
+          '"Where do I put the trash on checkout day?"',
+          '"Can I check out a little later?"',
+          '"What\'s good to eat near the place?"',
+        ]}
+      />
 
       <Divider />
 
@@ -73,23 +63,16 @@ export default function AirbnbHostsPage() {
 
       <Divider />
 
-      <section style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 860, margin: '0 auto' }}>
-        <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: '#F5EDD5', marginBottom: 20, textAlign: 'center' }}>What's Included</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          {[
-            { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One scan — everything they need.' },
-            { href: '/platform/ai-concierge', label: 'AI Concierge', desc: '24/7 answers and local recommendations.' },
-            { href: '/platform/property-guides', label: 'Property Guides', desc: 'WiFi, codes, and house rules.' },
-            { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Requests handled without texts.' },
-            { href: '/platform/work-orders', label: 'Work Orders', desc: 'Maintenance routed automatically.' },
-          ].map(({ href, label, desc }) => (
-            <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: '1px solid rgba(245,237,213,0.10)', background: 'rgba(245,237,213,0.03)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', margin: 0 }}>{label}</p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{desc}</p>
-            </a>
-          ))}
-        </div>
-      </section>
+      <ExploreLinksSection
+        eyebrow="What's Included"
+        links={[
+          { href: '/platform/qr-portal', label: 'QR Guest Portal', desc: 'One scan — everything they need.' },
+          { href: '/platform/ai-concierge', label: 'AI Concierge', desc: '24/7 answers and local recommendations.' },
+          { href: '/platform/property-guides', label: 'Property Guides', desc: 'WiFi, codes, and house rules.' },
+          { href: '/platform/late-checkout', label: 'Late Checkout', desc: 'Requests handled without texts.' },
+          { href: '/platform/work-orders', label: 'Work Orders', desc: 'Maintenance routed automatically.' },
+        ]}
+      />
 
       <Divider />
 
