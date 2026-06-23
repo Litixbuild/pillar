@@ -25,11 +25,11 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 }
 
 const PLATFORM = [
-  { Icon: QRIcon,      title: 'QR Guest Portal',  href: '/platform/qr-portal',       tag: 'Core'    },
-  { Icon: SparkleIcon, title: 'AI Concierge',      href: '/platform/ai-concierge',    tag: 'AI'      },
-  { Icon: BookIcon,    title: 'Property Guides',   href: '/platform/property-guides', tag: 'Content' },
-  { Icon: WrenchIcon,  title: 'Work Orders',       href: '/platform/work-orders',     tag: 'Ops'     },
-  { Icon: ClockIcon,   title: 'Late Checkout',     href: '/platform/late-checkout',   tag: 'Guest'   },
+  { Icon: QRIcon,      title: 'QR Guest Portal',  href: '/platform/qr-portal'       },
+  { Icon: SparkleIcon, title: 'AI Concierge',      href: '/platform/ai-concierge'    },
+  { Icon: BookIcon,    title: 'Property Guides',   href: '/platform/property-guides' },
+  { Icon: WrenchIcon,  title: 'Work Orders',       href: '/platform/work-orders'     },
+  { Icon: ClockIcon,   title: 'Late Checkout',     href: '/platform/late-checkout'   },
 ];
 
 const SOLUTIONS = [
@@ -83,8 +83,8 @@ function AccordionRow({ label, open, onToggle, t, children }: {
   );
 }
 
-function MenuLinkRow({ href, onClose, icon, title, tag, t }: {
-  href: string; onClose: () => void; icon?: React.ReactNode; title: string; tag?: string; t: T;
+function MenuLinkRow({ href, onClose, icon, title, t }: {
+  href: string; onClose: () => void; icon?: React.ReactNode; title: string; t: T;
 }) {
   const [hov, setHov] = useState(false);
   return (
@@ -98,11 +98,6 @@ function MenuLinkRow({ href, onClose, icon, title, tag, t }: {
     >
       {icon && <span style={{ color: GOLD, flexShrink: 0, display: 'flex' }}>{icon}</span>}
       <span style={{ fontSize: 12.5, fontWeight: 500, color: t.body, flex: 1 }}>{title}</span>
-      {tag && (
-        <span style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(212,175,106,0.85)', background: 'rgba(212,175,106,0.12)', padding: '2px 7px', borderRadius: 99, flexShrink: 0 }}>
-          {tag}
-        </span>
-      )}
     </Link>
   );
 }
@@ -217,8 +212,8 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
       {/* ── Consolidated dropdown ── */}
       <div
         style={{
-          position: 'absolute', top: '100%', right: 'clamp(14px,3.5vw,48px)',
-          width: 'min(320px, 92vw)', zIndex: 99,
+          position: 'absolute', top: '100%', right: 0,
+          width: 'min(248px, 88vw)', zIndex: 99,
           overflow: 'hidden',
           maxHeight: menuOpen ? 640 : 0,
           opacity: menuOpen ? 1 : 0,
@@ -241,8 +236,8 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
           </div>
 
           <AccordionRow label="Product" open={expanded === 'product'} onToggle={() => setExpanded((e) => (e === 'product' ? null : 'product'))} t={t}>
-            {PLATFORM.map(({ Icon, title, href, tag }) => (
-              <MenuLinkRow key={href} href={href} onClose={closeAll} icon={<Icon />} title={title} tag={tag} t={t} />
+            {PLATFORM.map(({ Icon, title, href }) => (
+              <MenuLinkRow key={href} href={href} onClose={closeAll} icon={<Icon />} title={title} t={t} />
             ))}
           </AccordionRow>
 

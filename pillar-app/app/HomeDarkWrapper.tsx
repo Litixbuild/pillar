@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import HomeNav from '../components/HomeNav';
+import HomeDemoWindow from '../components/HomeDemoWindow';
 
 const SANDY = '#F5EDD5';
 const GOLD_LIGHT = '#7A5A1E';
@@ -92,7 +93,7 @@ export default function HomeDarkWrapper() {
 
       {/* ── Hero ── */}
       <section className="relative flex items-center overflow-hidden">
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-32 pb-4 flex flex-col lg:flex-row items-center gap-4 lg:gap-16">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-20 pb-4 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
           <div className="flex-1 w-full max-w-2xl">
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.8rem] leading-[1.12] mb-5 lg:mb-7" style={{ color: heading }}>
               Tired of Endless<br />
@@ -119,40 +120,33 @@ export default function HomeDarkWrapper() {
               </span>
               {' '}work?&rdquo;
             </p>
-            <p className="text-lg lg:text-xl font-medium mb-8 lg:mb-10" style={{ color: heading }}>
+            <p className="text-lg lg:text-xl font-medium" style={{ color: heading }}>
               Pillar answers — so you don&apos;t have to.
             </p>
-            <div className="w-14 h-px mb-8 lg:mb-10" style={{ background: accent }} />
-            <div className="text-center">
-              <Link
-                href="/manager/login"
-                className="inline-flex items-center justify-center gap-2"
-                style={{
-                  height: 'clamp(38px,4.5vw,46px)', lineHeight: 1, boxSizing: 'border-box',
-                  fontSize: 'clamp(11px,1.3vw,13px)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 400,
-                  color: heading,
-                  background: 'transparent',
-                  padding: '0 clamp(22px,2.8vw,32px)',
-                  borderRadius: 10, textDecoration: 'none',
-                }}
-              >
-                Let&apos;s get you started!
-                <svg viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                  <path d="M9 5l7 7-7 7" stroke={heading} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-            </div>
           </div>
 
-          <div className="flex-1 w-full flex justify-center lg:justify-end">
-            <div className="relative w-full" style={{ maxWidth: '400px', aspectRatio: '400/525' }}>
-              <Image
-                src="/images/newbg1.png"
-                alt="Guest arriving at a luxury property"
-                fill
-                className="object-cover"
-              />
+          <div className="flex-1 w-full flex flex-col items-center lg:items-end">
+            <div className="relative w-full" style={{ maxWidth: '320px', aspectRatio: '320/650' }}>
+              <HomeDemoWindow dark={dark} />
             </div>
+            <div className="w-14 h-px mt-6 mb-5" style={{ background: accent }} />
+            <Link
+              href="/manager/login"
+              className="inline-flex items-center justify-center gap-2"
+              style={{
+                height: 'clamp(38px,4.5vw,46px)', lineHeight: 1, boxSizing: 'border-box',
+                fontSize: 'clamp(11px,1.3vw,13px)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 400,
+                color: heading,
+                background: 'transparent',
+                padding: '0 clamp(22px,2.8vw,32px)',
+                borderRadius: 10, textDecoration: 'none',
+              }}
+            >
+              Let&apos;s get you started!
+              <svg viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14, flexShrink: 0 }}>
+                <path d="M9 5l7 7-7 7" stroke={heading} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
@@ -175,11 +169,11 @@ export default function HomeDarkWrapper() {
               One Scan.<br />
               <span style={{ color: accent }}>Zero Questions.</span>
             </h2>
-            <p className="text-lg lg:text-xl leading-snug mb-2" style={{ color: heading }}>
-              Your guests get instant answers — so you don&apos;t have to.
+            <p className="text-sm lg:text-base leading-snug mb-2" style={{ color: bodyMuted }}>
+              No Downloads, or Accounts needed.
             </p>
-            <p className="text-sm lg:text-base leading-snug" style={{ color: bodyMuted }}>
-              No more repeating the WiFi password ten times a stay.
+            <p className="text-lg lg:text-xl leading-snug" style={{ color: heading }}>
+              Your guests get instant answers — so you don&apos;t have to.
             </p>
           </div>
         </div>

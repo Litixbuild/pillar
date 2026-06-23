@@ -1,4 +1,5 @@
 import { getWorkOrderCategories } from '@/lib/workOrders';
+import { slugExists } from '@/lib/properties';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const slug = searchParams.get('slug')?.trim() ?? '';
     if (!slug) return Response.json({ error: 'slug is required' }, { status: 400 });
+
+    if (!(await slugExists(slug))) {
+      return Response.json({ error: 'Property not found' }, { status: 404 });
+    }
 
     const categories = await getWorkOrderCategories(slug);
     return Response.json(

@@ -4,6 +4,7 @@ import { sendWorkOrderEmail } from '@/lib/mailer';
 import { logPropertyEvent } from '@/lib/propertyEvents';
 import { getClientIp } from '@/lib/auditLog';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { slugExists } from '@/lib/properties';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,10 @@ export async function POST(req: Request) {
 
     if (!slug) return Response.json({ error: 'slug is required' }, { status: 400 });
     if (!categoryName) return Response.json({ error: 'category_name is required' }, { status: 400 });
+
+    if (!(await slugExists(slug))) {
+      return Response.json({ error: 'Property not found' }, { status: 404 });
+    }
 
     const ip = getClientIp(req) ?? 'unknown';
     const allowed = await checkRateLimit(`work-order:${slug}:${ip}`, 5, 3600);
