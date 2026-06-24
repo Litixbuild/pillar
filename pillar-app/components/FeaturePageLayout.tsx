@@ -117,8 +117,10 @@ export function PageHero({ eyebrow, title, titleAccent, subtitle, cta, ctaHref }
 }) {
   const dark = useDark();
   const t = theme(dark);
+  const glow = dark ? 'rgba(245,237,213,0.12)' : 'rgba(122,90,30,0.14)';
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(40px, 6vw, 64px)', maxWidth: 1280, margin: '0 auto', textAlign: 'center' }}>
+    <section style={{ position: 'relative', padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(40px, 6vw, 64px)', maxWidth: 1280, margin: '0 auto', textAlign: 'center' }}>
+      <div aria-hidden className="pf-glow" style={{ position: 'absolute', top: '-10%', left: '20%', right: '20%', bottom: '10%', background: `radial-gradient(55% 60% at 50% 35%, ${glow}, transparent 70%)`, filter: 'blur(40px)', zIndex: -1 }} />
       <p style={{ fontSize: 10, letterSpacing: '0.40em', textTransform: 'uppercase', color: t.accent, marginBottom: 20 }}>{eyebrow}</p>
       <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(2.4rem, 6vw, 4.2rem)', fontWeight: 400, lineHeight: 1.12, color: t.heading, marginBottom: 20 }}>
         {title}<br /><span style={{ color: t.accent }}>{titleAccent}</span>
@@ -236,9 +238,9 @@ export function FeatureGrid({ features }: { features: { icon: React.ReactNode; t
   const t = theme(dark);
   return (
     <section style={{ padding: 'clamp(40px, 6vw, 72px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+      <div className="pf-feature-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         {features.map(({ icon, title, desc }) => (
-          <div key={title} style={{ padding: '24px 22px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg }}>
+          <div key={title} className="pf-card-hover" style={{ padding: '24px 22px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg }}>
             <div style={{ color: t.accent, marginBottom: 14 }}>{icon}</div>
             <p style={{ fontSize: 13.5, fontWeight: 500, color: t.heading, marginBottom: 8 }}>{title}</p>
             <p style={{ fontSize: 12.5, color: t.bodyFaint, lineHeight: 1.6 }}>{desc}</p>
@@ -257,7 +259,7 @@ export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabe
   return (
     <section style={{ padding: 'clamp(40px, 6vw, 72px) clamp(16px, 4vw, 40px)', maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ display: 'flex', flexDirection: reverse ? 'row-reverse' : 'row', alignItems: 'center', gap: 'clamp(32px, 5vw, 72px)', flexWrap: 'wrap' }}>
-        <div style={{ flex: hideScreenshot ? '1 1 100%' : '1 1 300px' }}>
+        <div className={hideScreenshot ? undefined : 'pf-split-text'} style={{ flex: hideScreenshot ? '1 1 100%' : '1 1 300px' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: t.accent, marginBottom: 16 }}>{eyebrow}</p>
           <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 400, lineHeight: 1.15, color: t.heading, marginBottom: 20 }}>
             {title}<br /><span style={{ color: t.accent }}>{titleAccent}</span>
@@ -274,7 +276,7 @@ export function SplitSection({ eyebrow, title, titleAccent, body, screenshotLabe
           </div>
         </div>
         {!hideScreenshot && (
-          <div style={{ flex: '1 1 300px' }}>
+          <div className="pf-split-shot" style={{ flex: '1 1 300px', width: '100%', ...({ '--pf-shot-bg': t.cardBg, '--pf-shot-border': t.cardBorder } as React.CSSProperties) }}>
             <ScreenshotPlaceholder label={screenshotLabel} src={screenshotSrc} aspect="4/3" phone={phoneScreenshot} />
           </div>
         )}
@@ -351,7 +353,7 @@ export function ExploreLinksSection({ eyebrow = 'Explore the Platform', links }:
       <p style={{ fontSize: 10, letterSpacing: '0.36em', textTransform: 'uppercase', color: t.accent, marginBottom: 20, textAlign: 'center' }}>{eyebrow}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         {links.map(({ href, label, desc }) => (
-          <a key={href} href={href} style={{ padding: '18px', borderRadius: 12, border: `1px solid ${t.cardBorder}`, background: t.cardBg, textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <a key={href} href={href} className="pf-card-hover" style={{ padding: '18px', borderRadius: 12, border: `1px solid ${t.cardBorder}`, background: t.cardBg, textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <p style={{ fontSize: 13, fontWeight: 500, color: t.heading, margin: 0 }}>{label}</p>
             <p style={{ fontSize: 12, color: t.bodyFaint, margin: 0 }}>{desc}</p>
           </a>
@@ -381,7 +383,7 @@ export function PricingCardsSection({ basePlan, addonPlan }: {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
 
         {/* Base plan */}
-        <div style={{ padding: '36px 32px', borderRadius: 18, border: '1px solid rgba(212,175,106,0.30)', background: 'rgba(212,175,106,0.05)', display: 'flex', flexDirection: 'column' }}>
+        <div className="pf-card-hover" style={{ padding: '36px 32px', borderRadius: 18, border: '1px solid rgba(212,175,106,0.30)', background: 'rgba(212,175,106,0.05)', display: 'flex', flexDirection: 'column' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.30em', textTransform: 'uppercase', color: '#D4AF6A', marginBottom: 12 }}>{basePlan.label}</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
             <span style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 52, fontWeight: 300, lineHeight: 1, color: t.heading }}>{basePlan.price}</span>
@@ -403,7 +405,7 @@ export function PricingCardsSection({ basePlan, addonPlan }: {
         </div>
 
         {/* Additional properties */}
-        <div style={{ padding: '36px 32px', borderRadius: 18, border: `1px solid ${t.cardBorder}`, background: t.cardBg, display: 'flex', flexDirection: 'column' }}>
+        <div className="pf-card-hover" style={{ padding: '36px 32px', borderRadius: 18, border: `1px solid ${t.cardBorder}`, background: t.cardBg, display: 'flex', flexDirection: 'column' }}>
           <p style={{ fontSize: 10, letterSpacing: '0.30em', textTransform: 'uppercase', color: '#D4AF6A', marginBottom: 12 }}>{addonPlan.label}</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
             <span style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 52, fontWeight: 300, lineHeight: 1, color: t.heading }}>{addonPlan.price}</span>
@@ -449,7 +451,7 @@ export function StepsSection({ eyebrow, title, titleAccent, intro, steps }: {
       <p style={{ fontSize: 15, color: t.bodyMuted, lineHeight: 1.7, maxWidth: 520, margin: '0 auto 36px' }}>{intro}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, maxWidth: 640, margin: '0 auto' }}>
         {steps.map(({ step, label, desc }) => (
-          <div key={step} style={{ padding: '22px 20px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg, textAlign: 'left' }}>
+          <div key={step} className="pf-card-hover" style={{ padding: '22px 20px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg, textAlign: 'left' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.25em', color: t.accent, marginBottom: 10 }}>{step}</p>
             <p style={{ fontSize: 13.5, fontWeight: 500, color: t.heading, marginBottom: 8 }}>{label}</p>
             <p style={{ fontSize: 12, color: t.bodyFaint, lineHeight: 1.6 }}>{desc}</p>

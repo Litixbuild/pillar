@@ -123,3 +123,45 @@ nextjs-portal {
 }
 
 /* Manager portal — page transition handled by PageFader (layout.tsx) */
+
+/* ── Marketing pages (home, /platform/*, /solutions/*, /pricing) — desktop-only (1024px+) polish.
+   Every rule here is either a no-op below 1024px or wrapped in the media query, so the mobile
+   layout these components already use is completely untouched. ── */
+.pf-glow {
+  display: none;
+}
+.pf-split-shot {
+  /* No-op wrapper on mobile/tablet — becomes a framed panel at desktop widths below. */
+}
+.pf-split-text {
+  /* No-op on mobile/tablet — caps reading width at desktop widths below. */
+}
+.pf-card-hover {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+
+@media (min-width: 1024px) {
+  .pf-glow {
+    display: block;
+  }
+
+  .pf-split-shot {
+    padding: 36px;
+    border-radius: 28px;
+    background: var(--pf-shot-bg, transparent);
+    border: 1px solid var(--pf-shot-border, transparent);
+  }
+
+  .pf-split-text {
+    max-width: 460px;
+  }
+
+  .pf-feature-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .pf-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  }
+}

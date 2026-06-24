@@ -248,6 +248,11 @@ export default function HomeDemoWindow({ dark }: { dark: boolean }) {
             <div className="flex-1 px-2 pb-2">
               <video
                 key={current.video}
+                ref={(el) => {
+                  if (!el) return;
+                  el.muted = true;
+                  void el.play().catch(() => {});
+                }}
                 muted
                 autoPlay
                 loop

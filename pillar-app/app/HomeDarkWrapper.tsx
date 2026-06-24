@@ -92,8 +92,8 @@ export default function HomeDarkWrapper() {
       <main className="min-h-screen" style={{ color: heading }}>
 
       {/* ── Hero ── */}
-      <section className="relative flex items-center overflow-hidden">
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-20 pb-4 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+      <section className="relative flex items-center overflow-hidden lg:min-h-[84vh]">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-28 pb-4 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 xl:gap-28">
           <div className="flex-1 w-full max-w-2xl">
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.8rem] leading-[1.12] mb-5 lg:mb-7" style={{ color: heading }}>
               Tired of Endless<br />
@@ -126,10 +126,20 @@ export default function HomeDarkWrapper() {
           </div>
 
           <div className="flex-1 w-full flex flex-col items-center lg:items-end">
-            <div className="relative w-full" style={{ maxWidth: '320px', aspectRatio: '320/650' }}>
+            <div className="relative w-full max-w-80 lg:max-w-87 xl:max-w-93" style={{ aspectRatio: '320/650' }}>
+              {/* Desktop-only ambient glow — fills the dead space around the phone on wide screens; invisible on mobile */}
+              <div
+                aria-hidden
+                className="hidden lg:block absolute -z-10"
+                style={{
+                  top: '-8%', left: '-35%', right: '-35%', bottom: '-8%',
+                  background: `radial-gradient(60% 55% at 50% 45%, ${accent}26, transparent 70%)`,
+                  filter: 'blur(40px)',
+                }}
+              />
               <HomeDemoWindow dark={dark} />
             </div>
-            <div className="w-14 h-px mt-6 mb-5" style={{ background: accent }} />
+            <div className="w-14 h-px mt-6 lg:mt-8 mb-5" style={{ background: accent }} />
             <Link
               href="/manager/login"
               className="inline-flex items-center justify-center gap-2"
@@ -155,7 +165,7 @@ export default function HomeDarkWrapper() {
       <section className="pt-2 pb-6 lg:py-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
-            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/500', maskImage: 'linear-gradient(to left, transparent, black 6%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 6%)' }}>
+            <div className="relative w-full max-w-[375px] lg:max-w-[430px] lg:drop-shadow-2xl" style={{ aspectRatio: '375/500', maskImage: 'linear-gradient(to left, transparent, black 6%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 6%)' }}>
               <Image
                 src="/images/newbg2.png"
                 alt="Guest scanning QR code to access property guide"
@@ -188,7 +198,7 @@ export default function HomeDarkWrapper() {
       <section className="py-6 lg:py-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row-reverse items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
-            <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/525', maskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', maskComposite: 'intersect', WebkitMaskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', WebkitMaskComposite: 'destination-in' }}>
+            <div className="relative w-full max-w-[375px] lg:max-w-[430px] lg:drop-shadow-2xl" style={{ aspectRatio: '375/525', maskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', maskComposite: 'intersect', WebkitMaskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', WebkitMaskComposite: 'destination-in' }}>
               <Image
                 src="/images/newbg3.png"
                 alt="Guest planning their perfect day with AI concierge"
