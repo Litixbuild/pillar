@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { StayDamagePhoto } from '@/lib/stayDamageReports';
+import { compressImageFiles } from '@/lib/clientImageCompress';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -43,22 +44,36 @@ export default function DamageSection({
     if (files.length === 0 || submitting) return;
     setSubmitting(true);
     setError(null);
+
+    const compressed = await compressImageFiles(files);
     const fd = new FormData();
-    files.forEach((f) => fd.append('files', f));
+    compressed.forEach((f) => fd.append('files', f));
     if (caption.trim()) fd.append('caption', caption.trim());
 
-    const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/damage`, {
-      method: 'POST',
-      body: fd,
-    });
-    if (res.ok) {
-      setOpen(false);
-      setFiles([]);
-      setCaption('');
-      router.refresh();
-    } else {
-      const d = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(d.error ?? 'Upload failed. Please try again.');
+    try {
+      const res = await fetch(`/api/manager/properties/${encodeURIComponent(slug)}/damage`, {
+        method: 'POST',
+        body: fd,
+      });
+      if (res.ok) {
+        setOpen(false);
+        setFiles([]);
+        setCaption('');
+        router.refresh();
+      } else {
+        const text = await res.text();
+        let message = `Upload failed (HTTP ${res.status}). Please try again.`;
+        try {
+          const d = JSON.parse(text) as { error?: string };
+          if (d.error) message = d.error;
+        } catch {
+          console.error('[damage upload] non-JSON error response:', text.slice(0, 300));
+        }
+        setError(message);
+      }
+    } catch (e) {
+      console.error('[damage upload] network error:', e);
+      setError('Could not reach the server. Check your connection and try again.');
     }
     setSubmitting(false);
   }

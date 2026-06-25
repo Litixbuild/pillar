@@ -20,7 +20,7 @@ export default function VerificationHeader({
           <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Link>
-      <p className="lux-title text-xl text-slate-900 dark:text-white">
+      <p className="lux-title text-3xl text-slate-900 dark:text-white">
         {kicker}
       </p>
     </div>

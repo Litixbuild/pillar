@@ -7,11 +7,11 @@ export default function VerificationTitleBlock({
 }) {
   return (
     <div className="mb-4">
-      <h1 className="text-xl font-light leading-tight tracking-tight text-slate-900 dark:text-white">
+      <h1 className="text-3xl font-light leading-tight tracking-tight text-slate-900 dark:text-white">
         {title}
       </h1>
       {subtitle ? (
-        <p className="mt-1.5 text-xs text-[rgba(100,80,40,0.55)] dark:text-white/40">{subtitle}</p>
+        <p className="mt-2 text-xs text-[rgba(100,80,40,0.55)] dark:text-white/40">{subtitle}</p>
       ) : null}
     </div>
   );

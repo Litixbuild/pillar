@@ -30,10 +30,22 @@ function extForMime(mime: string): string {
 }
 
 async function ensureBucket(supabase: ReturnType<typeof createServiceClient>) {
-  const { error } = await supabase.storage.getBucket(BUCKET);
-  if (!error) return;
+  const { data, error } = await supabase.storage.getBucket(BUCKET);
+  if (data) return; // bucket confirmed to exist — nothing to do
+
+  // Only the bucket genuinely not existing should trigger creation. Any other
+  // error (network blip, rate limit, transient API hiccup) must not block the
+  // upload — assume the bucket is fine and proceed straight to the file upload,
+  // which will surface its own real error if something is actually wrong.
+  if (error && !/not.?found/i.test(error.message)) {
+    console.error('[ensureBucket] getBucket check failed, proceeding anyway:', error.message);
+    return;
+  }
+
   const { error: createError } = await supabase.storage.createBucket(BUCKET, { public: true });
-  if (createError) throw new Error(`Could not create storage bucket: ${createError.message}`);
+  if (createError && !/already exists/i.test(createError.message)) {
+    throw new Error(`Could not create storage bucket: ${createError.message}`);
+  }
 }
 
 async function requireSession() {

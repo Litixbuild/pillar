@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { compressImageFiles } from '@/lib/clientImageCompress';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,16 +78,30 @@ export default function CleanerUploadPage() {
     if (files.length === 0 || submitting) return;
     setSubmitting(true);
     setError(null);
+
+    const compressed = await compressImageFiles(files);
     const fd = new FormData();
-    files.forEach((f) => fd.append('files', f));
+    compressed.forEach((f) => fd.append('files', f));
     if (name.trim()) fd.append('name', name.trim());
 
-    const res = await fetch(`/api/clean/${encodeURIComponent(token)}`, { method: 'POST', body: fd });
-    if (res.ok) {
-      setDone(true);
-    } else {
-      const d = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(d.error ?? 'Upload failed. Please try again.');
+    try {
+      const res = await fetch(`/api/clean/${encodeURIComponent(token)}`, { method: 'POST', body: fd });
+      if (res.ok) {
+        setDone(true);
+      } else {
+        const text = await res.text();
+        let message = `Upload failed (HTTP ${res.status}). Please try again.`;
+        try {
+          const d = JSON.parse(text) as { error?: string };
+          if (d.error) message = d.error;
+        } catch {
+          console.error('[cleaner upload] non-JSON error response:', text.slice(0, 300));
+        }
+        setError(message);
+      }
+    } catch (e) {
+      console.error('[cleaner upload] network error:', e);
+      setError('Could not reach the server. Check your connection and try again.');
     }
     setSubmitting(false);
   }
