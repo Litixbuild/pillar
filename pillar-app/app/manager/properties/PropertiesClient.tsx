@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Property } from '@/lib/types';
 import ManagerBottomNav from '@/app/manager/ManagerBottomNav';
-import DuplicatePropertyModal from '@/app/manager/DuplicatePropertyModal';
 
 const SANDY_RGB = '245,237,213';
 
@@ -45,14 +44,11 @@ function ToolsIcon() {
   );
 }
 
-function DuplicateHousesIcon() {
+function ShieldCheckIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
-      {/* back house — offset upper-right */}
-      <path d="M9 8.5L14.5 3.5L20 8.5V17H9V8.5Z" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" opacity="0.40" />
-      {/* front house */}
-      <path d="M4 12L9.5 6.5L15 12V20H4V12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.5 20V16.5H11.5V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 3l7 3v5.5c0 4.5-3 7.5-7 9.5-4-2-7-5-7-9.5V6l7-3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -72,7 +68,6 @@ export default function PropertiesClient({
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Property | null>(null);
-  const [duplicateTarget, setDuplicateTarget] = useState<Property | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -298,13 +293,13 @@ export default function PropertiesClient({
                             </div>
                             <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: labelColor }}>Edit</span>
                           </Link>
-                          {/* Duplicate */}
-                          <button type="button" onClick={() => setDuplicateTarget(p)} className="group flex w-full flex-col items-center gap-1.5">
+                          {/* Verification */}
+                          <Link href={`/manager/properties/${encodeURIComponent(slug)}/verification`} className="group flex w-full flex-col items-center gap-1.5">
                             <div className="flex h-[52px] w-full items-center justify-center rounded-xl transition-all duration-200 group-hover:opacity-75" style={actionBoxStyle}>
-                              <DuplicateHousesIcon />
+                              <ShieldCheckIcon />
                             </div>
-                            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: labelColor }}>Duplicate</span>
-                          </button>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: labelColor }}>Verification</span>
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -384,16 +379,6 @@ export default function PropertiesClient({
             </div>
           </div>
         </div>
-      ) : null}
-
-      {duplicateTarget ? (
-        <DuplicatePropertyModal
-          dark={dark}
-          sourceProperty={duplicateTarget}
-          needsSlot={!isSubscribed || properties.length >= propertySlots}
-          onAddSlot={isSubscribed ? () => void handleAddSlot() : undefined}
-          onClose={() => setDuplicateTarget(null)}
-        />
       ) : null}
     </div>
   );

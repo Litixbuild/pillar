@@ -122,6 +122,14 @@ nextjs-portal {
   animation: wxTabIconFade 0.30s ease both;
 }
 
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-fade-in {
+  animation: pageFadeIn 0.22s ease-out both;
+}
+
 /* Manager portal — page transition handled by PageFader (layout.tsx) */
 
 /* ── Marketing pages (home, /platform/*, /solutions/*, /pricing) — desktop-only (1024px+) polish.

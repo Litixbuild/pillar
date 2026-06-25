@@ -6,7 +6,6 @@ import Image from 'next/image';
 import type { Property } from '@/lib/types';
 import type { DashboardStats } from '@/lib/propertyEvents';
 import ManagerBottomNav from './ManagerBottomNav';
-import DuplicatePropertyModal from './DuplicatePropertyModal';
 import HomeStats from './HomeStats';
 
 const SANDY = '#F5EDD5';
@@ -66,7 +65,6 @@ export default function ManagerDashboardClient({
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Property | null>(null);
-  const [duplicateTarget, setDuplicateTarget] = useState<Property | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -373,14 +371,13 @@ export default function ManagerDashboardClient({
                             </Link>
                           ) : null}
                           {slug ? (
-                            <button
-                              type="button"
-                              onClick={() => setDuplicateTarget(p)}
+                            <Link
+                              href={`/manager/properties/${encodeURIComponent(slug)}/verification`}
                               className="inline-flex h-8 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition-all duration-200"
                               style={editLinkStyle}
                             >
-                              Duplicate
-                            </button>
+                              Verification
+                            </Link>
                           ) : null}
                           {!slug ? <span className="text-xs text-rose-400/55">Missing slug — add one in Supabase</span> : null}
                         </div>
@@ -603,14 +600,6 @@ export default function ManagerDashboardClient({
             </div>
           </div>
         </div>
-      ) : null}
-
-      {duplicateTarget ? (
-        <DuplicatePropertyModal
-          dark={dark}
-          sourceProperty={duplicateTarget}
-          onClose={() => setDuplicateTarget(null)}
-        />
       ) : null}
     </div>
   );

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import HomeNav from '../components/HomeNav';
 import HomeDemoWindow from '../components/HomeDemoWindow';
+import VerificationDemoWindow from '../components/VerificationDemoWindow';
 
 const SANDY = '#F5EDD5';
 const GOLD_LIGHT = '#7A5A1E';
@@ -194,29 +195,24 @@ export default function HomeDarkWrapper() {
         <div className="h-px" style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }} />
       </div>
 
-      {/* ── Section 3: AI Concierge ── */}
+      {/* ── Section 3: Verification & Damage Claim Protection ── */}
       <section className="py-6 lg:py-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row-reverse items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
-            <div className="relative w-full max-w-[375px] lg:max-w-[430px] lg:drop-shadow-2xl" style={{ aspectRatio: '375/525', maskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', maskComposite: 'intersect', WebkitMaskImage: 'linear-gradient(to right, transparent, black 9%, black 91%, transparent), linear-gradient(to bottom, black 91%, transparent)', WebkitMaskComposite: 'destination-in' }}>
-              <Image
-                src="/images/newbg3.png"
-                alt="Guest planning their perfect day with AI concierge"
-                fill
-                className="object-cover"
-              />
+            <div className="relative w-full max-w-md lg:max-w-lg" style={{ height: 460 }}>
+              <VerificationDemoWindow dark={dark} />
             </div>
           </div>
           <div className="flex-1 w-full max-w-lg">
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl leading-tight mb-5 lg:mb-7" style={{ color: heading }}>
-              Ask Anything.<br />
-              <span style={{ color: accent }}>Get Local Answers.</span>
+              Damage Claims.<br />
+              <span style={{ color: accent }}>Finally Backed Up.</span>
             </h2>
             <p className="text-lg lg:text-xl leading-snug mb-2" style={{ color: heading }}>
-              Your guests get answers any hour of the night. You get the night off.
+              Cleaning photos, guest consent, and damage evidence — timestamped automatically and bundled into one report your platform can&apos;t wave away.
             </p>
             <p className="text-sm lg:text-base leading-snug" style={{ color: bodyMuted }}>
-              Like having a concierge on call — without paying for one.
+              Because a legitimate claim shouldn&apos;t cost you a five-star rating.
             </p>
           </div>
         </div>

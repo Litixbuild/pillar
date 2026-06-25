@@ -679,7 +679,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
                           });
                       }}
                       className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
-                      style={{ background: `rgba(${accentGlowRGB},${isModalThemed ? '0.07' : '0.15'})`, border: `1px solid rgba(${accentGlowRGB},${isModalThemed ? '0.18' : '0.25'})`, color: checkColor }}
+                      style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.55)', color: dark ? '#86efac' : '#15803d' }}
                     >
                       {lateCheckoutLoading ? t('sending') : t('yes')}
                     </button>
@@ -688,7 +688,7 @@ function NeedHelpModal({ open, onClose, phone, dark, slug, lightTheme: modalThem
                       disabled={lateCheckoutLoading}
                       onClick={() => setLateCheckoutConfirm(false)}
                       className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
-                      style={{ background: 'transparent', border: `1px solid ${borderCol}`, color: mutedCol }}
+                      style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.50)', color: dark ? '#fca5a5' : '#b91c1c' }}
                     >
                       {t('no')}
                     </button>
