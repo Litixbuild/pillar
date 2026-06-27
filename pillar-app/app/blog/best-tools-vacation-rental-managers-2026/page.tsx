@@ -158,6 +158,9 @@ export default function BestToolsPage() {
           <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
             Digital Property Guide: What to Include (And What to Leave Out) →
           </Link>
+          <Link href="/blog/best-vacation-rental-guest-portals-2026" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+            Best Vacation Rental Guest Portals in 2026 (Compared) →
+          </Link>
         </div>
       </section>
     </FeaturePageLayout>

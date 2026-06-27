@@ -145,6 +145,12 @@ export default function PropertyGuidePage() {
           <Link href="/blog/best-tools-vacation-rental-managers-2026" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
             Best Tools for Vacation Rental Managers in 2026 →
           </Link>
+          <Link href="/blog/airbnb-welcome-guide-template" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+            The Ultimate Airbnb Welcome Guide Template (Copy & Paste) →
+          </Link>
+          <Link href="/blog/vacation-rental-house-rules-template" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+            Vacation Rental House Rules Template (2026 Update) →
+          </Link>
         </div>
       </section>
     </FeaturePageLayout>

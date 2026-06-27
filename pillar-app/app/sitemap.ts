@@ -102,6 +102,54 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.70,
     },
+    {
+      url: `${BASE_URL}/blog/best-vacation-rental-guest-portals-2026`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/airbnb-welcome-guide-template`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/stop-guests-calling-you-airbnb`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/vacation-rental-damage-claim-guide`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/airbnb-maintenance-requests-guide`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/late-checkout-vacation-rental-guide`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/vacation-rental-house-rules-template`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
+    {
+      url: `${BASE_URL}/blog/ai-concierge-for-airbnb-hosts`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.70,
+    },
 
     // Legal & support
     {

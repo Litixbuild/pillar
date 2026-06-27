@@ -175,6 +175,12 @@ export default function ReduceGuestMessagesPage() {
           <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
             Digital Property Guide: What to Include (And What to Leave Out) →
           </Link>
+          <Link href="/blog/stop-guests-calling-you-airbnb" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+            How to Stop Guests Calling You at 2am (The QR Code Solution) →
+          </Link>
+          <Link href="/blog/ai-concierge-for-airbnb-hosts" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+            AI Concierge for Airbnb: What It Is and Why Hosts Need It →
+          </Link>
         </div>
       </section>
     </FeaturePageLayout>
