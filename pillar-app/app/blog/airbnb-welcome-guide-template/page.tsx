@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { BlogTheme, Divider } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'The Ultimate Airbnb Welcome Guide Template (Copy & Paste) | Pillar Blog',
@@ -59,28 +59,29 @@ const SECTIONS = [
 export default function WelcomeGuideTemplatePage() {
   return (
     <FeaturePageLayout>
+      <BlogTheme>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(32px, 5vw, 56px)', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <Link href="/blog" style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: GOLD }}>Property Setup</span>
+          <Link href="/blog" style={{ fontSize: 11, color: 'var(--b-faint)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-category)' }}>Property Setup</span>
         </div>
-        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: '#fff', marginBottom: 20 }}>
+        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: 'var(--b-heading)', marginBottom: 20 }}>
           The Ultimate Airbnb Welcome Guide Template (Copy & Paste)
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>June 2026</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>6 min read</span>
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>June 2026</span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>6 min read</span>
         </div>
       </section>
 
       <Divider />
 
       <article style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'rgba(255,255,255,0.72)' }}>
+        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'var(--b-muted)' }}>
 
           <p style={{ marginBottom: 24 }}>
             Writing a welcome guide from scratch takes longer than it should, mostly because it is hard to know what to include until you have already gotten the messages asking for it. This template skips that step — it is built from the questions hosts actually get asked, section by section.
@@ -92,17 +93,17 @@ export default function WelcomeGuideTemplatePage() {
 
           {SECTIONS.map((section, i) => (
             <div key={section.title} style={{ marginBottom: 36 }}>
-              <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.15rem, 2vw, 1.4rem)', fontWeight: 400, color: '#fff', marginBottom: 14, lineHeight: 1.2 }}>
+              <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.15rem, 2vw, 1.4rem)', fontWeight: 400, color: 'var(--b-heading)', marginBottom: 14, lineHeight: 1.2 }}>
                 {i + 1}. {section.title}
               </h2>
               <pre style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(245,237,213,0.10)',
+                background: 'var(--b-bg)',
+                border: '1px solid var(--b-border)',
                 borderRadius: 10,
                 padding: '18px 20px',
                 fontSize: 13.5,
                 lineHeight: 1.7,
-                color: 'rgba(255,255,255,0.70)',
+                color: 'var(--b-muted)',
                 whiteSpace: 'pre-wrap',
                 fontFamily: 'inherit',
                 margin: 0,
@@ -112,7 +113,7 @@ export default function WelcomeGuideTemplatePage() {
             </div>
           ))}
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             Where to Put It
           </h2>
 
@@ -121,13 +122,13 @@ export default function WelcomeGuideTemplatePage() {
           </p>
 
           <p style={{ marginBottom: 36 }}>
-            Putting the same content into a <Link href="/platform/property-guides" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>digital property guide accessed by QR code</Link> at the property solves this. Guests scan a code on the counter or by the door and the whole guide opens instantly on their phone — no searching old messages, no app to download.
+            Putting the same content into a <Link href="/platform/property-guides" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>digital property guide accessed by QR code</Link> at the property solves this. Guests scan a code on the counter or by the door and the whole guide opens instantly on their phone — no searching old messages, no app to download.
           </p>
 
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(245,237,213,0.10)', paddingTop: 36, marginTop: 8 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>
+        <div style={{ borderTop: '1px solid var(--b-border)', paddingTop: 36, marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--b-faint)', marginBottom: 20 }}>
             Pillar turns this template into a QR-code guest portal — built in minutes, accessible the second a guest arrives.
           </p>
           <Link href="/manager/login"
@@ -140,16 +141,17 @@ export default function WelcomeGuideTemplatePage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 56px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 20 }}>More from the blog</p>
+        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-faint)', marginBottom: 20 }}>More from the blog</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             Digital Property Guide: What to Include (And What to Leave Out) →
           </Link>
-          <Link href="/blog/vacation-rental-house-rules-template" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/vacation-rental-house-rules-template" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             Vacation Rental House Rules Template (2026 Update) →
           </Link>
         </div>
       </section>
+    </BlogTheme>
     </FeaturePageLayout>
   );
 }

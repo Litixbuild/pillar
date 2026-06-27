@@ -12,7 +12,7 @@ const THEME_KEY = 'pillar-theme';
 /* ── Shared dark-mode detector — these helper components render outside FeaturePageLayout's
    own render tree (as page-level siblings passed in as children), so each reads the toggle
    independently rather than via prop-threading, matching the pattern used elsewhere in the app. ── */
-function useDark() {
+export function useDark() {
   const [dark, setDark] = useState(
     () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
   );
@@ -24,7 +24,7 @@ function useDark() {
   return dark;
 }
 
-function theme(dark: boolean) {
+export function theme(dark: boolean) {
   return {
     accent: dark ? SANDY : GOLD_LIGHT,
     heading: dark ? '#ffffff' : '#1a1410',
@@ -39,6 +39,27 @@ function theme(dark: boolean) {
     footerLink: dark ? 'rgba(245,237,213,0.40)' : 'rgba(28,20,10,0.45)',
     footerText: dark ? 'rgba(255,255,255,0.22)' : 'rgba(28,20,10,0.35)',
   };
+}
+
+/* ── Theme-aware CSS variables for blog article bodies — lets server-rendered
+   article content (which needs to export `metadata` and so can't itself be a
+   client component) pick up dark/light colors via var(), set by this client wrapper. ── */
+export function BlogTheme({ children }: { children: React.ReactNode }) {
+  const dark = useDark();
+  const t = theme(dark);
+  const vars = {
+    '--b-heading': t.heading,
+    '--b-body': t.body,
+    '--b-muted': t.bodyMuted,
+    '--b-faint': t.bodyFaint,
+    '--b-accent': t.accent,
+    '--b-category': dark ? '#D4AF6A' : '#8A6A2E',
+    '--b-border': t.cardBorder,
+    '--b-bg': t.cardBg,
+    '--b-ring': t.ring,
+    '--b-dot': dark ? 'rgba(255,255,255,0.20)' : 'rgba(28,20,10,0.18)',
+  } as React.CSSProperties;
+  return <div style={vars}>{children}</div>;
 }
 
 export default function FeaturePageLayout({ children }: { children: React.ReactNode }) {

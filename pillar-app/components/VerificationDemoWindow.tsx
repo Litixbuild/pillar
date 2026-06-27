@@ -6,10 +6,10 @@ import Image from 'next/image';
 type Phase = 'cleaning' | 'consent' | 'damage' | 'report';
 
 const SEQUENCE: { phase: Phase; duration: number }[] = [
-  { phase: 'cleaning', duration: 3200 },
-  { phase: 'consent', duration: 3000 },
-  { phase: 'damage', duration: 3600 },
-  { phase: 'report', duration: 5200 },
+  { phase: 'cleaning', duration: 3800 },
+  { phase: 'consent', duration: 3600 },
+  { phase: 'damage', duration: 4400 },
+  { phase: 'report', duration: 7400 },
 ];
 
 const DAMAGE_CAPTION = 'Broken vase found in living room';
@@ -72,7 +72,7 @@ export default function VerificationDemoWindow({ dark }: { dark: boolean }) {
   // Rows reveal one at a time during the report phase
   useEffect(() => {
     if (phase !== 'report') { setReportStep(0); return; }
-    const steps = [350, 1050, 1750, 2500, 3300];
+    const steps = [500, 1600, 2700, 3800, 4900];
     const timers = steps.map((delay, i) => setTimeout(() => setReportStep(i + 1), delay));
     return () => timers.forEach(clearTimeout);
   }, [phase]);

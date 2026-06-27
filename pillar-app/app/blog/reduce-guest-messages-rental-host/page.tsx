@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { BlogTheme, Divider } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'How to Reduce Guest Messages as a Rental Host | Pillar Blog',
@@ -24,28 +24,29 @@ const jsonLd = {
 export default function ReduceGuestMessagesPage() {
   return (
     <FeaturePageLayout>
+      <BlogTheme>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(32px, 5vw, 56px)', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <Link href="/blog" style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: GOLD }}>Guest Experience</span>
+          <Link href="/blog" style={{ fontSize: 11, color: 'var(--b-faint)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-category)' }}>Guest Experience</span>
         </div>
-        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: '#fff', marginBottom: 20 }}>
+        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: 'var(--b-heading)', marginBottom: 20 }}>
           How to Reduce Guest Messages as a Rental Host (Without Sacrificing Reviews)
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>June 2025</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>6 min read</span>
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>June 2025</span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>6 min read</span>
         </div>
       </section>
 
       <Divider />
 
       <article style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'rgba(255,255,255,0.72)' }}>
+        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'var(--b-muted)' }}>
 
           <p style={{ marginBottom: 24 }}>
             If you have managed a short-term rental for more than a few months, you already know the pattern. The booking is confirmed, check-in approaches, and the messages begin. Where do I park? What is the WiFi password? Where are the extra towels? Can we check out at noon?
@@ -59,7 +60,7 @@ export default function ReduceGuestMessagesPage() {
             The good news: reducing guest messages does not require you to be less warm or attentive. It requires you to be more proactive. Here is how to do it without hurting the experience that drives your reviews.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             1. Identify the Five Questions You Always Get
           </h2>
 
@@ -75,7 +76,7 @@ export default function ReduceGuestMessagesPage() {
               'Checkout time and procedure',
               'Local restaurant or activity recommendations',
             ].map(item => (
-              <li key={item} style={{ color: 'rgba(255,255,255,0.65)' }}>{item}</li>
+              <li key={item} style={{ color: 'var(--b-muted)' }}>{item}</li>
             ))}
           </ul>
 
@@ -83,7 +84,7 @@ export default function ReduceGuestMessagesPage() {
             These five questions alone account for the majority of guest contact for most rental hosts. If you can answer them before guests ask, you immediately cut your message volume in half — often more.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             2. Put the Answers Where Guests Actually Look
           </h2>
 
@@ -92,14 +93,14 @@ export default function ReduceGuestMessagesPage() {
           </p>
 
           <p style={{ marginBottom: 24 }}>
-            The solution is to put the information in a format guests actually use: their phone, when they need it. A <Link href="/platform/qr-portal" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>digital guest portal accessed by scanning a QR code</Link> at your property means guests can pull up their WiFi password, door code, or parking instructions on arrival without ever opening a messaging app.
+            The solution is to put the information in a format guests actually use: their phone, when they need it. A <Link href="/platform/qr-portal" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>digital guest portal accessed by scanning a QR code</Link> at your property means guests can pull up their WiFi password, door code, or parking instructions on arrival without ever opening a messaging app.
           </p>
 
           <p style={{ marginBottom: 24 }}>
             Physical information at the property (a framed welcome card, a printed sheet on the counter) increases the chances of guests finding the answers before they reach for their phone to message you.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             3. Use AI to Handle the Conversational Questions
           </h2>
 
@@ -108,14 +109,14 @@ export default function ReduceGuestMessagesPage() {
           </p>
 
           <p style={{ marginBottom: 24 }}>
-            An <Link href="/platform/ai-concierge" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>AI concierge built into your guest portal</Link> handles these questions automatically. Guests ask in natural language and get a real, useful answer in seconds. The AI can recommend restaurants with ratings and distance, build a day itinerary, answer property-specific questions, and respond at any hour without any involvement from you.
+            An <Link href="/platform/ai-concierge" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>AI concierge built into your guest portal</Link> handles these questions automatically. Guests ask in natural language and get a real, useful answer in seconds. The AI can recommend restaurants with ratings and distance, build a day itinerary, answer property-specific questions, and respond at any hour without any involvement from you.
           </p>
 
           <p style={{ marginBottom: 24 }}>
             This is not about replacing human hospitality. It is about ensuring that the 11pm question about where to get pizza does not wake you up or go unanswered.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             4. Create a Structured Process for Late Checkout
           </h2>
 
@@ -124,10 +125,10 @@ export default function ReduceGuestMessagesPage() {
           </p>
 
           <p style={{ marginBottom: 24 }}>
-            A <Link href="/platform/late-checkout" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>structured late checkout process</Link> — where guests make a formal request through the portal and hosts approve or deny with a single tap — eliminates the awkwardness entirely. Guests feel comfortable asking. Hosts feel in control of the answer. The last impression of the stay improves.
+            A <Link href="/platform/late-checkout" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>structured late checkout process</Link> — where guests make a formal request through the portal and hosts approve or deny with a single tap — eliminates the awkwardness entirely. Guests feel comfortable asking. Hosts feel in control of the answer. The last impression of the stay improves.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             5. Make Maintenance Easy to Report
           </h2>
 
@@ -136,10 +137,10 @@ export default function ReduceGuestMessagesPage() {
           </p>
 
           <p style={{ marginBottom: 24 }}>
-            A <Link href="/platform/work-orders" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>work order system in the guest portal</Link> — where guests can submit a categorised maintenance request in 30 seconds — means issues get reported during the stay rather than after. You can fix problems before they become review content.
+            A <Link href="/platform/work-orders" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>work order system in the guest portal</Link> — where guests can submit a categorised maintenance request in 30 seconds — means issues get reported during the stay rather than after. You can fix problems before they become review content.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             The Result: Fewer Messages, Better Reviews
           </h2>
 
@@ -153,8 +154,8 @@ export default function ReduceGuestMessagesPage() {
 
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(245,237,213,0.10)', paddingTop: 36, marginTop: 8 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>
+        <div style={{ borderTop: '1px solid var(--b-border)', paddingTop: 36, marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--b-faint)', marginBottom: 20 }}>
             Pillar gives you a QR guest portal, AI concierge, work orders, and late checkout management — all in one platform.
           </p>
           <Link href="/manager/login"
@@ -167,22 +168,23 @@ export default function ReduceGuestMessagesPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 56px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 20 }}>More from the blog</p>
+        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-faint)', marginBottom: 20 }}>More from the blog</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Link href="/blog/best-tools-vacation-rental-managers-2026" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/best-tools-vacation-rental-managers-2026" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             Best Tools for Vacation Rental Managers in 2026 →
           </Link>
-          <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/digital-property-guide-what-to-include" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             Digital Property Guide: What to Include (And What to Leave Out) →
           </Link>
-          <Link href="/blog/stop-guests-calling-you-airbnb" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/stop-guests-calling-you-airbnb" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             How to Stop Guests Calling You at 2am (The QR Code Solution) →
           </Link>
-          <Link href="/blog/ai-concierge-for-airbnb-hosts" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/ai-concierge-for-airbnb-hosts" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             AI Concierge for Airbnb: What It Is and Why Hosts Need It →
           </Link>
         </div>
       </section>
+    </BlogTheme>
     </FeaturePageLayout>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { BlogTheme, Divider } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'Best Vacation Rental Guest Portals in 2026 (Compared) | Pillar Blog',
@@ -59,28 +59,29 @@ const PORTALS = [
 export default function GuestPortalsComparedPage() {
   return (
     <FeaturePageLayout>
+      <BlogTheme>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(32px, 5vw, 56px)', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <Link href="/blog" style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: GOLD }}>Tools & Software</span>
+          <Link href="/blog" style={{ fontSize: 11, color: 'var(--b-faint)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-category)' }}>Tools & Software</span>
         </div>
-        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: '#fff', marginBottom: 20 }}>
+        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: 'var(--b-heading)', marginBottom: 20 }}>
           Best Vacation Rental Guest Portals in 2026 (Compared)
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>June 2026</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>7 min read</span>
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>June 2026</span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>7 min read</span>
         </div>
       </section>
 
       <Divider />
 
       <article style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'rgba(255,255,255,0.72)' }}>
+        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'var(--b-muted)' }}>
 
           <p style={{ marginBottom: 24 }}>
             A guest portal is the single highest-leverage tool a vacation rental host can add to their stack. Instead of guests texting you for the WiFi password or the door code, they scan a QR code at the property and find everything themselves — instantly, at the moment they need it.
@@ -92,16 +93,16 @@ export default function GuestPortalsComparedPage() {
 
           {PORTALS.map((portal, i) => (
             <div key={portal.name} style={{ marginBottom: 44 }}>
-              <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.2rem, 2.2vw, 1.55rem)', fontWeight: 400, color: '#fff', marginBottom: 14, lineHeight: 1.2 }}>
+              <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.2rem, 2.2vw, 1.55rem)', fontWeight: 400, color: 'var(--b-heading)', marginBottom: 14, lineHeight: 1.2 }}>
                 {i + 1}. {portal.name}
               </h2>
               <p style={{ marginBottom: 14 }}>{portal.summary}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.40)', margin: 0 }}>
-                  <span style={{ color: SANDY, fontWeight: 500 }}>Best for: </span>{portal.bestFor}
+                <p style={{ fontSize: 12.5, color: 'var(--b-faint)', margin: 0 }}>
+                  <span style={{ color: 'var(--b-accent)', fontWeight: 500 }}>Best for: </span>{portal.bestFor}
                 </p>
                 {'link' in portal && portal.link && (
-                  <Link href={portal.link} style={{ fontSize: 11, color: SANDY, textDecoration: 'none', letterSpacing: '0.10em', borderBottom: '1px solid rgba(245,237,213,0.35)', paddingBottom: 1 }}>
+                  <Link href={portal.link} style={{ fontSize: 11, color: 'var(--b-accent)', textDecoration: 'none', letterSpacing: '0.10em', borderBottom: '1px solid var(--b-ring)', paddingBottom: 1 }}>
                     {(portal as { link: string; linkLabel: string }).linkLabel}
                   </Link>
                 )}
@@ -109,7 +110,7 @@ export default function GuestPortalsComparedPage() {
             </div>
           ))}
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             What to Actually Look For
           </h2>
 
@@ -123,18 +124,18 @@ export default function GuestPortalsComparedPage() {
               'What happens when something breaks? If a guest notices a leaky faucet, can they report it through the same portal, or do they have to find your phone number? A portal without maintenance routing just moves the messaging problem instead of solving it.',
               'Is pricing per property or flat? Tools that charge per unit get expensive fast as you scale past a handful of properties. Flat or tiered pricing matters more than it seems once you are managing more than three or four units.',
             ].map(item => (
-              <li key={item} style={{ color: 'rgba(255,255,255,0.65)' }}>{item}</li>
+              <li key={item} style={{ color: 'var(--b-muted)' }}>{item}</li>
             ))}
           </ul>
 
           <p style={{ marginBottom: 36 }}>
-            The right choice depends on what you already have. If you are deep into a property management suite, the bundled guidebook inside it might be good enough. If guest communication is your actual bottleneck, a dedicated portal with an <Link href="/platform/ai-concierge" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>AI concierge</Link> and <Link href="/platform/work-orders" style={{ color: SANDY, textDecoration: 'none', borderBottom: '1px solid rgba(245,237,213,0.35)' }}>maintenance routing</Link> built in will save you more time than a static guidebook ever could.
+            The right choice depends on what you already have. If you are deep into a property management suite, the bundled guidebook inside it might be good enough. If guest communication is your actual bottleneck, a dedicated portal with an <Link href="/platform/ai-concierge" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>AI concierge</Link> and <Link href="/platform/work-orders" style={{ color: 'var(--b-accent)', textDecoration: 'none', borderBottom: '1px solid var(--b-ring)' }}>maintenance routing</Link> built in will save you more time than a static guidebook ever could.
           </p>
 
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(245,237,213,0.10)', paddingTop: 36, marginTop: 8 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>
+        <div style={{ borderTop: '1px solid var(--b-border)', paddingTop: 36, marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--b-faint)', marginBottom: 20 }}>
             Pillar combines a QR guest portal, AI concierge, and work orders in one platform — set up in under 10 minutes, starting at $14.99/month.
           </p>
           <Link href="/manager/login"
@@ -147,16 +148,17 @@ export default function GuestPortalsComparedPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 56px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 20 }}>More from the blog</p>
+        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-faint)', marginBottom: 20 }}>More from the blog</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Link href="/blog/reduce-guest-messages-rental-host" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/reduce-guest-messages-rental-host" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             How to Reduce Guest Messages as a Rental Host →
           </Link>
-          <Link href="/blog/stop-guests-calling-you-airbnb" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/stop-guests-calling-you-airbnb" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             How to Stop Guests Calling You at 2am (The QR Code Solution) →
           </Link>
         </div>
       </section>
+    </BlogTheme>
     </FeaturePageLayout>
   );
 }

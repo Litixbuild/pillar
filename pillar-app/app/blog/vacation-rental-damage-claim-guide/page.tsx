@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { BlogTheme, Divider } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'How to File a Vacation Rental Damage Claim That Actually Works | Pillar Blog',
@@ -24,28 +24,29 @@ const jsonLd = {
 export default function DamageClaimGuidePage() {
   return (
     <FeaturePageLayout>
+      <BlogTheme>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(32px, 5vw, 56px)', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-          <Link href="/blog" style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: GOLD }}>Operations</span>
+          <Link href="/blog" style={{ fontSize: 11, color: 'var(--b-faint)', textDecoration: 'none', letterSpacing: '0.08em' }}>← Blog</Link>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-category)' }}>Operations</span>
         </div>
-        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: '#fff', marginBottom: 20 }}>
+        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.9rem, 4.5vw, 2.8rem)', fontWeight: 400, lineHeight: 1.18, color: 'var(--b-heading)', marginBottom: 20 }}>
           How to File a Vacation Rental Damage Claim That Actually Works
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>June 2026</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>7 min read</span>
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>June 2026</span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+          <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>7 min read</span>
         </div>
       </section>
 
       <Divider />
 
       <article style={{ padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'rgba(255,255,255,0.72)' }}>
+        <div style={{ fontSize: 'clamp(14px, 1.8vw, 15.5px)', lineHeight: 1.82, color: 'var(--b-muted)' }}>
 
           <p style={{ marginBottom: 24 }}>
             Most hosts find out how their damage claim process actually works at the worst possible time — after a guest has already left, with a broken table or a stained mattress as the only evidence, and a claims form asking for documentation that does not exist.
@@ -55,7 +56,7 @@ export default function DamageClaimGuidePage() {
             The claims that get approved and the ones that get denied are rarely separated by how bad the damage was. They are separated by what was documented before the guest ever checked in.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 8, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 8, marginBottom: 18, lineHeight: 1.2 }}>
             Why Claims Get Denied
           </h2>
 
@@ -67,7 +68,7 @@ export default function DamageClaimGuidePage() {
             The second most common reason for denial is timing. Claims filed days after checkout, once a new guest has already stayed in the unit, lose the ability to prove which stay caused the damage at all.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             What to Document Before Every Stay
           </h2>
 
@@ -77,7 +78,7 @@ export default function DamageClaimGuidePage() {
               'Close-up photos of any existing wear, marks, or pre-existing condition issues — anything that could be mistaken for new damage',
               'A record of guest consent acknowledging the property\'s condition and house rules at check-in',
             ].map(item => (
-              <li key={item} style={{ color: 'rgba(255,255,255,0.65)' }}>{item}</li>
+              <li key={item} style={{ color: 'var(--b-muted)' }}>{item}</li>
             ))}
           </ul>
 
@@ -85,7 +86,7 @@ export default function DamageClaimGuidePage() {
             This sounds like extra work, and if you are doing it manually — taking photos on your phone, saving them to an album, hoping you can find the right ones three weeks later when you need them — it is. The documentation only has value if it is timestamped, organized by stay, and easy to retrieve under time pressure.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             What to Document After the Stay
           </h2>
 
@@ -97,7 +98,7 @@ export default function DamageClaimGuidePage() {
             The faster you file, the stronger the claim. Most platforms have a window — often as short as 14 days from checkout — to report damage. Waiting until you "get around to it" can forfeit a legitimate claim entirely.
           </p>
 
-          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: '#fff', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', fontWeight: 400, color: 'var(--b-heading)', marginTop: 44, marginBottom: 18, lineHeight: 1.2 }}>
             Building the Report
           </h2>
 
@@ -111,8 +112,8 @@ export default function DamageClaimGuidePage() {
 
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(245,237,213,0.10)', paddingTop: 36, marginTop: 8 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>
+        <div style={{ borderTop: '1px solid var(--b-border)', paddingTop: 36, marginTop: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--b-faint)', marginBottom: 20 }}>
             Pillar timestamps cleaning photos, guest consent, and damage evidence automatically — and bundles it into one report your platform can&apos;t wave away.
           </p>
           <Link href="/manager/login"
@@ -125,16 +126,17 @@ export default function DamageClaimGuidePage() {
       <Divider />
 
       <section style={{ padding: 'clamp(40px, 6vw, 56px) clamp(16px, 4vw, 40px)', maxWidth: 720, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.30)', marginBottom: 20 }}>More from the blog</p>
+        <p style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-faint)', marginBottom: 20 }}>More from the blog</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Link href="/blog/airbnb-maintenance-requests-guide" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/airbnb-maintenance-requests-guide" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             How to Manage Airbnb Maintenance Requests Without the Chaos →
           </Link>
-          <Link href="/blog/vacation-rental-house-rules-template" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.65)', fontSize: 14, lineHeight: 1.5 }}>
+          <Link href="/blog/vacation-rental-house-rules-template" style={{ textDecoration: 'none', color: 'var(--b-muted)', fontSize: 14, lineHeight: 1.5 }}>
             Vacation Rental House Rules Template (2026 Update) →
           </Link>
         </div>
       </section>
+    </BlogTheme>
     </FeaturePageLayout>
   );
 }

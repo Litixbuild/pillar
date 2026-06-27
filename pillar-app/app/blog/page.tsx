@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import FeaturePageLayout, { Divider } from '@/components/FeaturePageLayout';
+import FeaturePageLayout, { BlogTheme, Divider } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
   title: 'Blog — Property Management Tips for Rental Hosts | Pillar',
@@ -104,12 +104,13 @@ const POSTS = [
 export default function BlogIndexPage() {
   return (
     <FeaturePageLayout>
+      <BlogTheme>
       <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 4vw, 40px) clamp(40px, 6vw, 64px)', maxWidth: 1280, margin: '0 auto', textAlign: 'center' }}>
-        <p style={{ fontSize: 10, letterSpacing: '0.40em', textTransform: 'uppercase', color: SANDY, marginBottom: 20 }}>The Pillar Blog</p>
-        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(2.4rem, 6vw, 4rem)', fontWeight: 400, lineHeight: 1.12, color: '#fff', marginBottom: 18 }}>
-          Smarter Hosting,<br /><span style={{ color: SANDY }}>Better Stays.</span>
+        <p style={{ fontSize: 10, letterSpacing: '0.40em', textTransform: 'uppercase', color: 'var(--b-accent)', marginBottom: 20 }}>The Pillar Blog</p>
+        <h1 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(2.4rem, 6vw, 4rem)', fontWeight: 400, lineHeight: 1.12, color: 'var(--b-heading)', marginBottom: 18 }}>
+          Smarter Hosting,<br /><span style={{ color: 'var(--b-accent)' }}>Better Stays.</span>
         </h1>
-        <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.7, color: 'rgba(255,255,255,0.55)', maxWidth: 480, margin: '0 auto' }}>
+        <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.7, color: 'var(--b-muted)', maxWidth: 480, margin: '0 auto' }}>
           Practical guides for rental hosts who want to spend less time on messages and more time on what matters.
         </p>
       </section>
@@ -120,21 +121,21 @@ export default function BlogIndexPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {POSTS.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
-              <article style={{ padding: '32px 0', borderBottom: '1px solid rgba(245,237,213,0.08)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <article style={{ padding: '32px 0', borderBottom: '1px solid var(--b-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: GOLD }}>{post.category}</span>
-                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{post.date}</span>
-                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.20)' }} />
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{post.readTime}</span>
+                  <span style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--b-category)' }}>{post.category}</span>
+                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+                  <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>{post.date}</span>
+                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--b-dot)' }} />
+                  <span style={{ fontSize: 11, color: 'var(--b-faint)' }}>{post.readTime}</span>
                 </div>
-                <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.65rem)', fontWeight: 400, color: 'rgba(255,255,255,0.92)', lineHeight: 1.3, margin: 0 }}>
+                <h2 style={{ fontFamily: 'var(--font-lux-title), Georgia, serif', fontSize: 'clamp(1.3rem, 2.5vw, 1.65rem)', fontWeight: 400, color: 'var(--b-body)', lineHeight: 1.3, margin: 0 }}>
                   {post.title}
                 </h2>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.50)', lineHeight: 1.65, margin: 0 }}>
+                <p style={{ fontSize: 14, color: 'var(--b-faint)', lineHeight: 1.65, margin: 0 }}>
                   {post.excerpt}
                 </p>
-                <span style={{ fontSize: 12, color: SANDY, letterSpacing: '0.10em' }}>Read article →</span>
+                <span style={{ fontSize: 12, color: 'var(--b-accent)', letterSpacing: '0.10em' }}>Read article →</span>
               </article>
             </Link>
           ))}
@@ -144,7 +145,7 @@ export default function BlogIndexPage() {
       <Divider />
 
       <section style={{ padding: 'clamp(48px, 6vw, 72px) clamp(16px, 4vw, 40px)', maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 28 }}>
+        <p style={{ fontSize: 14, color: 'var(--b-faint)', lineHeight: 1.7, marginBottom: 28 }}>
           Ready to put these ideas into practice? Pillar gives you QR guest portals, AI concierge, and property guides out of the box.
         </p>
         <Link href="/manager/login"
@@ -152,6 +153,7 @@ export default function BlogIndexPage() {
           Try Pillar Free
         </Link>
       </section>
+    </BlogTheme>
     </FeaturePageLayout>
   );
 }
