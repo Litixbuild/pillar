@@ -81,12 +81,12 @@ export default async function RootLayout({
         })}} />
       </head>
       <body className="min-h-full flex flex-col">
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-2WDW0EHL90" strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-K21Y4LBPG9" strategy="afterInteractive" />
         <Script id="gtag-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-2WDW0EHL90');
+          gtag('config', 'G-K21Y4LBPG9');
         `}} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
