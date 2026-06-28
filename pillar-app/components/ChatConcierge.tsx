@@ -181,6 +181,63 @@ function PhoneButton({ phone }: { phone: string }) {
   );
 }
 
+/* ─── Itinerary download ─────────────────────────────────────── */
+
+type ItineraryData = { intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string; rating?: number }> }> };
+
+function buildItineraryText(data: ItineraryData): string {
+  const lines: string[] = ['Your Itinerary', ''];
+  if (data.intro) lines.push(data.intro, '');
+  for (const section of data.sections) {
+    lines.push(section.title.toUpperCase());
+    for (const p of section.places || []) {
+      const head = typeof p.rating === 'number' ? `${p.name || '—'} (${p.rating.toFixed(1)}★)` : (p.name || '—');
+      lines.push(`- ${head}`);
+      if (p.blurb) lines.push(`  ${p.blurb}`);
+      if (p.phone) lines.push(`  Phone: ${p.phone}`);
+      if (p.googleMapsUri) lines.push(`  Map: ${p.googleMapsUri}`);
+    }
+    lines.push('');
+  }
+  return lines.join('\n').trim() + '\n';
+}
+
+function downloadItinerary(data: ItineraryData) {
+  const blob = new Blob([buildItineraryText(data)], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Itinerary ${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 3v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 19h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DownloadButton({ data }: { data: ItineraryData }) {
+  return (
+    <button
+      type="button"
+      onClick={() => downloadItinerary(data)}
+      className="inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold tracking-wide transition-all duration-200"
+      style={{ borderColor: 'var(--accent-22)', background: 'var(--accent-10)', color: 'var(--accent)' }}
+    >
+      <DownloadIcon className="h-3.5 w-3.5" />
+      Download
+    </button>
+  );
+}
+
 /* ─── Google Maps mini button ────────────────────────────────── */
 
 function MapsButton({ href }: { href: string }) {
@@ -483,6 +540,15 @@ function ButlerCard({ data, onRetry }: { data: ButlerCardData; onRetry?: () => v
     );
   }
 
+  if (data.kind === 'itineraryDownload') {
+    return (
+      <div className="space-y-3">
+        <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>Would you like to download this itinerary to your phone?</div>
+        <DownloadButton data={data.itinerary} />
+      </div>
+    );
+  }
+
   return <MessageText text="—" />;
 }
 
@@ -497,6 +563,7 @@ type ButlerCardData =
   | { kind: 'phone'; phoneNumber: string; model?: string }
   | { kind: 'property'; address: string; zip: string; houseRules: string; managerPhone: string; wifiName: string; model?: string }
   | { kind: 'itinerary'; intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string; rating?: number }> }>; model?: string }
+  | { kind: 'itineraryDownload'; itinerary: ItineraryData }
   | { kind: 'places'; label?: string; intro?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model?: string }
   | { kind: 'weather'; summary: string; model?: string };
 
@@ -641,7 +708,18 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               : data.kind === 'property' ? { kind: 'property', address: data.address || '', zip: data.zip || '', houseRules: data.houseRules || '', managerPhone: data.managerPhone || '', wifiName: data.wifiName || '', model: data.model }
               : { kind: 'places', label: (data as { label?: string }).label, intro: (data as { intro?: string }).intro, places: Array.isArray(data.places) ? data.places : [], model: data.model };
 
-            setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: card.kind === 'text' ? (card.text || '').trim() || '—' : '—', data: card }]);
+            setMessages((prev) => {
+              const next = [...prev, { id: String(prev.length), role: 'butler' as const, text: card.kind === 'text' ? (card.text || '').trim() || '—' : '—', data: card }];
+              if (card.kind === 'itinerary') {
+                next.push({
+                  id: String(next.length),
+                  role: 'butler',
+                  text: 'Would you like to download this itinerary to your phone?',
+                  data: { kind: 'itineraryDownload', itinerary: { intro: card.intro, sections: card.sections } },
+                });
+              }
+              return next;
+            });
             return;
           }
           setMessages((prev) => [...prev, { id: String(prev.length), role: 'butler', text: (('response' in data ? data.response : '') || '').trim() || '—' }]);

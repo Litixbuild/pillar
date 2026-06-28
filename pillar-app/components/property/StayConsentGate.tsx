@@ -47,7 +47,7 @@ export default function StayConsentGate({
 
   useEffect(() => {
     if (!stayId) return;
-    setConsented(sessionStorage.getItem(consentKey(stayId)) === 'true');
+    setConsented(localStorage.getItem(consentKey(stayId)) === 'true');
   }, [stayId]);
 
   async function handleConfirm() {
@@ -57,7 +57,7 @@ export default function StayConsentGate({
     const res = await fetch(`/api/p/${encodeURIComponent(slug)}/consent`, { method: 'POST' });
     if (res.ok) {
       const data = (await res.json().catch(() => ({}))) as { stayId?: string };
-      sessionStorage.setItem(consentKey(data.stayId ?? stayId), 'true');
+      localStorage.setItem(consentKey(data.stayId ?? stayId), 'true');
       setConsented(true);
     } else {
       const d = (await res.json().catch(() => ({}))) as { error?: string };
@@ -66,7 +66,7 @@ export default function StayConsentGate({
     setSubmitting(false);
   }
 
-  // Briefly unknown while we check sessionStorage on mount.
+  // Briefly unknown while we check localStorage on mount.
   if (consented === null) {
     return <div className="relative min-h-screen"><GateBackground /></div>;
   }

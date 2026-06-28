@@ -182,7 +182,6 @@ export default function CleanerUploadPage() {
           type="file"
           accept="image/*"
           multiple
-          capture="environment"
           className="hidden"
           onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
         />

@@ -51,7 +51,6 @@ export const metadata: Metadata = {
     description: "Pillar gives rental hosts a branded guest portal, home amenity guides, 24/7 AI concierge & maintenance tools — one QR code scan.",
     url: 'https://pmpillar.com',
     siteName: 'Pillar',
-    images: [{ url: 'https://pmpillar.com/images/pillarlogogoogle.png', width: 512, height: 512, alt: 'Pillar' }],
     type: 'website',
   },
 };
