@@ -84,7 +84,7 @@ export default function AccountMfaPage() {
         </Link>
 
         <h1
-          className="lux-title mb-2 text-3xl font-light tracking-wide"
+          className="mb-2 text-[1.75rem] font-light leading-tight tracking-tight"
           style={{ color: dark ? '#ffffff' : '#1e293b' }}
         >
           Two-Factor Authentication

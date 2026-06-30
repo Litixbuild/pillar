@@ -472,7 +472,7 @@ function getMissingItems(core: CoreFields, windows: WindowDraft[], woCats: WOCat
   return missing;
 }
 
-function ProgressBanner({ pct, dark, missing }: { pct: number; dark: boolean; missing: string[] }) {
+function ProgressBanner({ pct, dark, missing, propertyName }: { pct: number; dark: boolean; missing: string[]; propertyName: string }) {
   const [open, setOpen] = useState(false);
   // Interpolate hue 0 (red) → 130 (green) based on completion
   const hue = Math.round(pct * 1.3);
@@ -495,16 +495,14 @@ function ProgressBanner({ pct, dark, missing }: { pct: number; dark: boolean; mi
         boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.30)' : '0 2px 12px rgba(0,0,0,0.06)',
       }}
     >
-      <div className="flex items-end justify-between mb-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>
-            Profile Complete
-          </p>
-          <p className="text-3xl font-bold tabular-nums mt-0.5" style={{ color: pctColor }}>
-            {pct}<span className="text-base font-semibold opacity-55">%</span>
-          </p>
-        </div>
-        <div className="flex gap-3 pb-0.5">
+      <p className="line-clamp-2 text-[10px] font-semibold uppercase tracking-[0.22em]" style={{ color: labelColor }}>
+        Profile Complete for <span className="font-bold" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>{propertyName}</span>
+      </p>
+      <div className="flex items-end justify-between mb-3 mt-0.5">
+        <p className="text-3xl font-bold tabular-nums" style={{ color: pctColor }}>
+          {pct}<span className="text-base font-semibold opacity-55">%</span>
+        </p>
+        <div className="flex flex-none gap-3 pb-0.5">
           {([
             { label: 'Info', color: '#F97316' },
             { label: 'Amenities', color: '#3B82F6' },
@@ -695,10 +693,10 @@ const GRID_TILES: GridTileDef[] = [
   },
 ];
 
-function GridView({ onNavigate, completion, dark, missing }: { onNavigate: (v: View) => void; completion: number; dark: boolean; missing: string[] }) {
+function GridView({ onNavigate, completion, dark, missing, propertyName }: { onNavigate: (v: View) => void; completion: number; dark: boolean; missing: string[]; propertyName: string }) {
   return (
     <div className="flex flex-col px-4 pb-4 pt-3" style={{ height: 'calc(100dvh - 64px - 80px)' }}>
-      <ProgressBanner pct={completion} dark={dark} missing={missing} />
+      <ProgressBanner pct={completion} dark={dark} missing={missing} propertyName={propertyName} />
       <div className="grid flex-1 grid-cols-2 gap-3" style={{ gridTemplateRows: '1fr 1fr' }}>
         {GRID_TILES.map((tile) => {
           const m = TILE_COLORS[tile.id][dark ? 'dark' : 'light'];
@@ -1914,7 +1912,7 @@ function SettingsView({ slug, initialBgKey, initialReviewUrl, dark }: { slug: st
     const current = photos[photoIdx];
     return (
       <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
-        <h2 className="lux-title mb-6 w-full text-3xl font-light tracking-wide" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
+        <h2 className="mb-6 w-full text-[1.75rem] font-light leading-tight tracking-tight" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
           Property Photos
         </h2>
 
@@ -2073,7 +2071,7 @@ function SettingsView({ slug, initialBgKey, initialReviewUrl, dark }: { slug: st
     const whiteAlpha = currentBg === 'bg4' ? 0.60 : 0.55;
     return (
       <div className="flex flex-col items-center px-4 pt-6 pb-32" style={{ opacity: subFading ? 0 : 1, transform: subFading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.22s ease-out, transform 0.22s ease-out' }}>
-        <h2 className="lux-title mb-5 w-full text-3xl font-light tracking-wide" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
+        <h2 className="mb-5 w-full text-[1.75rem] font-light leading-tight tracking-tight" style={{ color: dark ? '#ffffff' : '#1e293b' }}>
           Choose a Theme
         </h2>
 
@@ -3234,7 +3232,11 @@ export default function ManagerPropertyEditorClient({
 
   function goBack() {
     if (view === 'grid') {
-      window.location.href = '/manager';
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/manager/properties';
+      }
     } else {
       goTo('grid');
     }
@@ -3300,24 +3302,24 @@ export default function ManagerPropertyEditorClient({
       <div className="relative z-10 flex h-16 items-center gap-3 border-b px-4" style={{ borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)', background: dark ? 'rgba(10,10,10,0.60)' : 'rgba(255,255,255,0.80)', backdropFilter: 'blur(16px)' }}>
         <button
           type="button" onClick={goBack}
-          className="flex h-9 w-9 flex-none items-center justify-center rounded-xl border transition-all"
-          style={dark
-            ? { borderColor: 'rgba(255,255,255,0.20)', background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)' }
-            : { borderColor: 'rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.05)', color: '#475569' }}
-          aria-label={view === 'grid' ? 'Back to dashboard' : 'Back to menu'}
+          className="flex h-9 w-9 flex-none items-center justify-center transition-all"
+          style={{ color: dark ? 'rgba(255,255,255,0.75)' : '#475569' }}
+          aria-label={view === 'grid' ? 'Back' : 'Back to menu'}
         >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
-        <div className="flex-1 min-w-0">
-          <h1 className="truncate text-sm font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>
-            {view !== 'grid' ? VIEW_TITLES[view] : (core.PropertyName || 'Property')}
-          </h1>
+        <div className="min-w-0 flex-1 text-center">
+          {view !== 'grid' && (
+            <h1 className="truncate text-base font-semibold" style={{ color: dark ? 'rgba(255,255,255,0.80)' : '#1e293b' }}>
+              {VIEW_TITLES[view]}
+            </h1>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-none items-center gap-2">
           <button
             type="button" onClick={toggleMode}
             className="flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
@@ -3345,7 +3347,7 @@ export default function ManagerPropertyEditorClient({
 
       {/* Content with fade */}
       <div className="relative" style={{ opacity: fading ? 0 : 1, transform: fading ? 'translateY(12px) scale(0.99)' : 'translateY(0) scale(1)', transition: 'opacity 0.24s ease-out, transform 0.24s ease-out' }}>
-        {view === 'grid' && <GridView onNavigate={goTo} completion={completion} dark={dark} missing={missingItems} />}
+        {view === 'grid' && <GridView onNavigate={goTo} completion={completion} dark={dark} missing={missingItems} propertyName={core.PropertyName || 'Property'} />}
         {view === 'property-info' && (
           <PropertyInfoView
             slug={slug} core={core} setCore={setCore}

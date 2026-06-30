@@ -1769,6 +1769,7 @@ export default function PropertyExperience({
                 {/* Pillar Concierge inline button */}
                 <ChatConcierge
                   slug={slug}
+                  zip={property.PropertyZipCode}
                   placement="inline"
                   dark={dark}
                   inlineLightTheme={!dark ? {

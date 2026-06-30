@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { compressImageFiles } from '@/lib/clientImageCompress';
 
@@ -20,9 +20,9 @@ function GateBackground() {
   );
 }
 
-function CameraIcon() {
+function CameraIcon({ className = 'h-7 w-7 text-[#7a5c08] dark:text-[#D4AF37]' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-[#7a5c08] dark:text-[#D4AF37]" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <path d="M4 8h2.2l1.1-2h9.4l1.1 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <circle cx="12" cy="13.5" r="3.2" stroke="currentColor" strokeWidth="1.6" />
     </svg>
@@ -56,10 +56,12 @@ export default function CleanerUploadPage() {
   const [info, setInfo] = useState<LinkInfo | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     fetch(`/api/clean/${encodeURIComponent(token)}`)
@@ -73,6 +75,22 @@ export default function CleanerUploadPage() {
       })
       .catch(() => setLoadError('Could not load this link. Check your connection and try again.'));
   }, [token]);
+
+  useEffect(() => {
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setPreviewUrls(urls);
+    return () => { urls.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [files]);
+
+  function handleCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length) setFiles((prev) => [...prev, ...picked]);
+    e.target.value = '';
+  }
+
+  function removePhoto(idx: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   async function handleSubmit() {
     if (files.length === 0 || submitting) return;
@@ -174,22 +192,47 @@ export default function CleanerUploadPage() {
         {info.propertyName}
       </h1>
       <p className="mt-2 text-sm text-[rgba(100,80,40,0.65)] dark:text-white/45">
-        Add a few photos showing the home is clean and ready for the next tenant. No account needed.
+        {files.length === 0
+          ? 'Photos are ready to be taken. Tap below to use your camera — this keeps timestamps accurate.'
+          : 'Take another photo (e.g. of another room), or submit when you’re done.'}
       </p>
 
-      <label className="mt-7 flex w-full cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-[rgba(100,80,40,0.25)] bg-[rgba(100,80,40,0.04)] px-4 py-6 text-center dark:border-white/15 dark:bg-white/3">
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-        />
-        <span className="text-sm font-semibold text-[#7a5c08] dark:text-[#D4AF37]">
-          {files.length > 0 ? `${files.length} photo${files.length === 1 ? '' : 's'} selected` : 'Tap to choose photos'}
-        </span>
-        <span className="text-xs text-[rgba(100,80,40,0.50)] dark:text-white/35">JPEG, PNG, WebP, or GIF</span>
-      </label>
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleCapture}
+      />
+
+      {previewUrls.length > 0 && (
+        <div className="mt-5 grid w-full grid-cols-3 gap-2">
+          {previewUrls.map((url, i) => (
+            <div key={i} className="relative aspect-square overflow-hidden rounded-lg border border-[rgba(100,80,40,0.12)] dark:border-white/8">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(i)}
+                aria-label={`Remove photo ${i + 1}`}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[11px] text-white"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => cameraInputRef.current?.click()}
+        className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[rgba(100,80,40,0.25)] bg-[rgba(100,80,40,0.04)] text-sm font-semibold text-[#7a5c08] transition-all duration-200 hover:bg-[rgba(100,80,40,0.08)] dark:border-white/15 dark:bg-white/3 dark:text-[#D4AF37]"
+      >
+        <CameraIcon className="h-5 w-5" />
+        {files.length === 0 ? 'Use Camera' : 'Take Another Photo'}
+      </button>
 
       <input
         type="text"
@@ -201,15 +244,17 @@ export default function CleanerUploadPage() {
 
       {error && <p className="mt-3 text-xs text-rose-500 dark:text-rose-400">{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={files.length === 0 || submitting}
-        className="mt-5 h-12 w-full rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50"
-        style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #A87C0A 100%)' }}
-      >
-        {submitting ? 'Uploading…' : 'Submit Photos'}
-      </button>
+      {files.length > 0 && (
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="mt-3 h-12 w-full rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #A87C0A 100%)' }}
+        >
+          {submitting ? 'Uploading…' : `Submit ${files.length} Photo${files.length === 1 ? '' : 's'}`}
+        </button>
+      )}
     </Card>
   );
 }

@@ -755,17 +755,19 @@ export default function ManagerPropertyDetailsClient({
     <div className="min-h-screen bg-[#F5F3EE] text-[#1a1a1a] dark:bg-[#0D0D0D] dark:text-white">
 
       {/* ── Sticky header ── */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#D4AF6A]/15 bg-[#F5F3EE]/95 px-4 py-3 backdrop-blur-xl dark:border-[#D4AF6A]/10 dark:bg-[#0D0D0D]/95">
+      <div className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-[#D4AF6A]/15 bg-[#F5F3EE]/95 px-4 backdrop-blur-xl dark:border-[#D4AF6A]/10 dark:bg-[#0D0D0D]/95">
         <Link
           href="/manager"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white text-base text-[#2C2C2C] shadow-sm transition hover:bg-[#EDE9E0] dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          className="flex h-9 w-9 flex-none items-center justify-center text-[#2C2C2C] transition hover:opacity-70 dark:text-white"
           aria-label="Back to dashboard"
         >
-          ←
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </Link>
 
-        <div className="min-w-0 flex-1">
-          <div className="lux-title truncate text-sm leading-tight text-[#4A3010] dark:text-[#E8D4A8]">
+        <div className="min-w-0 flex-1 text-center">
+          <div className="lux-title truncate text-base leading-tight text-[#4A3010] dark:text-[#E8D4A8]">
             {draft.name || 'Property'}
           </div>
           <div className="truncate text-[11px] text-black/40 dark:text-white/40">{draft.address}</div>
@@ -775,7 +777,7 @@ export default function ManagerPropertyDetailsClient({
           type="button"
           onClick={() => void save()}
           disabled={isSaving}
-          className={`inline-flex h-9 shrink-0 items-center justify-center rounded-xl px-4 text-sm font-semibold shadow-sm transition disabled:opacity-60 ${
+          className={`inline-flex h-9 flex-none items-center justify-center rounded-xl px-4 text-sm font-semibold shadow-sm transition disabled:opacity-60 ${
             saveState === 'saved'
               ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
               : 'bg-[#2C2C2C] text-white hover:bg-black dark:bg-[#D4AF6A]/20 dark:text-[#E8D4A8] dark:hover:bg-[#D4AF6A]/30'

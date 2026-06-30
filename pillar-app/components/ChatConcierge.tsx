@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { currentHourForZip } from '@/lib/zipTimezone';
 
 const SANDY = '#F5EDD5';
 const SANDY_RGB = '245,237,213';
@@ -36,8 +37,8 @@ function makeChatVars(dark: boolean, theme?: InlineLightTheme): React.CSSPropert
   } as React.CSSProperties;
 }
 
-function getTimeGreeting() {
-  const h = new Date().getHours();
+function getTimeGreeting(zip?: string) {
+  const h = currentHourForZip(zip);
   if (h >= 5 && h < 12) return 'Good morning';
   if (h >= 12 && h < 17) return 'Good afternoon';
   return 'Good evening';
@@ -185,29 +186,226 @@ function PhoneButton({ phone }: { phone: string }) {
 
 type ItineraryData = { intro?: string; sections: Array<{ title: string; places: Array<{ name: string; blurb?: string; phone?: string; googleMapsUri?: string; rating?: number }> }> };
 
-function buildItineraryText(data: ItineraryData): string {
-  const lines: string[] = ['Your Itinerary', ''];
-  if (data.intro) lines.push(data.intro, '');
-  for (const section of data.sections) {
-    lines.push(section.title.toUpperCase());
-    for (const p of section.places || []) {
-      const head = typeof p.rating === 'number' ? `${p.name || '—'} (${p.rating.toFixed(1)}★)` : (p.name || '—');
-      lines.push(`- ${head}`);
-      if (p.blurb) lines.push(`  ${p.blurb}`);
-      if (p.phone) lines.push(`  Phone: ${p.phone}`);
-      if (p.googleMapsUri) lines.push(`  Map: ${p.googleMapsUri}`);
+function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? `${current} ${word}` : word;
+    if (current && ctx.measureText(test).width > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
     }
-    lines.push('');
   }
-  return lines.join('\n').trim() + '\n';
+  if (current) lines.push(current);
+  return lines;
 }
 
-function downloadItinerary(data: ItineraryData) {
-  const blob = new Blob([buildItineraryText(data)], { type: 'text/plain;charset=utf-8' });
+function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/** Draws (or measures, when draw=false) the itinerary as a styled one-pager and returns the total height used. */
+function layoutItineraryCanvas(ctx: CanvasRenderingContext2D, data: ItineraryData, width: number, draw: boolean): number {
+  const PAD = 56;
+  const CONTENT_W = width - PAD * 2;
+  const INK = '#2b2013';
+  const MUTED = 'rgba(43,32,19,0.58)';
+  const GOLD = '#A87C0A';
+  const CARD_BORDER = 'rgba(100,80,40,0.14)';
+  let y = 0;
+
+  // Header band
+  const headerH = 196;
+  if (draw) {
+    const grad = ctx.createLinearGradient(0, 0, width, headerH);
+    grad.addColorStop(0, '#D4AF37');
+    grad.addColorStop(1, '#A87C0A');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, headerH);
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = '600 22px -apple-system, system-ui, sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('PILLAR CONCIERGE', PAD, 56);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '300 52px -apple-system, system-ui, sans-serif';
+    ctx.fillText('Your Itinerary', PAD, 116);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '400 24px -apple-system, system-ui, sans-serif';
+    const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    ctx.fillText(dateLabel, PAD, 158);
+  }
+  y += headerH;
+  y += 40;
+
+  if (data.intro) {
+    ctx.font = '400 26px -apple-system, system-ui, sans-serif';
+    const lines = wrapCanvasText(ctx, data.intro, CONTENT_W);
+    if (draw) {
+      ctx.fillStyle = MUTED;
+      lines.forEach((line, i) => ctx.fillText(line, PAD, y + 30 + i * 34));
+    }
+    y += lines.length * 34 + 28;
+  }
+
+  for (const section of data.sections) {
+    // Section title
+    ctx.font = '700 28px -apple-system, system-ui, sans-serif';
+    if (draw) {
+      ctx.fillStyle = GOLD;
+      ctx.fillText(section.title.toUpperCase(), PAD, y + 30);
+      ctx.strokeStyle = 'rgba(168,124,10,0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(PAD, y + 44);
+      ctx.lineTo(width - PAD, y + 44);
+      ctx.stroke();
+    }
+    y += 64;
+
+    for (const p of section.places || []) {
+      const cardPad = 24;
+      const nameFont = '700 28px -apple-system, system-ui, sans-serif';
+      const blurbFont = '400 23px -apple-system, system-ui, sans-serif';
+      ctx.font = nameFont;
+      const nameLines = wrapCanvasText(ctx, p.name || '—', CONTENT_W - cardPad * 2);
+      const hasRating = typeof p.rating === 'number';
+      ctx.font = blurbFont;
+      const blurbLines = p.blurb ? wrapCanvasText(ctx, p.blurb, CONTENT_W - cardPad * 2) : [];
+
+      let cardY = cardPad; // top padding inside card
+      cardY += nameLines.length * 34;
+      if (hasRating) cardY += 34;
+      if (blurbLines.length) cardY += blurbLines.length * 30 + 6;
+      if (p.phone) cardY += 30;
+      const cardH = cardY + cardPad;
+
+      if (draw) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(100,80,40,0.10)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = '#ffffff';
+        roundRectPath(ctx, PAD, y, CONTENT_W, cardH, 16);
+        ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = CARD_BORDER;
+        ctx.lineWidth = 1.5;
+        roundRectPath(ctx, PAD, y, CONTENT_W, cardH, 16);
+        ctx.stroke();
+
+        let ty = y + cardPad + 24;
+        ctx.fillStyle = INK;
+        ctx.font = nameFont;
+        nameLines.forEach((line) => { ctx.fillText(line, PAD + cardPad, ty); ty += 34; });
+
+        if (hasRating) {
+          const rating = p.rating!;
+          const full = Math.round(rating);
+          ctx.font = '24px sans-serif';
+          let sx = PAD + cardPad;
+          for (let i = 0; i < 5; i++) {
+            ctx.fillStyle = i < full ? '#D4AF37' : 'rgba(100,80,40,0.22)';
+            ctx.fillText('★', sx, ty);
+            sx += 28;
+          }
+          ctx.fillStyle = MUTED;
+          ctx.font = '400 22px -apple-system, system-ui, sans-serif';
+          ctx.fillText(rating.toFixed(1), sx + 4, ty);
+          ty += 34;
+        }
+
+        if (blurbLines.length) {
+          ctx.fillStyle = MUTED;
+          ctx.font = blurbFont;
+          blurbLines.forEach((line) => { ctx.fillText(line, PAD + cardPad, ty); ty += 30; });
+          ty += 6;
+        }
+
+        if (p.phone) {
+          ctx.fillStyle = 'rgba(74,111,165,0.92)';
+          ctx.font = '600 22px -apple-system, system-ui, sans-serif';
+          ctx.fillText(`☎ ${p.phone}`, PAD + cardPad, ty);
+        }
+      }
+
+      y += cardH + 18;
+    }
+    y += 24;
+  }
+
+  // Footer
+  y += 8;
+  if (draw) {
+    ctx.strokeStyle = 'rgba(100,80,40,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD, y);
+    ctx.lineTo(width - PAD, y);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(43,32,19,0.40)';
+    ctx.font = '400 20px -apple-system, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Crafted with Pillar', width / 2, y + 38);
+    ctx.textAlign = 'left';
+  }
+  y += 64;
+
+  return y;
+}
+
+async function renderItineraryImage(data: ItineraryData): Promise<Blob> {
+  const WIDTH = 1080;
+  const canvas = document.createElement('canvas');
+  canvas.width = WIDTH;
+  canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+
+  const totalHeight = layoutItineraryCanvas(ctx, data, WIDTH, false);
+  canvas.width = WIDTH;
+  canvas.height = totalHeight;
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
+  bgGrad.addColorStop(0, '#FBF6E9');
+  bgGrad.addColorStop(1, '#F3E9CC');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, WIDTH, totalHeight);
+
+  layoutItineraryCanvas(ctx, data, WIDTH, true);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Failed to render image'))), 'image/png');
+  });
+}
+
+async function saveItineraryImage(data: ItineraryData) {
+  const blob = await renderItineraryImage(data);
+  const filename = `Itinerary ${new Date().toISOString().slice(0, 10)}.png`;
+  const file = new File([blob], filename, { type: 'image/png' });
+
+  const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
+  if (typeof navigator.share === 'function' && typeof nav.canShare === 'function' && nav.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Your Itinerary' });
+      return;
+    } catch {
+      // User cancelled the share sheet, or it failed — fall back to a plain download below.
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Itinerary ${new Date().toISOString().slice(0, 10)}.txt`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -225,15 +423,21 @@ function DownloadIcon({ className }: { className?: string }) {
 }
 
 function DownloadButton({ data }: { data: ItineraryData }) {
+  const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
-      onClick={() => downloadItinerary(data)}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold tracking-wide transition-all duration-200"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try { await saveItineraryImage(data); } catch { /* canvas/share failure — silently ignore */ }
+        setBusy(false);
+      }}
+      className="inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold tracking-wide transition-all duration-200 disabled:opacity-50"
       style={{ borderColor: 'var(--accent-22)', background: 'var(--accent-10)', color: 'var(--accent)' }}
     >
       <DownloadIcon className="h-3.5 w-3.5" />
-      Download
+      {busy ? 'Preparing…' : 'Save to Photos'}
     </button>
   );
 }
@@ -582,7 +786,7 @@ type InlineLightTheme = {
   chevronColor: string;
 };
 
-type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; dark?: boolean; inlineLightTheme?: InlineLightTheme };
+type Props = { slug: string; placement?: 'floating' | 'inline'; triggerClassName?: string; dark?: boolean; inlineLightTheme?: InlineLightTheme; zip?: string };
 
 type OverloadedErrorPayload = { code: 'OVERLOADED'; message: string; retryAfterMs: number };
 
@@ -595,16 +799,16 @@ type ChatOkResponse =
   | { kind: 'places'; label?: string; intro?: string; places: Array<{ name: string; cuisine?: string; blurb?: string; formattedAddress?: string; phone?: string; websiteUri?: string; googleMapsUri?: string; rating?: number }>; model: string }
   | { kind: 'weather'; summary: string; model: string };
 
-const SUGGESTED = ["What's the WiFi?", 'Local dinner spots', 'Plan my day', 'Check-out instructions'] as const;
+const SUGGESTED = ['Plan my day', 'Local restaurants', 'Bicycle rentals', 'Grocery stores', 'Coffee shops', 'Pharmacy', 'Kid-friendly activities'] as const;
 
 /* ─── Main export ────────────────────────────────────────────── */
 
-export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, dark = true, inlineLightTheme }: Props) {
+export default function ChatConcierge({ slug, placement = 'floating', triggerClassName, dark = true, inlineLightTheme, zip }: Props) {
   const chatVars = useMemo(() => makeChatVars(dark, inlineLightTheme), [dark, inlineLightTheme]);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    { id: '0', role: 'butler', text: `${getTimeGreeting()}. I'm Pillar — your private estate concierge. How may I assist?` },
+    { id: '0', role: 'butler', text: `${getTimeGreeting(zip)}! Need local recommendations, or have a question about the home? I'm here to help.` },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -781,9 +985,9 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                   <SlidingTriggerIcon />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : (inlineLightTheme?.titleText ?? '#1e293b') }}>Pillar Concierge</div>
+                  <div className="text-sm font-semibold tracking-wide" style={{ color: dark ? 'rgba(255,255,255,0.90)' : (inlineLightTheme?.titleText ?? '#1e293b') }}>Explore the Area</div>
                   <div className="mt-0.5 text-xs" style={{ color: dark ? 'rgba(245,237,213,0.45)' : (inlineLightTheme?.subtitleText ?? 'rgba(100,80,40,0.55)') }}>
-                    Ask about the home or local area
+                    Local tips, recommendations &amp; home help
                   </div>
                 </div>
               </div>
@@ -816,7 +1020,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
                 <ButlerIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>Pillar Concierge</p>
+                <p className="text-sm font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>Explore the Area</p>
                 {statusText ? <p className="mt-0.5 text-xs" style={{ color: 'var(--header-sub)' }}>{statusText}</p> : null}
               </div>
             </div>
@@ -890,7 +1094,7 @@ export default function ChatConcierge({ slug, placement = 'floating', triggerCla
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about the home or the local area…"
+              placeholder="Ask about local recommendations…"
               className={`h-11 flex-1 rounded-2xl border px-4 text-sm shadow-inner outline-none transition-[background-color,border-color,color] duration-500 ease-in-out ${dark ? 'placeholder:text-white/22' : 'placeholder:text-black/25'}`}
               style={{ background: 'var(--panel-input)', borderColor: 'var(--border-col)', color: 'var(--text-primary)' }}
             />
