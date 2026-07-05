@@ -152,7 +152,12 @@ export default function ManagerDashboardClient({
     }
   }
 
+  const isTrialing = subscriptionStatus === 'trialing';
+
   async function handleAddSlot() {
+    if (isTrialing && !window.confirm(
+      'Adding another property ends your free trial and starts billing today: $14.99/month for your first property plus $9.99/month for the additional property. Continue?'
+    )) return;
     setSlotLoading(true);
     setSlotError(null);
     const res = await fetch('/api/manager/billing/add-property-slot', { method: 'POST' });
@@ -317,7 +322,9 @@ export default function ManagerDashboardClient({
                       {slotLoading ? 'Upgrading…' : 'Add Property Slot — $9.99/mo'}
                     </button>
                     <p className="text-[11px]" style={{ color: mutedColor }}>
-                      You&apos;ve used all {propertySlots} {propertySlots === 1 ? 'slot' : 'slots'}. Adding a slot charges $9.99/month prorated to your current billing cycle.
+                      {isTrialing
+                        ? 'Your free trial includes 1 property. Adding another ends the trial and starts billing today — $14.99/month for your first property plus $9.99/month for each additional property.'
+                        : <>You&apos;ve used all {propertySlots} {propertySlots === 1 ? 'slot' : 'slots'}. Adding a slot charges $9.99/month prorated to your current billing cycle.</>}
                     </p>
                     {slotError ? <p className="text-[11px] text-rose-400">{slotError}</p> : null}
                   </div>

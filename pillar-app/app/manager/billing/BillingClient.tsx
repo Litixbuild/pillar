@@ -194,10 +194,12 @@ export default function BillingClient({
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-medium" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#1e293b' }}>
-                      Start your subscription
+                      {subscriptionStatus === null ? 'Start your free month' : 'Start your subscription'}
                     </p>
                     <p className="mt-1 text-xs" style={{ color: mutedColor }}>
-                      Subscribe to unlock property management and all Pillar features.
+                      {subscriptionStatus === null
+                        ? 'Your first 30 days are free — then $14.99/month. Unlock property management and all Pillar features. Cancel anytime during the trial and pay nothing.'
+                        : 'Subscribe to unlock property management and all Pillar features.'}
                     </p>
                   </div>
                   <button
@@ -208,7 +210,7 @@ export default function BillingClient({
                     className="inline-flex h-10 items-center gap-2 rounded-xl border px-5 text-sm font-semibold transition-all duration-300 disabled:opacity-40"
                     style={addBtnStyle}
                   >
-                    {billingLoading ? 'Loading…' : 'Subscribe now →'}
+                    {billingLoading ? 'Loading…' : subscriptionStatus === null ? 'Start free month →' : 'Subscribe now →'}
                   </button>
                   {billingError ? <p className="text-xs text-rose-400">{billingError}</p> : null}
                 </div>

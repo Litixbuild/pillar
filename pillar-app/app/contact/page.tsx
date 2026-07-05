@@ -89,7 +89,7 @@ export default function ContactPage() {
               },
               {
                 q: 'Is there a free trial?',
-                a: 'Pillar offers trial access for new accounts. Trial terms are displayed at signup and may vary. Contact us if you have questions about current trial availability.',
+                a: 'Yes — new accounts get their first month free. After 30 days, billing starts at $14.99/month for your first property, plus $9.99/month for each additional property. Cancel during the trial and you won\'t be charged.',
               },
               {
                 q: 'What payment methods do you accept?',

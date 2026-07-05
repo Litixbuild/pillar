@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import FeaturePageLayout, { PageHero, Divider, PricingCardsSection, StepsSection, FAQSection, CTASection } from '@/components/FeaturePageLayout';
 
 export const metadata: Metadata = {
-  title: 'Pillar Pricing — Full Platform Starting at $14.99/Month',
-  description: 'One plan, every feature. Pillar starts at $14.99/month for your first property. Add more at $9.99 each. No feature limits, no long-term contracts — cancel any time.',
+  title: 'Pillar Pricing — First Month Free, Then $14.99/Month',
+  description: 'Try Pillar free for 30 days. Then $14.99/month for your first property, $9.99 for each additional. Every feature included, no long-term contracts — cancel any time.',
 };
 
 const BASE_FEATURES = [
@@ -22,7 +22,7 @@ const BASE_FEATURES = [
 const FAQ = [
   {
     q: 'Is there a free trial?',
-    a: 'You can create an account and set up your first property for free. Billing begins when you publish and activate your portal.',
+    a: 'Yes — your first month is completely free. Subscribe, set up your first property, and pay nothing for 30 days. After the trial, billing starts automatically at $14.99/month. The trial covers one property — adding more during the trial starts billing right away ($14.99/month plus $9.99/month per additional property). Cancel any time during the trial and you won\'t be charged.',
   },
   {
     q: 'Can I add more properties later?',
@@ -63,9 +63,9 @@ export default function PricingPage() {
           label: 'Base Plan',
           price: '$14.99',
           priceUnit: '/month',
-          description: 'Everything included for your first property. No feature limits.',
+          description: 'First month free, then $14.99/month. Everything included for your first property. No feature limits.',
           features: BASE_FEATURES,
-          ctaText: 'Get Started',
+          ctaText: 'Start Free Month',
           ctaHref: '/manager/login',
         }}
         addonPlan={{
@@ -106,8 +106,8 @@ export default function PricingPage() {
 
       <CTASection
         title="Start With One Property"
-        subtitle="$14.99/month. Every feature included. Cancel any time."
-        buttonText="Get Started Today"
+        subtitle="First month free, then $14.99/month. Every feature included. Cancel any time."
+        buttonText="Start Your Free Month"
         buttonHref="/manager/login"
       />
     </FeaturePageLayout>

@@ -38,14 +38,20 @@ export async function POST() {
   const sub = await stripe.subscriptions.retrieve(subId);
   const existingItem = sub.items.data.find((item) => item.price.id === propertyPriceId);
 
+  // The free trial covers a single property. Adding another ends the trial
+  // and starts billing immediately: base plan + the new property slot.
+  const endTrialNow = sub.status === "trialing" ? { trial_end: "now" as const } : {};
+
   let updatedSub;
   if (existingItem) {
     updatedSub = await stripe.subscriptions.update(subId, {
+      ...endTrialNow,
       items: [{ id: existingItem.id, quantity: (existingItem.quantity ?? 0) + 1 }],
       proration_behavior: "create_prorations",
     });
   } else {
     updatedSub = await stripe.subscriptions.update(subId, {
+      ...endTrialNow,
       items: [{ price: propertyPriceId, quantity: 1 }],
       proration_behavior: "create_prorations",
     });

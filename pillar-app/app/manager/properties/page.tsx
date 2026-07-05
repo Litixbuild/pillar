@@ -19,19 +19,21 @@ export default async function PropertiesPage() {
     getPropertiesByManagerId(session.userId),
     supabase
       .from('profiles')
-      .select('is_subscribed, property_slots')
+      .select('is_subscribed, stripe_subscription_status, property_slots')
       .eq('id', session.userId)
       .single(),
   ]);
 
   const profile = profileResult.data;
   const isSubscribed = profile?.is_subscribed === true;
+  const subscriptionStatus = (profile?.stripe_subscription_status as string | null) ?? null;
   const propertySlots = (profile?.property_slots as number) ?? 1;
 
   return (
     <PropertiesClient
       properties={properties}
       isSubscribed={isSubscribed}
+      subscriptionStatus={subscriptionStatus}
       propertySlots={propertySlots}
     />
   );

@@ -124,6 +124,26 @@ export default function HomeDarkWrapper() {
             <p className="text-lg lg:text-xl font-medium" style={{ color: heading }}>
               Pillar answers — so you don&apos;t have to.
             </p>
+            <div className="mt-7 lg:mt-9 flex justify-center">
+              <Link
+                href="/manager/login"
+                className="inline-flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.03]"
+                style={{
+                  height: 'clamp(42px,4.8vw,48px)', lineHeight: 1, boxSizing: 'border-box',
+                  fontSize: 'clamp(12px,1.3vw,13px)', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600,
+                  color: '#3d2a0a',
+                  background: 'linear-gradient(135deg, #F5EDD5 0%, #E3D3AC 55%, #CDB283 100%)',
+                  padding: '0 clamp(24px,3vw,34px)',
+                  borderRadius: 11, textDecoration: 'none',
+                  boxShadow: dark ? '0 4px 24px rgba(245,237,213,0.25)' : '0 4px 20px rgba(122,90,30,0.22)',
+                }}
+              >
+                Try Free Today
+                <svg viewBox="0 0 24 24" fill="none" style={{ width: 13, height: 13, flexShrink: 0 }}>
+                  <path d="M9 5l7 7-7 7" stroke="#3d2a0a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
           <div className="flex-1 w-full flex flex-col items-center lg:items-end">
@@ -140,24 +160,6 @@ export default function HomeDarkWrapper() {
               />
               <HomeDemoWindow dark={dark} />
             </div>
-            <div className="w-14 h-px mt-6 lg:mt-8 mb-5" style={{ background: accent }} />
-            <Link
-              href="/manager/login"
-              className="inline-flex items-center justify-center gap-2"
-              style={{
-                height: 'clamp(38px,4.5vw,46px)', lineHeight: 1, boxSizing: 'border-box',
-                fontSize: 'clamp(11px,1.3vw,13px)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 400,
-                color: heading,
-                background: 'transparent',
-                padding: '0 clamp(22px,2.8vw,32px)',
-                borderRadius: 10, textDecoration: 'none',
-              }}
-            >
-              Let&apos;s get you started!
-              <svg viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                <path d="M9 5l7 7-7 7" stroke={heading} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
           </div>
         </div>
       </section>

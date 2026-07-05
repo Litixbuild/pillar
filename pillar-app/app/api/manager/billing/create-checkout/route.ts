@@ -27,9 +27,13 @@ export async function POST() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_customer_id, referral_discount_cents")
+    .select("stripe_customer_id, referral_discount_cents, stripe_subscription_id")
     .eq("id", session.userId)
     .single();
+
+  // Free trial only for first-time subscribers — anyone who ever had a
+  // subscription (even canceled) doesn't get a second free month.
+  const isFirstSubscription = !profile?.stripe_subscription_id;
 
   let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
 
@@ -67,6 +71,7 @@ export async function POST() {
       : { allow_promotion_codes: true }),
     subscription_data: {
       metadata: { userId: session.userId },
+      ...(isFirstSubscription ? { trial_period_days: 30 } : {}),
     },
   });
 
