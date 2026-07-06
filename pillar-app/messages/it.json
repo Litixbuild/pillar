@@ -65,7 +65,7 @@
     "nextPhoto": "Foto successiva"
   },
   "manager": {
-    "login": "Accesso Manager",
+    "login": "Accesso",
     "verifyIdentity": "Verifica la Tua Identità",
     "codeSentTo": "Un codice è stato inviato a {email}",
     "email": "Email",
@@ -78,8 +78,10 @@
     "verify": "Verifica",
     "verifying": "Verifica in corso…",
     "forgotPassword": "Password dimenticata?",
-    "noAccount": "Non hai un account?",
-    "signUp": "Registrati →",
+    "createAccount": "Crea un account →",
+    "continueWithGoogle": "Continua con Google",
+    "orDivider": "o",
+    "googleSignInFailed": "Accesso con Google non riuscito. Riprova o usa la tua password.",
     "resendCode": "Reinvia Codice",
     "resendCodeIn": "Reinvia codice tra {seconds}s",
     "loginFailed": "Accesso fallito. Riprova.",

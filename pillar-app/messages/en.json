@@ -65,7 +65,7 @@
     "nextPhoto": "Next photo"
   },
   "manager": {
-    "login": "Manager Login",
+    "login": "Login",
     "verifyIdentity": "Verify Your Identity",
     "codeSentTo": "A code was sent to {email}",
     "email": "Email",
@@ -78,8 +78,10 @@
     "verify": "Verify",
     "verifying": "Verifying…",
     "forgotPassword": "Forgot Password?",
-    "noAccount": "Don’t have an account?",
-    "signUp": "Sign up →",
+    "createAccount": "Create Account →",
+    "continueWithGoogle": "Continue with Google",
+    "orDivider": "or",
+    "googleSignInFailed": "Google sign-in failed. Please try again or use your password.",
     "resendCode": "Resend Code",
     "resendCodeIn": "Resend code in {seconds}s",
     "loginFailed": "Login failed. Please try again.",

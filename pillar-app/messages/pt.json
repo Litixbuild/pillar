@@ -65,7 +65,7 @@
     "nextPhoto": "Próxima foto"
   },
   "manager": {
-    "login": "Login do Gerente",
+    "login": "Login",
     "verifyIdentity": "Verifique Sua Identidade",
     "codeSentTo": "Um código foi enviado para {email}",
     "email": "E-mail",
@@ -78,8 +78,10 @@
     "verify": "Verificar",
     "verifying": "Verificando…",
     "forgotPassword": "Esqueceu a Senha?",
-    "noAccount": "Não tem uma conta?",
-    "signUp": "Cadastre-se →",
+    "createAccount": "Criar Conta →",
+    "continueWithGoogle": "Continuar com o Google",
+    "orDivider": "ou",
+    "googleSignInFailed": "Falha no login com o Google. Tente novamente ou use sua senha.",
     "resendCode": "Reenviar Código",
     "resendCodeIn": "Reenviar código em {seconds}s",
     "loginFailed": "Falha no login. Tente novamente.",

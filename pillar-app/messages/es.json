@@ -65,7 +65,7 @@
     "nextPhoto": "Foto siguiente"
   },
   "manager": {
-    "login": "Inicio de Sesión para Managers",
+    "login": "Iniciar Sesión",
     "verifyIdentity": "Verifica Tu Identidad",
     "codeSentTo": "Se envió un código a {email}",
     "email": "Correo Electrónico",
@@ -78,8 +78,10 @@
     "verify": "Verificar",
     "verifying": "Verificando…",
     "forgotPassword": "¿Olvidaste tu Contraseña?",
-    "noAccount": "¿No tienes una cuenta?",
-    "signUp": "Regístrate →",
+    "createAccount": "Crear Cuenta →",
+    "continueWithGoogle": "Continuar con Google",
+    "orDivider": "o",
+    "googleSignInFailed": "Error al iniciar sesión con Google. Inténtalo de nuevo o usa tu contraseña.",
     "resendCode": "Reenviar Código",
     "resendCodeIn": "Reenviar código en {seconds}s",
     "loginFailed": "Error al iniciar sesión. Intenta de nuevo.",

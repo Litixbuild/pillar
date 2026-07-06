@@ -65,7 +65,7 @@
     "nextPhoto": "次の写真"
   },
   "manager": {
-    "login": "マネージャーログイン",
+    "login": "ログイン",
     "verifyIdentity": "本人確認",
     "codeSentTo": "{email}にコードを送信しました",
     "email": "メールアドレス",
@@ -78,8 +78,10 @@
     "verify": "確認",
     "verifying": "確認中…",
     "forgotPassword": "パスワードをお忘れですか？",
-    "noAccount": "アカウントをお持ちでないですか？",
-    "signUp": "登録する →",
+    "createAccount": "アカウント作成 →",
+    "continueWithGoogle": "Googleで続行",
+    "orDivider": "または",
+    "googleSignInFailed": "Googleログインに失敗しました。もう一度お試しいただくか、パスワードをご使用ください。",
     "resendCode": "コードを再送信",
     "resendCodeIn": "{seconds}秒後に再送信",
     "loginFailed": "ログインに失敗しました。もう一度お試しください。",

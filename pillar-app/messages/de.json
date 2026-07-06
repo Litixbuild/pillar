@@ -65,7 +65,7 @@
     "nextPhoto": "Nächstes Foto"
   },
   "manager": {
-    "login": "Manager-Anmeldung",
+    "login": "Anmeldung",
     "verifyIdentity": "Identität bestätigen",
     "codeSentTo": "Ein Code wurde an {email} gesendet",
     "email": "E-Mail",
@@ -78,8 +78,10 @@
     "verify": "Bestätigen",
     "verifying": "Wird bestätigt…",
     "forgotPassword": "Passwort vergessen?",
-    "noAccount": "Noch kein Konto?",
-    "signUp": "Registrieren →",
+    "createAccount": "Konto erstellen →",
+    "continueWithGoogle": "Mit Google fortfahren",
+    "orDivider": "oder",
+    "googleSignInFailed": "Google-Anmeldung fehlgeschlagen. Versuchen Sie es erneut oder verwenden Sie Ihr Passwort.",
     "resendCode": "Code erneut senden",
     "resendCodeIn": "Code erneut senden in {seconds}s",
     "loginFailed": "Anmeldung fehlgeschlagen. Bitte erneut versuchen.",

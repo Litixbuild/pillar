@@ -65,7 +65,7 @@
     "nextPhoto": "Photo suivante"
   },
   "manager": {
-    "login": "Connexion Manager",
+    "login": "Connexion",
     "verifyIdentity": "Vérifiez Votre Identité",
     "codeSentTo": "Un code a été envoyé à {email}",
     "email": "Email",
@@ -78,8 +78,10 @@
     "verify": "Vérifier",
     "verifying": "Vérification…",
     "forgotPassword": "Mot de passe oublié ?",
-    "noAccount": "Pas encore de compte ?",
-    "signUp": "S’inscrire →",
+    "createAccount": "Créer un compte →",
+    "continueWithGoogle": "Continuer avec Google",
+    "orDivider": "ou",
+    "googleSignInFailed": "Échec de la connexion Google. Réessayez ou utilisez votre mot de passe.",
     "resendCode": "Renvoyer le code",
     "resendCodeIn": "Renvoyer dans {seconds}s",
     "loginFailed": "Échec de la connexion. Réessayez.",

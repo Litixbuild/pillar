@@ -94,7 +94,7 @@ export default function HomeDarkWrapper() {
 
       {/* ── Hero ── */}
       <section className="relative flex items-center overflow-hidden lg:min-h-[84vh]">
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-28 pb-4 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 xl:gap-28">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 lg:px-16 pt-28 pb-10 lg:pb-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 xl:gap-28">
           <div className="flex-1 w-full max-w-2xl">
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.8rem] leading-[1.12] mb-5 lg:mb-7" style={{ color: heading }}>
               Tired of Endless<br />
@@ -126,7 +126,7 @@ export default function HomeDarkWrapper() {
             </p>
             <div className="mt-7 lg:mt-9 flex justify-center">
               <Link
-                href="/manager/login"
+                href="/manager/signup"
                 className="inline-flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.03]"
                 style={{
                   height: 'clamp(42px,4.8vw,48px)', lineHeight: 1, boxSizing: 'border-box',
@@ -164,8 +164,13 @@ export default function HomeDarkWrapper() {
         </div>
       </section>
 
+      {/* Divider */}
+      <div className="max-w-7xl mx-auto px-8 lg:px-16">
+        <div className="h-px" style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }} />
+      </div>
+
       {/* ── Section 2: QR Instant Access ── */}
-      <section className="pt-2 pb-6 lg:py-14">
+      <section className="pt-10 pb-6 lg:pt-16 lg:pb-14">
         <div className="max-w-7xl mx-auto px-5 lg:px-16 flex flex-col-reverse lg:flex-row items-center gap-6 lg:gap-20">
           <div className="flex-1 w-full flex justify-center">
             <div className="relative w-full max-w-[375px] lg:max-w-[430px] lg:drop-shadow-2xl" style={{ aspectRatio: '375/500', maskImage: 'linear-gradient(to left, transparent, black 6%)', WebkitMaskImage: 'linear-gradient(to left, transparent, black 6%)' }}>

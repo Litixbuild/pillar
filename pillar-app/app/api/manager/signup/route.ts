@@ -1,26 +1,11 @@
 import { cookies } from "next/headers";
-import { randomBytes } from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase";
+import { getUniqueReferralCode, resolveReferrer } from "@/lib/referralCode";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pmpillar.com";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function generateReferralCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = randomBytes(6);
-  return Array.from(bytes).map((b) => chars[b % chars.length]).join("");
-}
-
-async function getUniqueReferralCode(service: ReturnType<typeof createServiceClient>): Promise<string> {
-  for (let i = 0; i < 5; i++) {
-    const code = generateReferralCode();
-    const { data } = await service.from("profiles").select("id").eq("referral_code", code).maybeSingle();
-    if (!data) return code;
-  }
-  return generateReferralCode();
-}
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as {
@@ -66,17 +51,7 @@ export async function POST(req: Request) {
   // Read referral cookie to track who referred this manager
   const jar = await cookies();
   const refCookieCode = jar.get("pillar_ref")?.value ?? null;
-  let referredBy: string | null = null;
-  if (refCookieCode) {
-    const { data: referrer } = await service
-      .from("profiles")
-      .select("id")
-      .eq("referral_code", refCookieCode)
-      .maybeSingle();
-    if (referrer?.id && referrer.id !== data.user.id) {
-      referredBy = referrer.id as string;
-    }
-  }
+  const referredBy = await resolveReferrer(service, refCookieCode, data.user.id);
 
   const { error: profileError } = await service.from("profiles").insert({
     id: data.user.id,
