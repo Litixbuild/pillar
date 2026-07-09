@@ -14,7 +14,6 @@ function SparkleIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ wi
 function BookIcon()    { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 17, height: 17 }}><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M8 7h8M8 11h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>; }
 function WrenchIcon()  { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 17, height: 17 }}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
 function ClockIcon()   { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 17, height: 17 }}><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
-function PersonIcon()  { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 26, height: 26 }}><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6"/><path d="M4 20c0-4.2 3.6-7.5 8-7.5s8 3.3 8 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>; }
 function MenuLinesIcon() { return <svg viewBox="0 0 24 24" fill="none" style={{ width: 28, height: 28 }}><path d="M4 8h16M4 16h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>; }
 function ChevronDownIcon({ open }: { open: boolean }) {
   return (
@@ -196,9 +195,6 @@ export default function HomeNav({ dark, onToggleDark }: { dark: boolean; onToggl
 
         {/* Right controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-          <Link href="/manager/login" aria-label="Sign in" style={topBarIconStyle}>
-            <PersonIcon />
-          </Link>
           <button
             type="button" onClick={toggleMenu}
             aria-label="Menu" aria-expanded={menuOpen}

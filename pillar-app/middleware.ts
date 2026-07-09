@@ -68,8 +68,23 @@ function isTokenExpired(token: string, maxAgeMs: number): boolean {
   } catch { return true; }
 }
 
+// Whole-site maintenance splash — flip to false to restore normal traffic.
+// Do not remove without explicit sign-off.
+const MAINTENANCE_MODE = true;
+const MAINTENANCE_PATH = "/maintenance";
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (MAINTENANCE_MODE) {
+    const isStaticFile = /\.[a-zA-Z0-9]+$/.test(pathname);
+    if (pathname !== MAINTENANCE_PATH && !isStaticFile) {
+      const url = req.nextUrl.clone();
+      url.pathname = MAINTENANCE_PATH;
+      return NextResponse.rewrite(url);
+    }
+    return NextResponse.next();
+  }
 
   // --- Admin auth ---
   if (pathname !== "/admin/login" && pathname.startsWith("/admin")) {

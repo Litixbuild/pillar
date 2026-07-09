@@ -142,150 +142,23 @@ export default function ManagerSignupPage() {
       {/* Content */}
       <div className="relative z-10 flex h-full w-full max-w-sm flex-col items-center justify-center">
 
-        {/* Email verification screen */}
-        {verificationEmail ? (
-          <div className="w-full text-center">
-            <div className="mb-5">
-              <div
-                className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border"
-                style={dark ? { borderColor: "rgba(245,237,213,0.18)", background: "rgba(245,237,213,0.10)" } : { borderColor: "rgba(100,80,40,0.18)", background: "rgba(100,80,40,0.06)" }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" style={{ color: dark ? "rgba(245,237,213,0.85)" : "rgba(100,80,40,0.75)" }} aria-hidden="true">
-                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-light tracking-tight" style={{ color: headingColor }}>Check your inbox</h2>
-              <p className="mt-2 text-sm" style={{ color: labelColor }}>
-                We sent a verification link to
-              </p>
-              <p className="mt-1 text-sm font-medium" style={{ color: headingColor }}>{verificationEmail}</p>
-              <p className="mt-3 text-xs" style={{ color: dark ? "rgba(245,237,213,0.45)" : "rgba(100,80,40,0.45)" }}>
-                Click the link in the email to verify your account, then come back and sign in.
-              </p>
-            </div>
-            <Link
-              href="/manager/login"
-              className="inline-flex h-9 w-full items-center justify-center rounded-full text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
-              style={submitStyle}
-            >
-              Go to Sign In
-            </Link>
-          </div>
-        ) : (
-          <>
-        {/* Hero image — flexes to absorb all leftover height (2:3 ratio, never causes scroll) */}
-        <div className="relative mb-3 min-h-0 max-w-full flex-1 overflow-hidden rounded-2xl" style={{ aspectRatio: "941 / 1672", transform: "scale(1.33)" }}>
-          <Image src="/images/newbg4.png" alt="" fill sizes="340px" className="object-contain" priority />
-        </div>
-
-        {/* Heading */}
-        <div className="mb-4 text-center">
+        {/* Signups temporarily disabled */}
+        <div className="w-full text-center">
           <h1 className="text-xl font-light tracking-tight" style={{ color: headingColor }}>
-            Create Account
+            Signups Temporarily Disabled
           </h1>
-          <p className="mt-1.5 text-sm" style={{ color: signInColor }}>
-            Set up your first property in minutes.
+          <p className="mt-2 text-sm" style={{ color: labelColor }}>
+            New account creation is paused right now. If you already have an account, sign in below.
           </p>
-        </div>
-
-        {/* Error */}
-        {error ? (
-          <div className="mb-4 w-full rounded-2xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300/80">
-            {error}
-          </div>
-        ) : null}
-
-        {/* Form */}
-        <form
-          className="w-full space-y-2.5"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setError(null);
-            setLoading(true);
-            const fd = new FormData(e.currentTarget);
-            const name = String(fd.get("name") || "");
-            const email = String(fd.get("email") || "");
-            const password = String(fd.get("password") || "");
-            if (password.length < 8) {
-              setError("Password must be at least 8 characters.");
-              setLoading(false);
-              return;
-            }
-            const res = await fetch("/api/manager/signup", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ name, email, password, confirmPassword: password }),
-            });
-            if (!res.ok) {
-              const data = (await res.json().catch(() => ({}))) as { error?: string };
-              setError(data.error || "Signup failed. Please try again.");
-              setLoading(false);
-              return;
-            }
-            setVerificationEmail(email);
-            setLoading(false);
-          }}
-        >
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: fieldIconColor }}><UserFieldIcon /></span>
-            <input id="signup-name" name="name" type="text" autoComplete="name" required placeholder="Name" aria-label="Full name" className={inputCls} />
-          </div>
-
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: fieldIconColor }}><MailFieldIcon /></span>
-            <input id="signup-email" name="email" type="email" autoComplete="username" required placeholder="Email" aria-label="Email" className={inputCls} />
-          </div>
-
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: fieldIconColor }}><LockFieldIcon /></span>
-            <input id="signup-password" name="password" type="password" autoComplete="new-password" required minLength={8} placeholder="Password (min. 8 characters)" aria-label="Password" className={inputCls} />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-3! h-9 w-full rounded-full text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
+          <Link
+            href="/manager/login"
+            className="mt-5 inline-flex h-9 w-full items-center justify-center rounded-full text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
             style={submitStyle}
           >
-            {loading ? "Creating account…" : "Create Account"}
-          </button>
+            Go to Sign In
+          </Link>
+        </div>
 
-          {/* Google sign-up */}
-          <div className="flex items-center gap-3 py-0.5">
-            <div className="h-px flex-1" style={{ background: dividerColor }} />
-            <span className="text-[10px] uppercase tracking-[0.22em]" style={{ color: labelColor }}>or</span>
-            <div className="h-px flex-1" style={{ background: dividerColor }} />
-          </div>
-          <div className="flex justify-center">
-            <a
-              href="/api/manager/auth/google"
-              aria-label="Sign in with Google"
-              title="Sign in with Google"
-              className="flex h-9 w-9 items-center justify-center transition-all duration-300 hover:opacity-80 active:scale-[0.96]"
-            >
-              <GoogleIcon />
-            </a>
-          </div>
-
-          <div className="pt-2 text-center">
-            <Link
-              href="/manager/login"
-              className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80"
-              style={{ color: signInColor }}
-            >
-              Already have an account? Sign in
-            </Link>
-          </div>
-
-          <p className="pt-1 text-center text-[10px] leading-relaxed" style={{ color: dark ? "rgba(245,237,213,0.35)" : "rgba(100,80,40,0.40)" }}>
-            By creating an account you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-2">Terms of Service</Link>
-            {" "}and{" "}
-            <Link href="/privacy" className="underline underline-offset-2">Privacy Policy</Link>.
-          </p>
-        </form>
-          </>
-        )}
       </div>
     </div>
   );

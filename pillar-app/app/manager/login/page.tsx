@@ -232,15 +232,6 @@ export default function ManagerLoginPage() {
                 </a>
               </div>
 
-              {/* Create Account — same inset style */}
-              <Link
-                href="/manager/signup"
-                className="mt-1! flex h-9 w-full items-center justify-center rounded-full text-sm font-semibold tracking-wide transition-all duration-300 active:scale-[0.98]"
-                style={ghostStyle}
-              >
-                {t("createAccount")}
-              </Link>
-
               <div className="pt-2 text-center">
                 <Link href="/manager/forgot-password" className="text-[11px] uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-80" style={{ color: forgotColor }}>
                   {t("forgotPassword")}

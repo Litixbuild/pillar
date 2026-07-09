@@ -9,6 +9,62 @@ import { checkRateLimit } from "@/lib/rateLimit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Signups are temporarily disabled following a security incident. Do not
+// remove this gate without explicit sign-off.
+const SIGNUPS_DISABLED = true;
+
+async function createNewGoogleAccount(
+  service: ReturnType<typeof createServiceClient>,
+  identity: { email: string; name?: string | null },
+  jar: Awaited<ReturnType<typeof cookies>>,
+): Promise<{ userId: string; managerName?: string } | null> {
+  // New account. Create the Supabase auth user first (no password — they sign
+  // in with Google, or set a password later via forgot-password).
+  const { data: created, error: createError } = await service.auth.admin.createUser({
+    email: identity.email,
+    email_confirm: true,
+    user_metadata: identity.name ? { full_name: identity.name } : undefined,
+  });
+
+  let userId: string;
+  if (createError || !created.user) {
+    // Auth user may exist without a profile row (e.g. abandoned unverified
+    // signup). Recover its id so we can attach a profile instead of failing.
+    const { data: list } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const orphan = list?.users.find((u) => u.email?.toLowerCase() === identity.email);
+    if (!orphan) {
+      console.error("[google-oauth] createUser failed:", createError?.message);
+      return null;
+    }
+    userId = orphan.id;
+  } else {
+    userId = created.user.id;
+  }
+
+  const managerName = identity.name ?? undefined;
+
+  const referralCode = await getUniqueReferralCode(service);
+  const refCookieCode = jar.get("pillar_ref")?.value ?? null;
+  const referredBy = await resolveReferrer(service, refCookieCode, userId);
+
+  const { error: profileError } = await service.from("profiles").insert({
+    id: userId,
+    email: identity.email,
+    full_name: identity.name ?? "",
+    role: "manager",
+    is_subscribed: false,
+    referral_code: referralCode,
+    ...(referredBy ? { referred_by: referredBy } : {}),
+  });
+
+  if (profileError && !profileError.message.includes("duplicate")) {
+    console.error("[google-oauth] profile insert failed:", profileError.message);
+    return null;
+  }
+
+  return { userId, managerName };
+}
+
 export async function GET(req: Request) {
   const base = getOAuthBaseUrl(req);
   const failure = Response.redirect(`${base}/manager/login?error=google`, 302);
@@ -62,48 +118,12 @@ export async function GET(req: Request) {
       await service.from("profiles").update({ full_name: identity.name }).eq("id", userId);
     }
   } else {
-    // New account. Create the Supabase auth user first (no password — they sign
-    // in with Google, or set a password later via forgot-password).
-    const { data: created, error: createError } = await service.auth.admin.createUser({
-      email: identity.email,
-      email_confirm: true,
-      user_metadata: identity.name ? { full_name: identity.name } : undefined,
-    });
+    if (SIGNUPS_DISABLED) return failure;
 
-    if (createError || !created.user) {
-      // Auth user may exist without a profile row (e.g. abandoned unverified
-      // signup). Recover its id so we can attach a profile instead of failing.
-      const { data: list } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      const orphan = list?.users.find((u) => u.email?.toLowerCase() === identity.email);
-      if (!orphan) {
-        console.error("[google-oauth] createUser failed:", createError?.message);
-        return failure;
-      }
-      userId = orphan.id;
-    } else {
-      userId = created.user.id;
-    }
-
-    managerName = identity.name ?? undefined;
-
-    const referralCode = await getUniqueReferralCode(service);
-    const refCookieCode = jar.get("pillar_ref")?.value ?? null;
-    const referredBy = await resolveReferrer(service, refCookieCode, userId);
-
-    const { error: profileError } = await service.from("profiles").insert({
-      id: userId,
-      email: identity.email,
-      full_name: identity.name ?? "",
-      role: "manager",
-      is_subscribed: false,
-      referral_code: referralCode,
-      ...(referredBy ? { referred_by: referredBy } : {}),
-    });
-
-    if (profileError && !profileError.message.includes("duplicate")) {
-      console.error("[google-oauth] profile insert failed:", profileError.message);
-      return failure;
-    }
+    const result = await createNewGoogleAccount(service, identity, jar);
+    if (!result) return failure;
+    userId = result.userId;
+    managerName = result.managerName;
   }
 
   // Google verified the user's identity, so the email-OTP step is skipped —

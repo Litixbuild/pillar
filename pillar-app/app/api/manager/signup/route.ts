@@ -7,7 +7,18 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pmpillar.com";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Signups are temporarily disabled following a security incident. Do not
+// remove this gate without explicit sign-off.
+const SIGNUPS_DISABLED = true;
+
 export async function POST(req: Request) {
+  if (SIGNUPS_DISABLED) {
+    return Response.json({ error: "Signups are temporarily disabled." }, { status: 503 });
+  }
+  return handleSignup(req);
+}
+
+async function handleSignup(req: Request) {
   const body = (await req.json().catch(() => null)) as {
     name?: unknown;
     email?: unknown;
