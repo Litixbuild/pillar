@@ -3,6 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Unused debug endpoint that calls the billed Gemini API unauthenticated —
+// disabled following a billing-abuse incident. Do not remove without
+// explicit sign-off.
+const MODELS_ENDPOINT_DISABLED = true;
+
 function requireGeminiApiKey(): string {
   const v = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!v) {
@@ -21,6 +26,10 @@ type GeminiModelListResponse = {
 };
 
 export async function GET() {
+  if (MODELS_ENDPOINT_DISABLED) {
+    return Response.json({ error: "Disabled." }, { status: 503 });
+  }
+
   try {
     const apiKey = requireGeminiApiKey();
 

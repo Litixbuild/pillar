@@ -1135,7 +1135,17 @@ function buildDayPlanQueries(near: string, modifiers: string) {
   };
 }
 
+// AI concierge is temporarily disabled following a billing-abuse incident on
+// the Google API key. Do not remove without explicit sign-off.
+const CHAT_DISABLED = true;
+
 export async function POST(req: Request) {
+  if (CHAT_DISABLED) {
+    return Response.json(
+      { error: "The AI concierge is temporarily unavailable. Please contact your host directly." },
+      { status: 503 }
+    );
+  }
   try {
     const body = (await req.json()) as Partial<ChatRequestBody>;
     const message = body.message?.toString().trim();
